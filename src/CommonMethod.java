@@ -3,10 +3,7 @@ import com.sun.org.glassfish.external.statistics.annotations.Reset;
 import com.sun.xml.internal.ws.util.StringUtils;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
  * @author snowf
@@ -479,18 +476,46 @@ public class CommonMethod {
         System.out.print("to " + OutFile + "\n");
     }
 
-    public static ArrayList<String[]> GetChromosomeSize(String SamFile) throws IOException {
-        BufferedReader samfile = new BufferedReader(new FileReader(SamFile));
-        ArrayList<String[]> ChrSizeList = new ArrayList<>();
+    public static Hashtable<String, Integer> GetChromosomeSize(String InFile) throws IOException {
+        BufferedReader infile = new BufferedReader(new FileReader(InFile));
+        Hashtable<String, Integer> ChrSizeList = new Hashtable<>();
         String line;
         String[] str;
-        while ((line = samfile.readLine()).matches("^@.+")) {
-            if (line.matches("^@SQ.+")) {
-                str = line.split("\\s+");
-                ChrSizeList.add(new String[]{str[1].replace("SN:", ""), str[2].replace("LN:", "")});
+        if (InFile.matches(".+\\.ann")) {
+            infile.readLine();
+            while ((line = infile.readLine()) != null) {
+                String Chr = line.split("\\s+")[1];
+                line = infile.readLine();
+                int Size = Integer.parseInt(line.split("\\s+")[1]);
+                ChrSizeList.put(Chr, Size);
+            }
+        } else if (InFile.matches(".+\\.(fna|fa|fasta)")) {
+            String Chr = "";
+            int Size = 0;
+            while ((line = infile.readLine()) != null) {
+                if (line.matches("^>.+")) {
+                    Chr = line.split("\\s+")[0].replace(">", "");
+                    break;
+                }
+            }
+            while ((line = infile.readLine()) != null) {
+                if (line.matches("^>.+")) {
+                    ChrSizeList.put(Chr, Size);
+                    Chr = line.split("\\s+")[0].replace(">", "");
+                    Size = 0;
+                } else {
+                    Size += line.length();
+                }
+            }
+        } else if (InFile.matches(".+\\.sam")) {
+            while ((line = infile.readLine()).matches("^@.+")) {
+                if (line.matches("^@SQ.+")) {
+                    str = line.split("\\s+");
+                    ChrSizeList.put(str[1].replace("SN:", ""), Integer.parseInt(str[2].replace("LN:", "")));
+                }
             }
         }
-        samfile.close();
+        infile.close();
         return ChrSizeList;
     }
 

@@ -2,6 +2,7 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Hashtable;
 
 class SeProcess {
     private String Prefix;
@@ -47,9 +48,9 @@ class SeProcess {
         Init();
     }
 
-    SeProcess(String ConfigFile) throws IOException{
-            GetOption(ConfigFile);
-            Init();
+    SeProcess(String ConfigFile) throws IOException {
+        GetOption(ConfigFile);
+        Init();
     }
 
     public void Run() throws IOException {
@@ -106,21 +107,11 @@ class SeProcess {
         return SortBedFile;
     }
 
-    public int[] GetChrSize(String[] Chromosome) {
-        try {
-            ArrayList<String[]> list = CommonMethod.GetChromosomeSize(SamFile[0]);
-            ChrSize = new int[Chromosome.length];
-            for (int i = 0; i < list.size(); i++) {
-                for (int j = 0; j < Chromosome.length; j++) {
-                    if (list.get(i)[0].equals(Chromosome[j])) {
-                        ChrSize[j] = Integer.parseInt(list.get(i)[1]);
-                        break;
-                    }
-                }
-                ChrSize[i] = Integer.parseInt(list.get(i)[1]);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    public int[] GetChrSize(String[] Chromosome) throws IOException {
+        Hashtable<String, Integer> list = CommonMethod.GetChromosomeSize(IndexFile + ".ann");
+        ChrSize = new int[Chromosome.length];
+        for (int i = 0; i < Chromosome.length; i++) {
+            ChrSize[i] = list.get(Chromosome[i]);
         }
         return ChrSize;
     }
@@ -154,11 +145,11 @@ class SeProcess {
                     break;
                 case "AlignMinQuality":
                     MinQuality = Integer.parseInt(str[2]);
-                    System.out.println("Align Min Quality:\t" + MinQuality);
+                    System.out.println("CreatMatrix Min Quality:\t" + MinQuality);
                     break;
                 case "AlignThread":
                     AlignThreads = Integer.parseInt(str[2]);
-                    System.out.println("Align Thread:\t" + AlignThreads);
+                    System.out.println("CreatMatrix Thread:\t" + AlignThreads);
                     break;
                 case "Thread":
                     Threads = Integer.parseInt(str[2]);
@@ -166,7 +157,7 @@ class SeProcess {
                     break;
                 case "AlignMisMatch":
                     MisMatch = Integer.parseInt(str[2]);
-                    System.out.println("Align MisMatch:\t" + MisMatch);
+                    System.out.println("CreatMatrix MisMatch:\t" + MisMatch);
                     break;
                 case "RestrictionSeq":
                     RestrictionSeq = str[2];

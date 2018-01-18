@@ -1,17 +1,18 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Hashtable;
 
 public class Main {
     private String FastqFile;//fastq文件
+    private String GenomeFile;//基因组文件
     private int Phred;//fastq格式
     private String OutPrefix;//输出前缀
     private String OutPath;//输出路径
     private String ChromosomePrefix;//染色体前缀
     private String[] Chromosome;//染色体名
     private String RestrictionSeq;//酶切位点序列
-    private int RestrictionSite;//酶切位置
-    private String[] Restriction = new String[2];//酶切后的序列
+    private String[] MatchRestriction = new String[2];//匹配的序列
     private String[] AddSeq = new String[2];//延长的序列
     private String EnzyFilePrefix;//酶切位点文件前缀
     private String[] LinkersType;//linker类型
@@ -73,8 +74,8 @@ public class Main {
         String PastFile = reprocess.getPastFile();//获取past文件位置
         reprocess = null;
         //=======================================Se Process===单端处理=============================================
-        SeProcess seleft = new SeProcess(SeProcessDir, OutPrefix, PastFile, LinkersType, UseLinker, IndexFile, Restriction[0], AddSeq[0], 1, AlignMisMatch);//左端处理类
-        SeProcess seright = new SeProcess(SeProcessDir, OutPrefix, PastFile, LinkersType, UseLinker, IndexFile, Restriction[1], AddSeq[1], 2, AlignMisMatch);//右端处理类
+        SeProcess seleft = new SeProcess(SeProcessDir, OutPrefix, PastFile, LinkersType, UseLinker, IndexFile, MatchRestriction[0], AddSeq[0], 1, AlignMisMatch);//左端处理类
+        SeProcess seright = new SeProcess(SeProcessDir, OutPrefix, PastFile, LinkersType, UseLinker, IndexFile, MatchRestriction[1], AddSeq[1], 2, AlignMisMatch);//右端处理类
         seleft.Threads = Threads;//设置线程数
         seleft.Phred = Phred;//设置fastq文件格式
         seleft.MinLinkerFilterQuality = LinkerLength * MatchScore + MaxMisMatchLength * MisMatchScore;//设置linkerfilter最小分数
@@ -109,10 +110,24 @@ public class Main {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        int[] ChrSize = seleft.GetChrSize(Chromosome);//获取染色体大小
+        //=======================================================提取染色体大小信息=================================================================================
         ArrayList<String> list = new ArrayList<>();
-        for (int i = 0; i < Chromosome.length; i++) {
-            list.add(Chromosome[i] + "\t" + ChrSize[i]);
+        int[] ChrSize = new int[Chromosome.length];
+        if (EnzyFilePrefix == null) {
+            EnzyFilePrefix = OutPath + "/EnzySiteFile";
+            if (!new File(EnzyFilePrefix).isDirectory()) {
+                new File(EnzyFilePrefix).mkdir();
+            }
+            EnzyFilePrefix = EnzyFilePrefix + "/" + OutPrefix + "." + RestrictionSeq.replace("^", "");
+            Hashtable<String, Integer> temphash = step.FindRestrictionSite(GenomeFile, RestrictionSeq, EnzyFilePrefix);
+            for (String s : Chromosome) {
+                list.add(s + "\t" + temphash.get(s));
+            }
+        } else {
+            Hashtable<String, Integer> temphash = CommonMethod.GetChromosomeSize(IndexFile + ".ann");//获取染色体大小
+            for (String s : Chromosome) {
+                list.add(s + "\t" + temphash.get(s));
+            }
         }
         CommonMethod.PrintList(list, SeProcessDir + "/" + OutPrefix + ".ChrSize");//打印染色体大小信息
         list = null;
@@ -190,10 +205,7 @@ public class Main {
                         break;
                     case "RestrictionSeq":
                         RestrictionSeq = str[2];
-                        System.out.println("Restriction sequence:\t" + RestrictionSeq);
-                        break;
-                    case "RestrictionSite":
-                        RestrictionSite = Integer.parseInt(str[2]);
+                        System.out.println("MatchRestriction sequence:\t" + RestrictionSeq);
                         break;
                     case "LinkerFile":
                         LinkerFile = str[2];
@@ -209,7 +221,7 @@ public class Main {
                         break;
                     case "AlignMisMatch":
                         AlignMisMatch = Integer.parseInt(str[2]);
-                        System.out.println("Align MisMatch:\t" + AlignMisMatch);
+                        System.out.println("CreatMatrix MisMatch:\t" + AlignMisMatch);
                         break;
                     case "Phred":
                         Phred = Integer.parseInt(str[2]);
@@ -229,7 +241,7 @@ public class Main {
                         break;
                     case "AlignThread":
                         AlignThread = Integer.parseInt(str[2]);
-                        System.out.println("Align Thread:\t" + AlignThread);
+                        System.out.println("CreatMatrix Thread:\t" + AlignThread);
                         break;
                     case "MinReadsLength":
                         MinReadsLength = Integer.parseInt(str[2]);
@@ -241,7 +253,7 @@ public class Main {
                         break;
                     case "AlignMinQuality":
                         AlignMinQuality = Integer.parseInt(str[2]);
-                        System.out.println("Align Min Quality:\t" + AlignMinQuality);
+                        System.out.println("CreatMatrix Min Quality:\t" + AlignMinQuality);
                         break;
                     case "EnzyFilePrefix":
                         EnzyFilePrefix = str[2];
@@ -269,6 +281,10 @@ public class Main {
                         }
                         System.out.println();
                         break;
+                    case "GenomeFile":
+                        GenomeFile = str[2];
+                        System.out.println("GenomeFile:\t" + GenomeFile);
+                        break;
                 }
             } catch (IndexOutOfBoundsException ignored) {
             }
@@ -277,8 +293,8 @@ public class Main {
     }
 
     private void Init() throws IOException {
-        if (EnzyFilePrefix == null) {
-            System.err.println("Error ! no EnzyFilePrefix");
+        if (EnzyFilePrefix == null && GenomeFile == null) {
+            System.err.println("Error ! no EnzyFilePrefix or GenomeFile");
             System.exit(0);
         }
         if (FastqFile == null) {
@@ -291,10 +307,6 @@ public class Main {
         }
         if (RestrictionSeq == null) {
             System.err.println("Error ! no RestrictionSeq");
-            System.exit(0);
-        }
-        if (RestrictionSite == 0) {
-            System.err.println("Error ! no RestrictionSite");
             System.exit(0);
         }
         if (IndexFile == null) {
@@ -364,7 +376,7 @@ public class Main {
         }
         if (AlignThread == 0) {
             AlignThread = 4;
-            System.out.println("Align Thread:\t" + AlignThread);
+            System.out.println("CreatMatrix Thread:\t" + AlignThread);
         }
         if (MinReadsLength == 0) {
             MinReadsLength = 16;
@@ -381,18 +393,19 @@ public class Main {
             System.out.print(Chromosome[i] + " ");
         }
         System.out.println();
-
-        Restriction[0] = RestrictionSeq.substring(0, RestrictionSite);
-        Restriction[1] = RestrictionSeq.substring(RestrictionSeq.length() - RestrictionSite);
+        int restrictionSite = RestrictionSeq.indexOf("^");
+        String TempSeq = RestrictionSeq.replace("^", "");
+        MatchRestriction[0] = TempSeq.substring(0, TempSeq.length() - restrictionSite);
+        MatchRestriction[1] = TempSeq.substring(restrictionSite);
         try {
-            AddSeq[0] = RestrictionSeq.substring(RestrictionSite);
-            AddSeq[1] = RestrictionSeq.substring(0, RestrictionSeq.length() - RestrictionSite);
+            AddSeq[0] = TempSeq.substring(TempSeq.length() - restrictionSite);
+            AddSeq[1] = TempSeq.substring(0, restrictionSite);
         } catch (IndexOutOfBoundsException e) {
             AddSeq = new String[]{"", ""};
         }
 
-        System.out.println("Restriction one:\t" + Restriction[0]);
-        System.out.println("Restriction two:\t" + Restriction[1]);
+        System.out.println("MatchRestriction one:\t" + MatchRestriction[0]);
+        System.out.println("MatchRestriction two:\t" + MatchRestriction[1]);
         BufferedReader infile = new BufferedReader(new FileReader(LinkerFile));
         LinkerLength = infile.readLine().length();
         infile.close();

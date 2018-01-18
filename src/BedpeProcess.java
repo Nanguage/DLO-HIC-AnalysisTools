@@ -36,9 +36,9 @@ public class BedpeProcess {
 
     public void Run() throws IOException {
 
-        Routine bedpe = new Routine();
-        bedpe.Threads = Threads;
-        bedpe.BedpeToSameAndDiff(BedpeFile, SameBedpeFile, DiffBedpeFile);
+        Routine step = new Routine();
+        step.Threads = Threads;
+        step.BedpeToSameAndDiff(BedpeFile, SameBedpeFile, DiffBedpeFile);
         Thread[] Process = new Thread[Chromosome.length];
         for (int i = 0; i < Chromosome.length; i++) {
             int finalI = i;
@@ -46,13 +46,13 @@ public class BedpeProcess {
                 @Override
                 public void run() {
                     try {
-                        bedpe.SeperateChromosome(SameBedpeFile, 1, Chromosome[finalI], SameBedpeChrFile[finalI]);
-                        bedpe.SeperateChromosome(DiffBedpeFile, 1, Chromosome[finalI], DiffBedpeChrFile[finalI]);
-                        bedpe.WhichEnzy(SameBedpeChrFile[finalI], EnzyFilePrefix + Chromosome[finalI] + ".txt", EnzyChrFragment[finalI]);
-                        bedpe.SeperateLigationType(EnzyChrFragment[finalI], LigationChrFile[finalI][0], LigationChrFile[finalI][1], LigationChrFile[finalI][2]);
+                        step.SeperateChromosome(SameBedpeFile, 1, Chromosome[finalI], SameBedpeChrFile[finalI]);
+                        step.SeperateChromosome(DiffBedpeFile, 1, Chromosome[finalI], DiffBedpeChrFile[finalI]);
+                        step.WhichEnzy(SameBedpeChrFile[finalI], EnzyFilePrefix + "." + Chromosome[finalI] + ".txt", EnzyChrFragment[finalI]);
+                        step.SeperateLigationType(EnzyChrFragment[finalI], LigationChrFile[finalI][0], LigationChrFile[finalI][1], LigationChrFile[finalI][2]);
                         CommonMethod.Append(DiffBedpeChrFile[finalI], LigationChrFile[finalI][2]);
                         CommonMethod.SortFile(LigationChrFile[finalI][2], new int[]{2, 3, 5, 6}, "n", "", LigationChrFile[finalI][2] + ".sort", Threads);
-                        bedpe.RemoveRepeat(LigationChrFile[finalI][2] + ".sort", new int[]{2, 3, 5, 6}, LigationChrFile[finalI][2] + ".clean.sort");
+                        step.RemoveRepeat(LigationChrFile[finalI][2] + ".sort", new int[]{2, 3, 5, 6}, LigationChrFile[finalI][2] + ".clean.sort");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

@@ -976,4 +976,58 @@ public class Routine {
         return SameChrFile;
     }
 
+    public Hashtable<String, Integer> FindRestrictionSite(String FastFile, String Restriction, String Prefix) throws IOException {
+        BufferedReader fastfile = new BufferedReader(new FileReader(FastFile));
+        BufferedWriter chrwrite;
+        Hashtable<String, Integer> ChrSize = new Hashtable<>();
+        StringBuilder Seq = new StringBuilder();
+        String line;
+        String Chr = "";
+        int Site = Restriction.indexOf("^");
+        Restriction = Restriction.replace("^", "");
+        int ResLength = Restriction.length();
+        //找到第一个以 ">" 开头的行
+        while ((line = fastfile.readLine()) != null) {
+            if (line.matches("^>.+")) {
+                Chr = line.split("\\s+")[0].replace(">", "");
+                break;
+            }
+        }
+        while ((line = fastfile.readLine()) != null) {
+            if (line.matches("^>.+")) {
+                int Count = 0;
+                int len = Seq.length();
+                chrwrite = new BufferedWriter(new FileWriter(Prefix + "." + Chr + ".txt"));
+                chrwrite.write(Count + "\t+\t" + Chr + "\t0\n");
+                ChrSize.put(Chr, len);
+                for (int i = 0; i <= len - ResLength; i++) {
+                    if (Seq.substring(i, i + ResLength).equals(Restriction)) {
+                        Count++;
+                        chrwrite.write(Count + "\t+\t" + Chr + "\t" + String.valueOf(i + Site) + "\n");
+                    }
+                }
+                chrwrite.write(++Count + "\t+\t" + Chr + "\t" + len + "\n");
+                Seq.setLength(0);
+                Chr = line.split("\\s+")[0].replace(">", "");
+            } else {
+                Seq.append(line);
+            }
+        }
+        //========================================打印最后一条染色体=========================================
+        int Count = 0;
+        int len = Seq.length();
+        chrwrite = new BufferedWriter(new FileWriter(Prefix + "." + Chr + ".txt"));
+        chrwrite.write(Count + "\t+\t" + Chr + "\t0\n");
+        ChrSize.put(Chr, len);
+        for (int i = 0; i <= len - ResLength; i++) {
+            if (Seq.substring(i, i + ResLength).equals(Restriction)) {
+                Count++;
+                chrwrite.write(Count + "\t+\t" + Chr + "\t" + String.valueOf(i + Site) + "\n");
+            }
+        }
+        chrwrite.write(++Count + "\t+\t" + Chr + "\t" + len + "\n");
+        Seq.setLength(0);
+        return ChrSize;
+    }
+
 }

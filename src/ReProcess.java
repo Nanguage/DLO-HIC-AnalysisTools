@@ -11,13 +11,24 @@ public class ReProcess {
     private String LinkerFilterOutPrefix;
     private String PastFile;
     public int Threads = 1;
+    private LinkerFiltering lk;
 
-    ReProcess(String outpath, String outprefix, String fastqfile, String linkerfile) {
+    ReProcess(String outpath, String outprefix, String fastqfile, String linkerfile) throws IOException {
         OutPath = outpath;
         OutPrefix = outprefix;
         FastqFile = fastqfile;
         LinkerFile = linkerfile;
         Init();
+        lk = new LinkerFiltering(SeqFile, LinkerFile, LinkerFilterOutPrefix, 0, Threads * 4);
+    }
+
+    ReProcess(String outpath, String outprefix, String fastqfile, String linkerfile, int matchscore, int mismatchscore, int indelscore) throws IOException {
+        OutPath = outpath;
+        OutPrefix = outprefix;
+        FastqFile = fastqfile;
+        LinkerFile = linkerfile;
+        Init();
+        lk = new LinkerFiltering(SeqFile, LinkerFile, LinkerFilterOutPrefix, matchscore, mismatchscore, indelscore, 0, Threads * 4);
     }
 
     public void Run() throws IOException {
@@ -25,7 +36,7 @@ public class ReProcess {
         reprocess.Threads = Threads;
         reprocess.FastqToSeqAndOneLine(FastqFile, SeqFile, OneLineFile);
         System.out.println(new Date() + "\tStart to linkerfilter");
-        new LinkerFiltering(SeqFile, LinkerFile, LinkerFilterOutPrefix, 0, Threads * 4);
+        lk.Run();
         CommonMethod.Paste(new String[]{LinkerFilterOutPrefix + ".output.txt", OneLineFile}, PastFile);
     }
 

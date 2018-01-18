@@ -8,434 +8,240 @@ import java.util.*;
 
 public class LocalAlignment {
 
-    private int debugLevel = 1;
-    private int[][] scoreMatrix;
-    private int score;
-    private int maxI; // at row maxI, the score is maximum
-    private int maxJ; // at column maxJ, the score is maximum
-    private int minI; // at row minI, the maximum score starts from here
-    private int minJ; // at column minJ, the maximum score starts from here
-    private int m;
-    private int n;
-    private int MatchScore = 1;
-    private int MismatchScore = -1;
-    private int IndelScore = -1;
-    private String str1;
-    private String str2;
+    private int MatchScore;
+    private int MismatchScore;
+    private int IndelScore;
+    private char[] Seq1 = new char[]{};
+    private char[] Seq2 = new char[]{};
+    private int[][] ScoreMatrix;
+    private int MaxScore;
+    private int[] MaxIndex;
+    private int[] MinIndex;
+    private int[] MatrixSzie;
     // ****** assumptions ******
     // 1) the aligned strings are from the beginning of the original sequences
     // 2) the aligned str2 is the linker sequence
     // 3) the insertions and deletions are represented with '-'
-    private StringBuilder alignedStr1 = new StringBuilder();
-    private StringBuilder alignedStr2 = new StringBuilder();
-    private StringBuilder alignedStatus = new StringBuilder();
 
-    public LocalAlignment(int m, int n) {
-        this.m = m;
-        this.n = n;
-        scoreMatrix = new int[m + 1][n + 1];
-        init();
+    LocalAlignment(int matchscore, int mismatchscore, int indelscore) {
+        MatchScore = matchscore;
+        MismatchScore = mismatchscore;
+        IndelScore = indelscore;
+        Init();
+//        MinSeqLength = minseqlength;
     }
 
-    public void init() {
-        initMatrix(0);
-        setScore(0);
-        setMaxI(0);
-        setMaxJ(0);
-        setMinI(0);
-        setMinJ(0);
-        this.setStr1("");
-        this.setStr2("");
-        this.setAlignedStatus("");
-        this.setAlignedStr1("");
-        this.setAlignedStr2("");
+    LocalAlignment() {
+        MatchScore = 1;
+        MismatchScore = -2;
+        IndelScore = -2;
+        Init();
     }
 
-    public void initMatrix(int score) {
-        for (int i = 0; i <= m; i++) {
-            Arrays.fill(scoreMatrix[i], score);
+    private void Init() {
+        MatrixSzie = new int[]{Seq1.length + 1, Seq2.length + 1};
+        ScoreMatrix = new int[MatrixSzie[0]][MatrixSzie[1]];
+        MaxIndex = new int[]{Seq1.length, Seq2.length};
+        MinIndex = MaxIndex.clone();
+        InitMatrix(0);
+    }
+
+    private void InitMatrix(int score) {
+        for (int i = 0; i < ScoreMatrix.length; i++) {
+            Arrays.fill(ScoreMatrix[i], score);
         }
     }
 
-    public void outputScoreMatrix() {
+    public void FindMaxIndex() {
+        for (int i = 0; i < MatrixSzie[0]; i++) {
+            for (int j = 0; j < MatrixSzie[1]; j++) {
+                if (ScoreMatrix[i][j] > MaxScore) {
+                    MaxScore = ScoreMatrix[i][j];
+                    MaxIndex[0] = i;
+                    MaxIndex[1] = j;
+                }
+            }
+        }
+    }
+
+    public void FindMinIndex() {
+        int MinI = MaxIndex[0];
+        int MinJ = MaxIndex[1];
+        while (MinI > 0 && MinJ > 0) {
+            if (ScoreMatrix[MinI][MinJ] == 0) {
+                break;
+            }
+            if (Seq1[MinI - 1] == Seq2[MinJ - 1] && ScoreMatrix[MinI][MinJ] == ScoreMatrix[MinI - 1][MinJ - 1] + MatchScore) {
+                MinI--;
+                MinJ--;
+            } else if (ScoreMatrix[MinI][MinJ] == ScoreMatrix[MinI - 1][MinJ - 1] + MismatchScore) {
+                MinI--;
+                MinJ--;
+            } else if (ScoreMatrix[MinI][MinJ] == ScoreMatrix[MinI - 1][MinJ] + IndelScore) {
+                MinI--;
+            } else {
+                MinJ--;
+            }
+        }
+        MinIndex = new int[]{MinI, MinJ};
+    }
+
+    public void CreatMatrix(String seq1, String seq2) {
+        if (MatrixSzie[0] < seq1.length() + 1 || MatrixSzie[1] < seq2.length() + 1) {
+            ScoreMatrix = new int[seq1.length() + 1][seq2.length() + 1];
+            InitMatrix(0);
+        }
+        MatrixSzie = new int[]{seq1.length() + 1, seq2.length() + 1};
+        Seq1 = seq1.toCharArray();
+        Seq2 = seq2.toCharArray();
+        int Seq1Length = Seq1.length;
+        int Seq2Length = Seq2.length;
+        int Seq1Index, Seq2Index;
+        for (Seq1Index = 0; Seq1Index < Seq1Length; Seq1Index++) {
+            for (Seq2Index = 0; Seq2Index < Seq2Length; Seq2Index++) {
+                if (Seq1[Seq1Index] == Seq2[Seq2Index]) {
+                    ScoreMatrix[Seq1Index + 1][Seq2Index + 1] = ScoreMatrix[Seq1Index][Seq2Index] + MatchScore;
+                } else {
+                    ScoreMatrix[Seq1Index + 1][Seq2Index + 1] = ScoreMatrix[Seq1Index][Seq2Index] + MismatchScore;
+                }
+                if (ScoreMatrix[Seq1Index + 1][Seq2Index + 1] < ScoreMatrix[Seq1Index + 1][Seq2Index] + IndelScore) {
+                    ScoreMatrix[Seq1Index + 1][Seq2Index + 1] = ScoreMatrix[Seq1Index + 1][Seq2Index] + IndelScore;
+                }
+                if (ScoreMatrix[Seq1Index + 1][Seq2Index + 1] < ScoreMatrix[Seq1Index][Seq2Index + 1] + IndelScore) {
+                    ScoreMatrix[Seq1Index + 1][Seq2Index + 1] = ScoreMatrix[Seq1Index][Seq2Index + 1] + IndelScore;
+                }
+                if (ScoreMatrix[Seq1Index + 1][Seq2Index + 1] < 0) {
+                    ScoreMatrix[Seq1Index + 1][Seq2Index + 1] = 0;
+                }
+            }
+        }
+    }
+    // trace back to get the maximum aligned sub-sequences
+//        alignedStr1.delete(0, alignedStr1.length());
+//        alignedStr2.delete(0, alignedStr2.length());
+//        alignedStatus.delete(0, alignedStatus.length());
+//    SeqIndex =MaxI -1;
+//    LinkerIndex =MaxJ -1;
+//
+//    int ScoreGreaterThan0 = 1;
+//        while((SeqIndex >=0)||(LinkerIndex >=0))
+//
+//    {
+//        if (SeqIndex < 0) { // deletion at the beginning of seq, insertion in linker
+//            alignedStr1.append('-');
+//            alignedStr2.append(linker.charAt(LinkerIndex));
+//            alignedStatus.append(' ');
+//            LinkerIndex--;
+//        } else if (LinkerIndex < 0) { // insertion in seq, deletion at the beginning of linker
+//            alignedStr1.append(seq.charAt(SeqIndex));
+//            alignedStr2.append('-');
+//            alignedStatus.append(' ');
+//            SeqIndex--;
+//        } else if ((ScoreMatrix[SeqIndex + 1][LinkerIndex + 1] == ScoreMatrix[SeqIndex][LinkerIndex] + MatchScore) && (seq.charAt(SeqIndex) == linker.charAt(LinkerIndex))) {
+//            // match from both strs
+//            alignedStr1.append(seq.charAt(SeqIndex));
+//            alignedStr2.append(linker.charAt(LinkerIndex));
+//            alignedStatus.append('|');
+//            SeqIndex--;
+//            LinkerIndex--;
+//        } else if (ScoreMatrix[SeqIndex + 1][LinkerIndex + 1] == ScoreMatrix[SeqIndex][LinkerIndex] + MismatchScore) {
+//            // mismatch from both strs
+//            alignedStr1.append(seq.charAt(SeqIndex));
+//            alignedStr2.append(linker.charAt(LinkerIndex));
+//            alignedStatus.append('X');
+//            SeqIndex--;
+//            LinkerIndex--;
+//        } else if (ScoreMatrix[SeqIndex + 1][LinkerIndex + 1] == ScoreMatrix[SeqIndex + 1][LinkerIndex] + IndelScore) {
+//            // deletion in seq, insertion in linker
+//            alignedStr1.append('-');
+//            alignedStr2.append(linker.charAt(LinkerIndex));
+//            alignedStatus.append(' ');
+//            LinkerIndex--;
+//        } else {
+//            // insertion in seq, deletion in linker
+//            //if (ScoreMatrix[SeqIndex + 1][LinkerIndex + 1] == ScoreMatrix[SeqIndex][LinkerIndex + 1] + IndelScore)
+//            alignedStr1.append(seq.charAt(SeqIndex));
+//            alignedStr2.append('-');
+//            alignedStatus.append(' ');
+//            SeqIndex--;
+//        }
+//        if (ScoreGreaterThan0 == 1) {
+//            if (ScoreMatrix[SeqIndex + 1][LinkerIndex + 1] <= 0) {
+//                MinI = SeqIndex + 1;
+//                MinJ = LinkerIndex + 1;
+//                ScoreGreaterThan0 = 0;
+//            }
+//        }
+//        if (debugLevel > 2) {
+//            System.out.println("SeqIndex = " + (SeqIndex + 1) + "; LinkerIndex = " + (LinkerIndex + 1));
+//        }
+//    }
+//        alignedStr1.reverse();
+//        alignedStr2.reverse();
+//        alignedStatus.reverse();
+//        if(debugLevel >2)
+//
+//    {
+//        System.out.println("seq: " + seq);
+//        System.out.println("linker: " + linker);
+//        System.out.println("aligned Score: " + Score);
+//        System.out.println("aligned seq      : " + getAlignedStr1());
+//        System.out.println("aligned strStatus : " + getAlignedStatus());
+//        System.out.println("aligned linker      : " + getAlignedStr2());
+//    }
+
+    public void PrintMatrix() {
         int index1, index2;
-        int length1 = this.getStr1().length();
-        int length2 = this.getStr2().length();
+        int length1 = Seq1.length;
+        int length2 = Seq2.length;
         System.out.println("length1 = " + length1);
         System.out.println("length2 = " + length2);
 
-        System.out.print("i = 0:");
-        for (index2 = 0; index2 <= length1; index2++) {
-            System.out.print("\t" + index2);
+        System.out.print(" \t_");
+        for (index2 = 1; index2 <= length2; index2++) {
+            System.out.print("\t" + Seq2[index2 - 1]);
+        }
+        System.out.print("\n" + "_");
+        for (int i = 0; i <= length2; i++) {
+            System.out.print("\t" + ScoreMatrix[0][i]);
         }
         System.out.println();
-        for (index1 = 0; index1 <= length1; index1++) {
-            System.out.print("i = " + index1 + ":");
+        for (index1 = 1; index1 <= length1; index1++) {
+            System.out.print(Seq1[index1 - 1]);
             for (index2 = 0; index2 <= length2; index2++) {
-                System.out.print("\t" + scoreMatrix[index1][index2]);
+                System.out.print("\t" + ScoreMatrix[index1][index2]);
             }
             System.out.println();
         }
     }
 
-    public void Align(String str1, String str2) {
-        int length1 = str1.length();
-        int length2 = str2.length();
-        // adjust the dimension of the score matrix
-        boolean dimensionChanged = false;
-        if (m < length1) {
-            m = length1;
-            dimensionChanged = true;
-        }
-        if (n < length2) {
-            n = length2;
-            dimensionChanged = true;
-        }
-        if (dimensionChanged) {
-            scoreMatrix = new int[m + 1][n + 1];
-        }
-        init();
-        this.setStr1(str1);
-        this.setStr2(str2);
-
-        // alignment to generate the maximum score
-        int index1, index2;
-        for (index1 = 0; index1 < length1; index1++) {
-            for (index2 = 0; index2 < length2; index2++) {
-                if (str1.charAt(index1) == str2.charAt(index2)) {
-                    scoreMatrix[index1 + 1][index2 + 1] = scoreMatrix[index1][index2] + MatchScore;
-                } else {
-                    scoreMatrix[index1 + 1][index2 + 1] = scoreMatrix[index1][index2] + MismatchScore;
-                }
-                if (scoreMatrix[index1 + 1][index2 + 1] < scoreMatrix[index1 + 1][index2] + IndelScore) {
-                    scoreMatrix[index1 + 1][index2 + 1] = scoreMatrix[index1 + 1][index2] + IndelScore;
-                }
-                if (scoreMatrix[index1 + 1][index2 + 1] < scoreMatrix[index1][index2 + 1] + IndelScore) {
-                    scoreMatrix[index1 + 1][index2 + 1] = scoreMatrix[index1][index2 + 1] + IndelScore;
-                }
-                if (scoreMatrix[index1 + 1][index2 + 1] < 0) {
-                    scoreMatrix[index1 + 1][index2 + 1] = 0;
-                }
-                if (score < scoreMatrix[index1 + 1][index2 + 1]) {
-                    setScore(scoreMatrix[index1 + 1][index2 + 1]);
-                    setMaxI(index1 + 1);
-                    setMaxJ(index2 + 1);
-                }
-            }
-        }
-
-        // trace back to get the maximum aligned sub-sequences
-        alignedStr1.delete(0, alignedStr1.length());
-        alignedStr2.delete(0, alignedStr2.length());
-        alignedStatus.delete(0, alignedStatus.length());
-        index1 = maxI - 1;
-        index2 = maxJ - 1;
-
-        int scoreGreaterThan0 = 1;
-        while ((index1 >= 0) || (index2 >= 0)) {
-            if (index1 < 0) { // deletion at the beginning of str1, insertion in str2
-                alignedStr1.append('-');
-                alignedStr2.append(str2.charAt(index2));
-                alignedStatus.append(' ');
-                index2--;
-            } else if (index2 < 0) { // insertion in str1, deletion at the beginning of str2
-                alignedStr1.append(str1.charAt(index1));
-                alignedStr2.append('-');
-                alignedStatus.append(' ');
-                index1--;
-            } else if ((scoreMatrix[index1 + 1][index2 + 1] == scoreMatrix[index1][index2] + MatchScore) && (str1.charAt(index1) == str2.charAt(index2))) {
-                // match from both strs
-                alignedStr1.append(str1.charAt(index1));
-                alignedStr2.append(str2.charAt(index2));
-                alignedStatus.append('|');
-                index1--;
-                index2--;
-            } else if (scoreMatrix[index1 + 1][index2 + 1] == scoreMatrix[index1][index2] + MismatchScore) {
-                // mismatch from both strs
-                alignedStr1.append(str1.charAt(index1));
-                alignedStr2.append(str2.charAt(index2));
-                alignedStatus.append('X');
-                index1--;
-                index2--;
-            } else if (scoreMatrix[index1 + 1][index2 + 1] == scoreMatrix[index1 + 1][index2] + IndelScore) {
-                // deletion in str1, insertion in str2
-                alignedStr1.append('-');
-                alignedStr2.append(str2.charAt(index2));
-                alignedStatus.append(' ');
-                index2--;
-            } else {
-                // insertion in str1, deletion in str2
-                //if (scoreMatrix[index1 + 1][index2 + 1] == scoreMatrix[index1][index2 + 1] + IndelScore)
-                alignedStr1.append(str1.charAt(index1));
-                alignedStr2.append('-');
-                alignedStatus.append(' ');
-                index1--;
-            }
-            if (scoreGreaterThan0 == 1) {
-                if (scoreMatrix[index1 + 1][index2 + 1] <= 0) {
-                    minI = index1 + 1;
-                    minJ = index2 + 1;
-                    scoreGreaterThan0 = 0;
-                }
-            }
-            if (debugLevel > 2) {
-                System.out.println("index1 = " + (index1 + 1) + "; index2 = " + (index2 + 1));
-            }
-        }
-        alignedStr1.reverse();
-        alignedStr2.reverse();
-        alignedStatus.reverse();
-        if (debugLevel > 2) {
-            System.out.println("str1: " + str1);
-            System.out.println("str2: " + str2);
-            System.out.println("aligned score: " + score);
-            System.out.println("aligned str1      : " + getAlignedStr1());
-            System.out.println("aligned strStatus : " + getAlignedStatus());
-            System.out.println("aligned str2      : " + getAlignedStr2());
-        }
-    }
-
     public static void main(String[] args) throws IOException {
-        if (args.length == 2) {
-            LocalAlignment localAligner = new LocalAlignment(args[0].length(), args[1].length());
-            //localAligner.Align("AACCGGTT", "ACCGTATT");
-            localAligner.setDebugLevel(3);
-            localAligner.Align(args[0], args[1]);
-
-        } else {
-            System.out.println("Usage: java LocalAlignment <sequence 1> <sequence 2>");
+        if (args.length < 2) {
+            System.out.println("Usage: java LocalAlignment <sequence 1> <sequence 2> [option]");
             System.exit(0);
         }
+        if (args.length == 2) {
+            LocalAlignment localAligner = new LocalAlignment();
+            localAligner.CreatMatrix(args[0], args[1]);
+            localAligner.FindMaxIndex();
+            localAligner.FindMinIndex();
+            localAligner.PrintMatrix();
+            //localAligner.CreatMatrix("AACCGGTT", "ACCGTATT");
+        } else {
+            LocalAlignment localAligner = new LocalAlignment(Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]));
+            localAligner.CreatMatrix(args[0], args[1]);
+        }
     }
 
-    /**
-     * @return the scoreMatrix
-     */
-    public int[][] getScoreMatrix() {
-        return scoreMatrix;
+    public int getMaxScore() {
+        return MaxScore;
     }
 
-    /**
-     * @return the score
-     */
-    public int getScore() {
-        return score;
+    public int[] getMaxIndex() {
+        return MaxIndex;
     }
 
-    /**
-     * @param score the score to set
-     */
-    public void setScore(int score) {
-        this.score = score;
-    }
-
-    /**
-     * @return the maxI
-     */
-    public int getMaxI() {
-        return maxI;
-    }
-
-    /**
-     * @param maxI the maxI to set
-     */
-    public void setMaxI(int maxI) {
-        this.maxI = maxI;
-    }
-
-    /**
-     * @return the maxJ
-     */
-    public int getMaxJ() {
-        return maxJ;
-    }
-
-    /**
-     * @param maxJ the maxJ to set
-     */
-    public void setMaxJ(int maxJ) {
-        this.maxJ = maxJ;
-    }
-
-    /**
-     * @return the m
-     */
-    public int getM() {
-        return m;
-    }
-
-    /**
-     * @param m the m to set
-     */
-    public void setM(int m) {
-        this.m = m;
-    }
-
-    /**
-     * @return the n
-     */
-    public int getN() {
-        return n;
-    }
-
-    /**
-     * @param n the n to set
-     */
-    public void setN(int n) {
-        this.n = n;
-    }
-
-    /**
-     * @return the MatchScore
-     */
-    public int getMatchScore() {
-        return MatchScore;
-    }
-
-    /**
-     * @param MatchScore the MatchScore to set
-     */
-    public void setMatchScore(int MatchScore) {
-        this.MatchScore = MatchScore;
-    }
-
-    /**
-     * @return the MismatchScore
-     */
-    public int getMismatchScore() {
-        return MismatchScore;
-    }
-
-    /**
-     * @param MismatchScore the MismatchScore to set
-     */
-    public void setMismatchScore(int MismatchScore) {
-        this.MismatchScore = MismatchScore;
-    }
-
-    /**
-     * @return the IndelScore
-     */
-    public int getIndelScore() {
-        return IndelScore;
-    }
-
-    /**
-     * @param IndelScore the IndelScore to set
-     */
-    public void setIndelScore(int IndelScore) {
-        this.IndelScore = IndelScore;
-    }
-
-    /**
-     * @return the str1
-     */
-    public String getStr1() {
-        return str1;
-    }
-
-    /**
-     * @param str1 the str1 to set
-     */
-    public void setStr1(String str1) {
-        this.str1 = str1;
-    }
-
-    /**
-     * @return the str2
-     */
-    public String getStr2() {
-        return str2;
-    }
-
-    /**
-     * @param str2 the str2 to set
-     */
-    public void setStr2(String str2) {
-        this.str2 = str2;
-    }
-
-    /**
-     * @return the alignedStr1
-     */
-    public String getAlignedStr1() {
-        return alignedStr1.toString();
-    }
-
-    /**
-     * @param alignedStr1 the alignedStr1 to set
-     */
-    public void setAlignedStr1(String alignedStr1) {
-        this.alignedStr1 = new StringBuilder(alignedStr1);
-    }
-
-    /**
-     * @return the alignedStr2
-     */
-    public String getAlignedStr2() {
-        return alignedStr2.toString();
-    }
-
-    /**
-     * @param alignedStr2 the alignedStr2 to set
-     */
-    public void setAlignedStr2(String alignedStr2) {
-        this.alignedStr2 = new StringBuilder(alignedStr2);
-    }
-
-    /**
-     * @return the alignedStatus
-     */
-    public String getAlignedStatus() {
-        return alignedStatus.toString();
-    }
-
-    /**
-     * @param alignedStatus the alignedStatus to set
-     */
-    public void setAlignedStatus(String alignedStatus) {
-        this.alignedStatus = new StringBuilder(alignedStatus);
-    }
-
-    /**
-     * @return the debugLevel
-     */
-    public int getDebugLevel() {
-        return debugLevel;
-    }
-
-    /**
-     * @param debugLevel the debugLevel to set
-     */
-    public void setDebugLevel(int debugLevel) {
-        this.debugLevel = debugLevel;
-    }
-
-    /**
-     * @return the minI
-     */
-    public int getMinI() {
-        return minI;
-    }
-
-    /**
-     * @param minI the minI to set
-     */
-    public void setMinI(int minI) {
-        this.minI = minI;
-    }
-
-    /**
-     * @return the minJ
-     */
-    public int getMinJ() {
-        return minJ;
-    }
-
-    /**
-     * @param minJ the minJ to set
-     */
-    public void setMinJ(int minJ) {
-        this.minJ = minJ;
+    public int[] getMinIndex() {
+        return MinIndex;
     }
 }
