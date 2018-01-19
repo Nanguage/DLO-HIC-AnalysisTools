@@ -2,13 +2,13 @@ import java.io.*;
 import java.util.Date;
 
 public class PreProcess {
-    private String OutPath;
-    private String OutPrefix;
-    private String FastqFile;
-    private String LinkerFile;
-    private String LinkerFilterOutPrefix;
-    private int Threads = 1;
-    private LinkerFiltering lk;
+    private String OutPath;//输出路径
+    private String OutPrefix;//输出前缀
+    private String FastqFile;//Fastq文件
+    private String LinkerFile;//linker文件
+    private String LinkerFilterOutPrefix;//linker过滤输出前缀
+    private int Threads = 1;//线程数，默认1
+    private LinkerFiltering lk;//声明一个linkerFiltering类
 
     PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, int threads) throws IOException {
         OutPath = outpath;
@@ -17,6 +17,7 @@ public class PreProcess {
         LinkerFile = linkerfile;
         Threads = threads;
         Init();
+        //实例化一个LinkerFiltering对象
         lk = new LinkerFiltering(FastqFile, LinkerFile, LinkerFilterOutPrefix, 0, Threads * 4);
     }
 
@@ -45,4 +46,5 @@ public class PreProcess {
         }
         LinkerFilterOutPrefix = OutPath + "/" + OutPrefix + ".linkerfilter";
     }
+
 }

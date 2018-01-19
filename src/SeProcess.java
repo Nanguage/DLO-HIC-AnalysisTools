@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 
+/**
+ * @author snowf
+ * @version 1.0
+ */
+
 class SeProcess {
     private String Prefix;//输出前缀
     private String IndexFile;//比对索引文件
@@ -50,6 +55,16 @@ class SeProcess {
         Init();
     }
 
+    /**
+     * <p>单端数据处理</p>
+     * <p>1. linker聚类（区分不同的linker）</p>
+     * <p>2. 比对</p>
+     * <p>3. sam文件过滤</p>
+     * <p>4. sam转bed</p>
+     * <p>5. bed文件排序</p>
+     *
+     * @throws IOException
+     */
     public void Run() throws IOException {
         Routine Se = new Routine();
         Se.Threads = Threads;
@@ -57,6 +72,7 @@ class SeProcess {
         //区分不同类型的linker，并放到不同的文件中（中间会过滤掉比对质量较低，和无法延长的序列）
         Se.ClusterLinker(PastFile, LinkerFastqFile, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, RestrictionSeq, AddSeq, AddQuality, SeNum);
         Thread[] process = new Thread[UseLinkerType.length];
+        //处理可用的linker类型（每个线程处理一种linker类型）
         for (int i = 0; i < UseLinkerType.length; i++) {
             int finalI = i;
             process[i] = new Thread(new Runnable() {
@@ -64,10 +80,14 @@ class SeProcess {
                 public void run() {
                     try {
 //                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start\t" + LinkersType[finalI]);
+                        //比对
                         Se.Align(IndexFile, UseLinkerFastqFile[finalI], SamFile[finalI], AlignThreads, MisMatch);
+                        //Sam文件过滤
                         Se.SamFilter(SamFile[finalI], FilterSamFile[finalI], MinQuality);
+                        //Sam文件转bam再转bed
                         Se.SamToBed(FilterSamFile[finalI], BamFile[finalI], BedFile[finalI]);
                         synchronized (process) {
+                            //对bed文件排序（由于在大量数据下bed文件会比较大，所以为了减少内存消耗，bed文件排序使用串行）
                             CommonMethod.SortFile(BedFile[finalI], new int[]{4}, "", "\\s+", SortBedFile[finalI], Threads);
                         }
 //                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end\t" + LinkersType[finalI]);
@@ -85,11 +105,11 @@ class SeProcess {
                 e.printStackTrace();
             }
         }
+        //删掉过滤后的sam文件（有bam文件，所以不用留sam文件，节省空间）
         for (String samfile : FilterSamFile) {
             System.out.println(new Date() + "\tDelete " + samfile);
             new File(samfile).delete();
         }
-        //--------------------------------------------------------------------------------------------
     }
 
     public static void main(String[] args) throws IOException {
@@ -218,23 +238,25 @@ class SeProcess {
         }
     }
 
+    /**
+     * <p>类的初始化</p>
+     * <p>检测输出路径，判断单端类型（哪一端），构建输出文件</p>
+     */
     private void Init() {
         if (!new File(OutPath).isDirectory()) {
             new File(OutPath).mkdirs();
         }
-        String dir;
+        String dir = "";
         if (SeNum == 1) {
-            dir = "left";
-            if (!new File(OutPath + "/left").isDirectory()) {
-                new File(OutPath + "/left").mkdir();
-            }
+            dir = "R1";
         } else if (SeNum == 2) {
-            dir = "right";
-            if (!new File(OutPath + "/right").isDirectory()) {
-                new File(OutPath + "/right").mkdir();
-            }
+            dir = "R2";
         } else {
-            dir = "";
+            System.err.println("Error Single Type!\t" + SeNum);
+            System.exit(0);
+        }
+        if (!new File(OutPath + "/" + dir).isDirectory()) {
+            new File(OutPath + "/" + dir).mkdir();
         }
         LinkerFastqFile = new String[LinkersType.length];
         UseLinkerFastqFile = new String[UseLinkerType.length];
