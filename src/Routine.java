@@ -269,7 +269,6 @@ public class Routine {
      *
      * @param PastFastq              输入文件
      * @param LinkerFastq            不同类型的linker文件（输出为fastq格式）
-     * @param Index                  需要的linker类型的索引
      * @param MinReadsLength         最小reads长度
      * @param MaxReadsLength         最大reads长度
      * @param MinLinkerFilterQuality linker比对的最小质量
@@ -279,7 +278,7 @@ public class Routine {
      * @param Type                   单端类型（1或2）
      * @throws IOException
      */
-    public void ClusterLinker(String PastFastq, String[] LinkerFastq, int[] Index, int MinReadsLength, int MaxReadsLength, int MinLinkerFilterQuality, String Restriction, String AddSeq, String AddQuality, int Type) throws IOException {
+    public void ClusterLinker(String PastFastq, String[] LinkerFastq, int MinReadsLength, int MaxReadsLength, int MinLinkerFilterQuality, String Restriction, String AddSeq, String AddQuality, int Type) throws IOException {
         BufferedReader fastq_read = new BufferedReader(new FileReader(PastFastq));
         BufferedWriter[] fastq_write = new BufferedWriter[LinkerFastq.length];
         for (int i = 0; i < LinkerFastq.length; i++) {
@@ -298,24 +297,21 @@ public class Routine {
                         try {
 //                            System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " begin");
                             while ((line = fastq_read.readLine()) != null) {
-                                str = line.split("\\s+");
+                                str = line.split("\\t+");
                                 for (int j = 0; j < LinkerFastq.length; j++) {
-                                    if (str[0].length() >= MinReadsLength && Integer.parseInt(str[4]) >= MinLinkerFilterQuality && Integer.parseInt(str[3]) == Index[j]) {
+                                    if (str[0].length() >= MinReadsLength && Integer.parseInt(str[5]) >= MinLinkerFilterQuality && Integer.parseInt(str[4]) == j) {
                                         if (AppendBase(str[0], Restriction, Type)) {
+                                            int len = 0;
                                             if (str[0].length() >= MaxReadsLength) {
-                                                synchronized (process) {
-                                                    fastq_write[j].write(str[10] + "\n");
-                                                    fastq_write[j].write(str[0].substring(str[0].length() - MaxReadsLength, str[0].length()) + AddSeq + "\n");
-                                                    fastq_write[j].write(str[13] + "\n");
-                                                    fastq_write[j].write(str[14].substring(str[0].length() - MaxReadsLength, str[0].length()) + AddQuality + "\n");
-                                                }
+                                                len = str[0].length();
                                             } else {
-                                                synchronized (process) {
-                                                    fastq_write[j].write(str[10] + "\n");
-                                                    fastq_write[j].write(str[0] + AddSeq + "\n");
-                                                    fastq_write[j].write(str[13] + "\n");
-                                                    fastq_write[j].write(str[14].substring(0, str[0].length()) + AddQuality + "\n");
-                                                }
+                                                len = MaxReadsLength;
+                                            }
+                                            synchronized (process) {
+                                                fastq_write[j].write(str[6] + "\n");
+                                                fastq_write[j].write(str[0].substring(len - MaxReadsLength, str[0].length()) + AddSeq + "\n");
+                                                fastq_write[j].write(str[8] + "\n");
+                                                fastq_write[j].write(str[9].substring(len - MaxReadsLength, str[0].length()) + AddQuality + "\n");
                                             }
                                         }
                                         break;
@@ -355,24 +351,21 @@ public class Routine {
                         try {
 //                            System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " begin");
                             while ((line = fastq_read.readLine()) != null) {
-                                str = line.split("\\s+");
+                                str = line.split("\\t+");
                                 for (int j = 0; j < LinkerFastq.length; j++) {
-                                    if (str[2].length() >= MinReadsLength && Integer.parseInt(str[4]) >= MinLinkerFilterQuality && Integer.parseInt(str[3]) == Index[j]) {
-                                        if (AppendBase(str[2], Restriction, Type)) {
-                                            if (str[2].length() >= MaxReadsLength) {
-                                                synchronized (process) {
-                                                    fastq_write[j].write(str[10] + "\n");
-                                                    fastq_write[j].write(AddSeq + str[2].substring(0, MaxReadsLength) + "\n");
-                                                    fastq_write[j].write(str[13] + "\n");
-                                                    fastq_write[j].write(AddQuality + str[14].substring(Integer.parseInt(str[1]) - 1, Integer.parseInt(str[1]) - 1 + MaxReadsLength) + "\n");
-                                                }
+                                    if (str[3].length() >= MinReadsLength && Integer.parseInt(str[5]) >= MinLinkerFilterQuality && Integer.parseInt(str[4]) == j) {
+                                        if (AppendBase(str[3], Restriction, Type)) {
+                                            int len = 0;
+                                            if (str[3].length() >= MaxReadsLength) {
+                                                len = MaxReadsLength;
                                             } else {
-                                                synchronized (process) {
-                                                    fastq_write[j].write(str[10] + "\n");
-                                                    fastq_write[j].write(AddSeq + str[2].substring(0, MinReadsLength) + "\n");
-                                                    fastq_write[j].write(str[13] + "\n");
-                                                    fastq_write[j].write(AddQuality + str[14].substring(Integer.parseInt(str[1]) - 1, Integer.parseInt(str[1]) - 1 + MinReadsLength) + "\n");
-                                                }
+                                                len = str[3].length();
+                                            }
+                                            synchronized (process) {
+                                                fastq_write[j].write(str[6] + "\n");
+                                                fastq_write[j].write(AddSeq + str[3].substring(0, len) + "\n");
+                                                fastq_write[j].write(str[8] + "\n");
+                                                fastq_write[j].write(AddQuality + str[9].substring(Integer.parseInt(str[2]) + 1, Integer.parseInt(str[2]) + 1 + len) + "\n");
                                             }
                                         }
                                         break;
@@ -1007,6 +1000,7 @@ public class Routine {
                     }
                 }
                 chrwrite.write(++Count + "\t+\t" + Chr + "\t" + len + "\n");
+                chrwrite.close();
                 Seq.setLength(0);
                 Chr = line.split("\\s+")[0].replace(">", "");
             } else {
@@ -1026,6 +1020,7 @@ public class Routine {
             }
         }
         chrwrite.write(++Count + "\t+\t" + Chr + "\t" + len + "\n");
+        chrwrite.close();
         Seq.setLength(0);
         return ChrSize;
     }

@@ -21,6 +21,7 @@ public class Main {
     private int LinkerLength;//linker长度
     private int MatchScore;//linker过滤匹配分数
     private int MisMatchScore;//linker过滤错配分数
+    private int IndelScore;//linker过滤插入缺失分数
     private int MaxMisMatchLength;//linker过滤最大错配数
     private String IndexFile;//比对索引
     private int AlignMisMatch;//bwa等比对最小错配数
@@ -31,7 +32,7 @@ public class Main {
     private int Resolution;//分辨率
     private int Threads;//线程数
     //    private String ConfigureFile;//配置文件
-    private String ReProcessDir;//预处理输出目录
+    private String PreProcessDir;//预处理输出目录
     private String SeProcessDir;//单端处理输出目录
     private String BedpeProcessDir;//bedpe处理输出目录
     private String MakeMatrixDir;//建立矩阵输出目录
@@ -67,12 +68,11 @@ public class Main {
         String InterBedpeFile = BedpeProcessDir + "/" + OutPrefix + ".inter.bedpe";
         Routine step = new Routine();
         step.Threads = Threads;//设置线程数
-        //=========================================Re Process==预处理=============================================
-        PreProcess reprocess = new PreProcess(ReProcessDir, OutPrefix, FastqFile, LinkerFile);
-        reprocess.Threads = Threads;//设置预处理的线程数
-        reprocess.Run();//运行预处理
-        String PastFile = reprocess.getPastFile();//获取past文件位置
-        reprocess = null;
+        //=========================================linker filter==linker 过滤=============================================
+        PreProcess preprocess = new PreProcess(PreProcessDir, OutPrefix, FastqFile, LinkerFile, MatchScore, MisMatchScore, IndelScore, Threads);
+        preprocess.Run();//运行预处理
+        String PastFile = preprocess.getPastFile();//获取past文件位置
+        preprocess = null;
         //=======================================Se Process===单端处理=============================================
         SeProcess seleft = new SeProcess(SeProcessDir, OutPrefix, PastFile, LinkersType, UseLinker, IndexFile, MatchRestriction[0], AddSeq[0], 1, AlignMisMatch);//左端处理类
         SeProcess seright = new SeProcess(SeProcessDir, OutPrefix, PastFile, LinkersType, UseLinker, IndexFile, MatchRestriction[1], AddSeq[1], 2, AlignMisMatch);//右端处理类
@@ -242,6 +242,10 @@ public class Main {
                         MisMatchScore = Integer.parseInt(str[2]);
                         System.out.println("MisMatch Score:\t" + MisMatchScore);
                         break;
+                    case "IndelScore":
+                        IndelScore = Integer.parseInt(str[2]);
+                        System.out.println("Indel Score:\t" + IndelScore);
+                        break;
                     case "MaxMisMatchLength":
                         MaxMisMatchLength = Integer.parseInt(str[2]);
                         System.out.println("Max MisMatch Length:\t" + MaxMisMatchLength);
@@ -377,6 +381,10 @@ public class Main {
             MisMatchScore = -2;
             System.out.println("MisMatch Score:\t" + MisMatchScore);
         }
+        if (IndelScore == 0) {
+            IndelScore = -2;
+            System.out.println("Indel Score:\t" + IndelScore);
+        }
         if (AlignThread == 0) {
             AlignThread = 4;
             System.out.println("CreatMatrix Thread:\t" + AlignThread);
@@ -412,7 +420,7 @@ public class Main {
         BufferedReader infile = new BufferedReader(new FileReader(LinkerFile));
         LinkerLength = infile.readLine().length();
         infile.close();
-        ReProcessDir = OutPath + "/PreProcess";
+        PreProcessDir = OutPath + "/PreProcess";
         SeProcessDir = OutPath + "/SeProcess";
         BedpeProcessDir = OutPath + "/BedpeProcess";
         MakeMatrixDir = OutPath + "/MakeMatrix";

@@ -5,34 +5,31 @@ import java.util.Date;
 import java.util.Hashtable;
 
 class SeProcess {
-    private String Prefix;
-    private String IndexFile;
-    public int Threads = 1;
-    private int SeNum;
-    private int MisMatch;
-    private String RestrictionSeq;
-    private String AddSeq;
-    private String[] LinkersType;
-    private String[] UseLinkerType;
-    private int[] Index;
-    private String AddQuality;
-    private int RestrictionLength;
-    public int Phred = 33;
-    public int MinQuality = 20;
-    public int MaxReadsLength = 20;
-    public int MinReadsLength = 16;
-    public int AlignThreads = 8;
-    public int MinLinkerFilterQuality = 34;
-    private String OutPath;
-    private String PastFile;
-    private int[] ChrSize;
-    //--------------------------------------------------------------------------
-    private String[] LinkerFastqFile;
-    private String[] SamFile;
-    private String[] FilterSamFile;
-    private String[] BamFile;
-    private String[] BedFile;
-    private String[] SortBedFile;
+    private String Prefix;//输出前缀
+    private String IndexFile;//比对索引文件
+    public int Threads = 1;//线程数
+    private int SeNum;//单端类型(R1 or R2)
+    private int MisMatch;//错配数，bwa中使用
+    private String RestrictionSeq;//需要匹配的酶切位点序列
+    private String AddSeq;//需要延长的序列
+    private String[] LinkersType;//linker类型
+    private String[] UseLinkerType;//有用的linker类型
+    private String AddQuality;//延长的序列
+    public int Phred = 33;//Fastq格式
+    private int MinQuality = 20;//最小比对质量
+    private int MaxReadsLength = 20;//最长reads长度
+    private int MinReadsLength = 16;//最短reads长度
+    private int AlignThreads = 8;//比对线程数
+    public int MinLinkerFilterQuality = 34;//最小linker过滤的比对质量
+    private String OutPath;//输出目录
+    private String PastFile;//输入文件(linker过滤的结果文件)
+    private String[] LinkerFastqFile;//不同linker类型的Fastq文件
+    private String[] UseLinkerFastqFile;//可用的linker类型的Fastq文件
+    private String[] SamFile;//Sam文件
+    private String[] FilterSamFile;//过滤后的Sam文件
+    private String[] BamFile;//Bam文件
+    private String[] BedFile;//Bed文件
+    private String[] SortBedFile;//排序后的bed文件
 
     SeProcess(String outPath, String prefix, String pastfile, String[] linkerstype, String[] uselinker, String index, String restrictionSeq, String addseq, int num, int mismatch) {
         OutPath = outPath;
@@ -57,7 +54,8 @@ class SeProcess {
         Routine Se = new Routine();
         Se.Threads = Threads;
         //========================================================================================
-        Se.ClusterLinker(PastFile, LinkerFastqFile, Index, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, RestrictionSeq, AddSeq, AddQuality, SeNum);
+        //区分不同类型的linker，并放到不同的文件中（中间会过滤掉比对质量较低，和无法延长的序列）
+        Se.ClusterLinker(PastFile, LinkerFastqFile, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, RestrictionSeq, AddSeq, AddQuality, SeNum);
         Thread[] process = new Thread[UseLinkerType.length];
         for (int i = 0; i < UseLinkerType.length; i++) {
             int finalI = i;
@@ -66,7 +64,7 @@ class SeProcess {
                 public void run() {
                     try {
 //                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start\t" + LinkersType[finalI]);
-                        Se.Align(IndexFile, LinkerFastqFile[finalI], SamFile[finalI], AlignThreads, MisMatch);
+                        Se.Align(IndexFile, UseLinkerFastqFile[finalI], SamFile[finalI], AlignThreads, MisMatch);
                         Se.SamFilter(SamFile[finalI], FilterSamFile[finalI], MinQuality);
                         Se.SamToBed(FilterSamFile[finalI], BamFile[finalI], BedFile[finalI]);
                         synchronized (process) {
@@ -107,14 +105,14 @@ class SeProcess {
         return SortBedFile;
     }
 
-    public int[] GetChrSize(String[] Chromosome) throws IOException {
-        Hashtable<String, Integer> list = CommonMethod.GetChromosomeSize(IndexFile + ".ann");
-        ChrSize = new int[Chromosome.length];
-        for (int i = 0; i < Chromosome.length; i++) {
-            ChrSize[i] = list.get(Chromosome[i]);
-        }
-        return ChrSize;
-    }
+//    public int[] GetChrSize(String[] Chromosome) throws IOException {
+//        Hashtable<String, Integer> list = CommonMethod.GetChromosomeSize(IndexFile + ".ann");
+//        int[] chrSize = new int[Chromosome.length];
+//        for (int i = 0; i < Chromosome.length; i++) {
+//            chrSize[i] = list.get(Chromosome[i]);
+//        }
+//        return chrSize;
+//    }
 
     private void GetOption(String ConfigFile) throws IOException {
         BufferedReader file = new BufferedReader(new FileReader(ConfigFile));
@@ -238,27 +236,24 @@ class SeProcess {
         } else {
             dir = "";
         }
-        LinkerFastqFile = new String[UseLinkerType.length];
+        LinkerFastqFile = new String[LinkersType.length];
+        UseLinkerFastqFile = new String[UseLinkerType.length];
         SamFile = new String[UseLinkerType.length];
         FilterSamFile = new String[UseLinkerType.length];
         BamFile = new String[UseLinkerType.length];
         BedFile = new String[UseLinkerType.length];
         SortBedFile = new String[UseLinkerType.length];
-        RestrictionLength = RestrictionSeq.length() + AddSeq.length();
-        Index = new int[UseLinkerType.length];
+        int restrictionLength = RestrictionSeq.length() + AddSeq.length();
+        for (int i = 0; i < LinkersType.length; i++) {
+            LinkerFastqFile[i] = OutPath + "/" + dir + "/" + Prefix + "." + SeNum + "." + restrictionLength + "linker." + LinkersType[i] + ".fastq";
+        }
         for (int i = 0; i < UseLinkerType.length; i++) {
-            LinkerFastqFile[i] = OutPath + "/" + dir + "/" + Prefix + "." + SeNum + "." + RestrictionLength + "linker." + UseLinkerType[i] + ".fastq";
-            SamFile[i] = LinkerFastqFile[i].replace(".fastq", "." + MisMatch + ".sam");
+            UseLinkerFastqFile[i] = OutPath + "/" + dir + "/" + Prefix + "." + SeNum + "." + restrictionLength + "linker." + UseLinkerType[i] + ".fastq";
+            SamFile[i] = UseLinkerFastqFile[i].replace(".fastq", "." + MisMatch + ".sam");
             FilterSamFile[i] = SamFile[i].replace(".sam", ".uniq.sam");
             BamFile[i] = FilterSamFile[i].replace(".uniq.sam", ".bam");
             BedFile[i] = BamFile[i].replace(".bam", ".bed");
             SortBedFile[i] = BedFile[i].replace(".bed", ".sort.bed");
-            for (int j = 0; j < LinkersType.length; j++) {
-                if (LinkersType[j].equals(UseLinkerType[i])) {
-                    Index[i] = j;
-                    break;
-                }
-            }
         }
         if (Phred == 33) {
             AddQuality = "I";

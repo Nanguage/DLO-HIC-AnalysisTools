@@ -92,8 +92,7 @@ public class test_class {
         Routine step = new Routine();
         step.Threads = Threads;//设置线程数
         //=========================================Re Process==预处理=============================================
-        PreProcess reprocess = new PreProcess(ReProcessDir, OutPrefix, FastqFile, LinkerFile);
-        reprocess.Threads = Threads;//设置预处理的线程数
+        PreProcess reprocess = new PreProcess(ReProcessDir, OutPrefix, FastqFile, LinkerFile, Threads);
 //        reprocess.Run();//运行预处理
         String PastFile = reprocess.getPastFile();//获取past文件位置
         //=======================================Se Process===单端处理=============================================

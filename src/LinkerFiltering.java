@@ -23,13 +23,15 @@ import java.util.ArrayList;
 import java.util.Date;
 
 /**
- * @author ligl
+ * @author snowf
  */
 public class LinkerFiltering {
 
-    private String SequenceFile;
+    private String FastqFile;
     private String LinkerFile;
     private String OutputPrefix;
+    private String OutFile;
+    private String DistributionFile;
     private String[] linkers;
     private int nLinkers = 0;
     private int[] scoreHist;
@@ -43,8 +45,8 @@ public class LinkerFiltering {
     private int MisMatchScore;
     private int IndelScore;
 
-    LinkerFiltering(String sequenceFile, String linkerFile, String outputPrefix, int flip_tail, int Threads) throws IOException {
-        SequenceFile = sequenceFile;
+    LinkerFiltering(String fastqFile, String linkerFile, String outputPrefix, int flip_tail, int Threads) throws IOException {
+        FastqFile = fastqFile;
         LinkerFile = linkerFile;
         OutputPrefix = outputPrefix;
         this.flip_tail = flip_tail;
@@ -56,8 +58,8 @@ public class LinkerFiltering {
 
     }
 
-    LinkerFiltering(String sequenceFile, String linkerFile, String outputPrefix, int matchscore, int mismatchscore, int indelscore, int flip_tail, int Threads) throws IOException {
-        SequenceFile = sequenceFile;
+    LinkerFiltering(String fastqFile, String linkerFile, String outputPrefix, int matchscore, int mismatchscore, int indelscore, int flip_tail, int Threads) throws IOException {
+        FastqFile = fastqFile;
         LinkerFile = linkerFile;
         OutputPrefix = outputPrefix;
         this.flip_tail = flip_tail;
@@ -78,11 +80,13 @@ public class LinkerFiltering {
             System.out.println("Too many linkers. Please check!!!");
             System.exit(0);
         }
+        OutFile = OutputPrefix + ".output.txt";
+        DistributionFile = OutputPrefix + ".ScoreDistribution.txt";
     }
 
     public void Run() throws IOException {
-        BufferedReader infile = new BufferedReader(new FileReader(SequenceFile));
-        BufferedWriter outfile = new BufferedWriter(new FileWriter(OutputPrefix + ".output.txt"));
+        BufferedReader infile = new BufferedReader(new FileReader(FastqFile));
+        BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
         final int[] Count = new int[]{0};
         LocalAlignment[] local = new LocalAlignment[Threads];
         for (int i = 0; i < Threads; i++) {
@@ -180,7 +184,7 @@ public class LinkerFiltering {
     }
 
     private void printDistribution() throws IOException {
-        PrintWriter fileOut = new PrintWriter(new FileOutputStream(this.OutputPrefix + ".ScoreDistribution.txt"));
+        PrintWriter fileOut = new PrintWriter(new FileOutputStream(DistributionFile));
 
         fileOut.println("schoreHist");
         for (int i = 0; i < scoreHist.length; i++) {
@@ -256,5 +260,13 @@ public class LinkerFiltering {
             }
         }
         return result.toString();
+    }
+
+    public String getDistributionFile() {
+        return DistributionFile;
+    }
+
+    public String getOutFile() {
+        return OutFile;
     }
 }
