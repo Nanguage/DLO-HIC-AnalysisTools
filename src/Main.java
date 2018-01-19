@@ -68,7 +68,7 @@ public class Main {
         Routine step = new Routine();
         step.Threads = Threads;//设置线程数
         //=========================================Re Process==预处理=============================================
-        ReProcess reprocess = new ReProcess(ReProcessDir, OutPrefix, FastqFile, LinkerFile);
+        PreProcess reprocess = new PreProcess(ReProcessDir, OutPrefix, FastqFile, LinkerFile);
         reprocess.Threads = Threads;//设置预处理的线程数
         reprocess.Run();//运行预处理
         String PastFile = reprocess.getPastFile();//获取past文件位置
@@ -179,6 +179,9 @@ public class Main {
         String[] str;
         BufferedReader infile = new BufferedReader(new FileReader(Infile));
         while ((line = infile.readLine()) != null) {
+            if (line.equals("")) {
+                continue;
+            }
             str = line.split("\\s+");
             try {
                 switch (str[0]) {
@@ -186,6 +189,10 @@ public class Main {
                     case "FastqFile":
                         FastqFile = str[2];
                         System.out.println("FastqFile:\t" + FastqFile);
+                        break;
+                    case "GenomeFile":
+                        GenomeFile = str[2];
+                        System.out.println("GenomeFile:\t" + GenomeFile);
                         break;
                     case "OutPrefix":
                         OutPrefix = str[2];
@@ -280,10 +287,6 @@ public class Main {
                             System.out.print(" " + s);
                         }
                         System.out.println();
-                        break;
-                    case "GenomeFile":
-                        GenomeFile = str[2];
-                        System.out.println("GenomeFile:\t" + GenomeFile);
                         break;
                 }
             } catch (IndexOutOfBoundsException ignored) {
@@ -409,7 +412,7 @@ public class Main {
         BufferedReader infile = new BufferedReader(new FileReader(LinkerFile));
         LinkerLength = infile.readLine().length();
         infile.close();
-        ReProcessDir = OutPath + "/ReProcess";
+        ReProcessDir = OutPath + "/PreProcess";
         SeProcessDir = OutPath + "/SeProcess";
         BedpeProcessDir = OutPath + "/BedpeProcess";
         MakeMatrixDir = OutPath + "/MakeMatrix";

@@ -1,7 +1,7 @@
 import java.io.*;
 import java.util.Date;
 
-public class ReProcess {
+public class PreProcess {
     private String OutPath;
     private String OutPrefix;
     private String FastqFile;
@@ -13,7 +13,7 @@ public class ReProcess {
     public int Threads = 1;
     private LinkerFiltering lk;
 
-    ReProcess(String outpath, String outprefix, String fastqfile, String linkerfile) throws IOException {
+    PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile) throws IOException {
         OutPath = outpath;
         OutPrefix = outprefix;
         FastqFile = fastqfile;
@@ -22,7 +22,7 @@ public class ReProcess {
         lk = new LinkerFiltering(SeqFile, LinkerFile, LinkerFilterOutPrefix, 0, Threads * 4);
     }
 
-    ReProcess(String outpath, String outprefix, String fastqfile, String linkerfile, int matchscore, int mismatchscore, int indelscore) throws IOException {
+    PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, int matchscore, int mismatchscore, int indelscore) throws IOException {
         OutPath = outpath;
         OutPrefix = outprefix;
         FastqFile = fastqfile;
