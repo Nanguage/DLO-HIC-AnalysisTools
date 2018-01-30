@@ -46,10 +46,10 @@ public class BedpeProcess {
                 @Override
                 public void run() {
                     try {
-                        step.SeperateChromosome(SameBedpeFile, 1, Chromosome[finalI], SameBedpeChrFile[finalI]);
-                        step.SeperateChromosome(DiffBedpeFile, 1, Chromosome[finalI], DiffBedpeChrFile[finalI]);
-                        step.WhichEnzy(SameBedpeChrFile[finalI], EnzyFilePrefix + "." + Chromosome[finalI] + ".txt", EnzyChrFragment[finalI]);
-                        step.SeperateLigationType(EnzyChrFragment[finalI], LigationChrFile[finalI][0], LigationChrFile[finalI][1], LigationChrFile[finalI][2]);
+                        step.SeparateChromosome(SameBedpeFile, 1, Chromosome[finalI], SameBedpeChrFile[finalI]);
+                        step.SeparateChromosome(DiffBedpeFile, 1, Chromosome[finalI], DiffBedpeChrFile[finalI]);
+                        step.WhichEnzymeFragment(SameBedpeChrFile[finalI], EnzyFilePrefix + "." + Chromosome[finalI] + ".txt", EnzyChrFragment[finalI]);
+                        step.SeparateLigationType(EnzyChrFragment[finalI], LigationChrFile[finalI][0], LigationChrFile[finalI][1], LigationChrFile[finalI][2]);
                         CommonMethod.Append(DiffBedpeChrFile[finalI], LigationChrFile[finalI][2]);
                         CommonMethod.SortFile(LigationChrFile[finalI][2], new int[]{2, 3, 5, 6}, "n", "", LigationChrFile[finalI][2] + ".sort", Threads);
                         step.RemoveRepeat(LigationChrFile[finalI][2] + ".sort", new int[]{2, 3, 5, 6}, LigationChrFile[finalI][2] + ".clean.sort");
@@ -93,7 +93,7 @@ public class BedpeProcess {
         OutPath = OutPath + "/" + LinkerType;
         FinalBedpeFile = OutPath + "/" + OutPrefix + "." + "final.bedpe";
         if (EnzyDir == null) {
-            EnzyDir = "WhichEnzy";
+            EnzyDir = "WhichEnzymeFragment";
         }
         if (LigationDir == null) {
             LigationDir = "Ligation";

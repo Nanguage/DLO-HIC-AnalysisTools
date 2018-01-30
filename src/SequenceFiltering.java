@@ -25,15 +25,19 @@ import java.util.Date;
 /**
  * @author snowf
  */
-public class LinkerFiltering {
+public class SequenceFiltering {
 
     private String FastqFile;
     private String LinkerFile;
+    private String AdapterFile;
     private String OutputPrefix;
     private String OutFile;
     private String DistributionFile;
     private String[] linkers;
-    private int nLinkers = 0;
+    private String[] Adapters;
+    private String[] AdapterAlignment;
+    private int AdapterLength;
+    private int LinkersNum = 0;
     private int[] scoreHist;
     private int[] secondBestScoreDiffHist;
     private int maxTagLength = 300;
@@ -45,7 +49,7 @@ public class LinkerFiltering {
     private int MisMatchScore;
     private int IndelScore;
 
-    LinkerFiltering(String fastqFile, String linkerFile, String outputPrefix, int flip_tail, int Threads) throws IOException {
+    SequenceFiltering(String fastqFile, String linkerFile, String outputPrefix, int flip_tail, int Threads) throws IOException {
         FastqFile = fastqFile;
         LinkerFile = linkerFile;
         OutputPrefix = outputPrefix;
@@ -55,10 +59,22 @@ public class LinkerFiltering {
         MisMatchScore = -1;
         IndelScore = -1;
         Init();
-
     }
 
-    LinkerFiltering(String fastqFile, String linkerFile, String outputPrefix, int matchscore, int mismatchscore, int indelscore, int flip_tail, int Threads) throws IOException {
+    SequenceFiltering(String fastqFile, String linkerFile, String adapterFile, String outputPrefix, int flip_tail, int Threads) throws IOException {
+        FastqFile = fastqFile;
+        LinkerFile = linkerFile;
+        AdapterFile = adapterFile;
+        OutputPrefix = outputPrefix;
+        this.flip_tail = flip_tail;
+        this.Threads = Threads;
+        MatchScore = 1;
+        MisMatchScore = -1;
+        IndelScore = -1;
+        Init();
+    }
+
+    SequenceFiltering(String fastqFile, String linkerFile, String outputPrefix, int matchscore, int mismatchscore, int indelscore, int flip_tail, int Threads) throws IOException {
         FastqFile = fastqFile;
         LinkerFile = linkerFile;
         OutputPrefix = outputPrefix;
@@ -70,15 +86,41 @@ public class LinkerFiltering {
         Init();
     }
 
+    SequenceFiltering(String fastqFile, String linkerFile, String adapterFile, String outputPrefix, int matchscore, int mismatchscore, int indelscore, int flip_tail, int Threads) throws IOException {
+        FastqFile = fastqFile;
+        LinkerFile = linkerFile;
+        AdapterFile = adapterFile;
+        OutputPrefix = outputPrefix;
+        this.flip_tail = flip_tail;
+        this.Threads = Threads;
+        MatchScore = matchscore;
+        MisMatchScore = mismatchscore;
+        IndelScore = indelscore;
+        Init();
+    }
+
     private void Init() throws IOException {
-        readLinkers();
-        if (nLinkers <= 0) {
+        ReadLinkers();
+        if (LinkersNum <= 0) {
             System.out.println("No linker sequence information. Stop!!!");
             System.exit(0);
         }
-        if (nLinkers > 100) {
+        if (LinkersNum > 100) {
             System.out.println("Too many linkers. Please check!!!");
             System.exit(0);
+        }
+        if (AdapterFile != null) {
+            ReadAdapter();
+        }
+        if (Adapters != null) {
+            AdapterAlignment = new String[Adapters.length];
+            for (int i = 0; i < Adapters.length; i++) {
+                try {
+                    AdapterAlignment[i] = Adapters[i].substring(0, 30);
+                } catch (IndexOutOfBoundsException e) {
+                    AdapterAlignment[i] = Adapters[i];
+                }
+            }
         }
         OutFile = OutputPrefix + ".output.txt";
         DistributionFile = OutputPrefix + ".ScoreDistribution.txt";
@@ -110,10 +152,28 @@ public class LinkerFiltering {
                         }
                     }
                     while (line4 != null) {
-                        int MaxScore = 0;
+                        float MaxScore = 0;
                         int Index = 0;
                         int MaxIndex = 0;
                         int MinIndex = 0;
+                        if (AdapterAlignment != null) {
+                            for (int j = 0; j < AdapterAlignment.length; j++) {
+                                local[finalI].CreatMatrix(line2, AdapterAlignment[j]);
+                                local[finalI].FindMaxIndex();
+                                local[finalI].FindMinIndex();
+                                float score = (float) local[finalI].getMaxScore() / AdapterAlignment[j].length();
+                                int minindex = local[finalI].getMinIndex()[0];
+                                if (score > MaxScore) {
+                                    MaxScore = score;
+                                    Index = j;
+                                    MinIndex = minindex;
+                                }
+                            }
+                            if (MaxScore > 0.7) {
+                                line2 = line2.substring(0, MinIndex);
+                            }
+                            MaxScore = 0;
+                        }
                         for (int j = 0; j < linkers.length; j++) {
                             local[finalI].CreatMatrix(line2, linkers[j]);
                             local[finalI].FindMaxIndex();
@@ -174,9 +234,11 @@ public class LinkerFiltering {
 
     public static void main(String[] args) throws IOException {
         if (args.length == 5) {
-            new LinkerFiltering(args[0], args[1], args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4])).Run();
+            new SequenceFiltering(args[0], args[1], args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4])).Run();
+        } else if (args.length == 6) {
+            new SequenceFiltering(args[0], args[1], args[2], args[3], Integer.parseInt(args[4]), Integer.parseInt(args[5])).Run();
         } else {
-            System.out.println("Usage: java LinkerFiltering <sequence file> <linker file> <output prefix> <flip_tail> <threads>");
+            System.out.println("Usage: java SequenceFiltering <sequence file> <linker file> <output prefix> <flip_tail> <threads>");
             System.out.println("flip_tail: 1: output the reverseComplement of the tail;");
             System.out.println("           0: output the original tail sequences");
             System.exit(0);
@@ -203,7 +265,7 @@ public class LinkerFiltering {
         fileOut.close();
     }
 
-    private void readLinkers() throws IOException {
+    private void ReadLinkers() throws IOException {
         BufferedReader fileIn = new BufferedReader(new InputStreamReader(new FileInputStream(this.LinkerFile)));
         ArrayList<String> tempLinkers = new ArrayList<>();
         String line;
@@ -219,7 +281,24 @@ public class LinkerFiltering {
                 this.linkerLength = this.linkers[i].length();
             }
         }
-        nLinkers = linkers.length;
+        LinkersNum = linkers.length;
+    }
+
+    private void ReadAdapter() throws IOException {
+        BufferedReader adapterfile = new BufferedReader(new FileReader(AdapterFile));
+        String line;
+        ArrayList<String> templist = new ArrayList<>();
+        while ((line = adapterfile.readLine()) != null && !line.equals("")) {
+            templist.add(line);
+        }
+        adapterfile.close();
+        Adapters = new String[templist.size()];
+        for (int i = 0; i < Adapters.length; i++) {
+            Adapters[i] = templist.get(i);
+            if (AdapterLength < Adapters[i].length()) {
+                AdapterLength = Adapters[i].length();
+            }
+        }
     }
 
     private static char[] complTable = new char[255];

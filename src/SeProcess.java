@@ -125,15 +125,6 @@ class SeProcess {
         return SortBedFile;
     }
 
-//    public int[] GetChrSize(String[] Chromosome) throws IOException {
-//        Hashtable<String, Integer> list = CommonMethod.GetChromosomeSize(IndexFile + ".ann");
-//        int[] chrSize = new int[Chromosome.length];
-//        for (int i = 0; i < Chromosome.length; i++) {
-//            chrSize[i] = list.get(Chromosome[i]);
-//        }
-//        return chrSize;
-//    }
-
     private void GetOption(String ConfigFile) throws IOException {
         BufferedReader file = new BufferedReader(new FileReader(ConfigFile));
         String line;

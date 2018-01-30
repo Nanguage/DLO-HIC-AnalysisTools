@@ -1,4 +1,5 @@
 import java.io.*;
+import java.util.ArrayList;
 
 
 public class MakeMatrix {
@@ -10,6 +11,7 @@ public class MakeMatrix {
     private int Resolution;
     private String InterMatrixPrefix;
     private String NormalizeMatrixPrefix;
+    private String ChrSzieFile;
     public int Threads = 1;
 
 
@@ -33,7 +35,7 @@ public class MakeMatrix {
         int[][] Matrix = P.CreatInterActionMatrix(InterBedpeFile, Chromosome, ChromosomeSize, Resolution, InterMatrixPrefix);
         double[][] NormalizeMatrix = P.MatrixNormalize(Matrix);
         CommonMethod.PrintMatrix(NormalizeMatrix, NormalizeMatrixPrefix + ".2d.matrix", NormalizeMatrixPrefix + ".spare.matrix");
-        String[] ChrInterBedpeFile = P.SeperateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + OutPrefix, "");
+        String[] ChrInterBedpeFile = P.SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + OutPrefix, "");
         for (int i = 0; i < Chromosome.length; i++) {
             String ChrInterMatrixPrefix = OutPath + "/" + OutPrefix + "." + Chromosome[i] + ".inter";
             String ChrNormalizeMatrixPrefix = OutPath + "/" + OutPrefix + "." + Chromosome[i] + ".normalize";
@@ -45,7 +47,6 @@ public class MakeMatrix {
 
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
-            System.out.println("Error ! No parameter");
             System.out.println("Usage: java MakeMatrix Config.txt");
             System.exit(0);
         }
@@ -62,13 +63,21 @@ public class MakeMatrix {
         while ((line = option.readLine()) != null) {
             str = line.split("\\s+");
             switch (str[0]) {
-                case "OutPrefix":
-                    OutPrefix = str[2];
-                    System.out.println("OutPrefix:\t" + OutPrefix);
+                case "InterBedpeFile":
+                    InterBedpeFile = str[2];
+                    System.out.println("InterBedpeFile:\t" + InterBedpeFile);
                     break;
                 case "OutPath":
                     OutPath = str[2];
                     System.out.println("OutPath:\t" + OutPath);
+                    break;
+                case "OutPrefix":
+                    OutPrefix = str[2];
+                    System.out.println("OutPrefix:\t" + OutPrefix);
+                    break;
+                case "ChrSizeFile":
+                    ChrSzieFile = str[2];
+                    System.out.println("ChrSzieFile:\t" + ChrSzieFile);
                     break;
                 case "ChromosomePrefix":
                     ChromosomePrefix = str[2];
@@ -85,10 +94,6 @@ public class MakeMatrix {
                 case "Resolution":
                     Resolution = Integer.parseInt(str[2]);
                     System.out.println("Resolution:\t" + Resolution);
-                    break;
-                case "InterBedpeFile":
-                    InterBedpeFile = str[2];
-                    System.out.println("InterBedpeFile:\t" + InterBedpeFile);
                     break;
                 case "ChrSize":
                     System.out.print("ChrSize:");
@@ -107,9 +112,36 @@ public class MakeMatrix {
         if (OutPrefix == null) {
             OutPrefix = "Out";
         }
-        if (Chromosome == null) {
-            System.out.println("Error ! No Chromosome");
-            System.exit(0);
+        if (ChrSzieFile != null) {
+            BufferedReader chrsize = new BufferedReader(new FileReader(ChrSzieFile));
+            ArrayList<String[]> list = new ArrayList<>();
+            while ((line = chrsize.readLine()) != null) {
+                str = line.split("\\s+");
+                list.add(str);
+            }
+            Chromosome = new String[list.size()];
+            ChromosomeSize = new int[list.size()];
+            for (int i = 0; i < list.size(); i++) {
+                Chromosome[i] = list.get(i)[0];
+                ChromosomeSize[i] = Integer.parseInt(list.get(i)[1]);
+                System.out.println("Chr:\t" + Chromosome[i]);
+                System.out.println("Size:\t" + ChromosomeSize[i]);
+            }
+        } else {
+            if (Chromosome == null) {
+                System.out.println("Error ! No Chromosome");
+                System.exit(0);
+            }
+            if (ChromosomeSize == null) {
+                System.out.println("Error ! No ChromosomeSize");
+                System.exit(0);
+            }
+            System.out.print("Chromosome:");
+            for (int i = 0; i < Chromosome.length; i++) {
+                Chromosome[i] = ChromosomePrefix + Chromosome[i];
+                System.out.print("\t" + Chromosome[i]);
+            }
+            System.out.print("\n");
         }
         if (Resolution == 0) {
             System.out.println("Error ! No Resolution");
@@ -119,12 +151,7 @@ public class MakeMatrix {
             System.out.println("Error ! No InterBedpeFile");
             System.exit(0);
         }
-        System.out.print("Chromosome:");
-        for (int i = 0; i < Chromosome.length; i++) {
-            Chromosome[i] = ChromosomePrefix + Chromosome[i];
-            System.out.print("\t" + Chromosome[i]);
-        }
-        System.out.print("\n");
+
         Init();
     }
 

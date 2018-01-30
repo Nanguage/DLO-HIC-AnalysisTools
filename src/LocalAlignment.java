@@ -54,6 +54,7 @@ public class LocalAlignment {
 
     public void FindMaxIndex() {
         MaxScore = 0;
+        MaxIndex = new int[]{0, 0};
         for (int i = 0; i < MatrixSzie[0]; i++) {
             for (int j = 0; j < MatrixSzie[1]; j++) {
                 if (ScoreMatrix[i][j] > MaxScore) {

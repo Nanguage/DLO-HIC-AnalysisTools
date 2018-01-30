@@ -120,17 +120,20 @@ public class Main {
             }
             EnzyFilePrefix = EnzyFilePrefix + "/" + OutPrefix + "." + RestrictionSeq.replace("^", "");
             Hashtable<String, Integer> temphash = step.FindRestrictionSite(GenomeFile, RestrictionSeq, EnzyFilePrefix);
-            for (String s : Chromosome) {
-                list.add(s + "\t" + temphash.get(s));
+            for (int i = 0; i < Chromosome.length; i++) {
+                ChrSize[i] = temphash.get(Chromosome[i]);
+                list.add(Chromosome[i] + "\t" + ChrSize[i]);
             }
         } else {
             Hashtable<String, Integer> temphash = CommonMethod.GetChromosomeSize(IndexFile + ".ann");//获取染色体大小
-            for (String s : Chromosome) {
-                list.add(s + "\t" + temphash.get(s));
+            for (int i = 0; i < Chromosome.length; i++) {
+                ChrSize[i] = temphash.get(Chromosome[i]);
+                list.add(Chromosome[i] + "\t" + ChrSize[i]);
             }
         }
         CommonMethod.PrintList(list, SeProcessDir + "/" + OutPrefix + ".ChrSize");//打印染色体大小信息
         list = null;
+        //==============================================================================================================================================================
         String[] Test1SortBedFile = seleft.getSortBedFile();//获取排序好的bed文件
         String[] Test2SortBedFile = seright.getSortBedFile();
         if (!new File(OutPath + "/bedpe").isDirectory()) {

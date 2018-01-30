@@ -8,7 +8,7 @@ public class PreProcess {
     private String LinkerFile;//linker文件
     private String LinkerFilterOutPrefix;//linker过滤输出前缀
     private int Threads = 1;//线程数，默认1
-    private LinkerFiltering lk;//声明一个linkerFiltering类
+    private SequenceFiltering lk;//声明一个linkerFiltering类
 
     PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, int threads) throws IOException {
         OutPath = outpath;
@@ -18,7 +18,7 @@ public class PreProcess {
         Threads = threads;
         Init();
         //实例化一个LinkerFiltering对象
-        lk = new LinkerFiltering(FastqFile, LinkerFile, LinkerFilterOutPrefix, 0, Threads * 4);
+        lk = new SequenceFiltering(FastqFile, LinkerFile, LinkerFilterOutPrefix, 0, Threads * 4);
     }
 
     PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, int matchscore, int mismatchscore, int indelscore, int threads) throws IOException {
@@ -28,7 +28,7 @@ public class PreProcess {
         LinkerFile = linkerfile;
         Threads = threads;
         Init();
-        lk = new LinkerFiltering(FastqFile, LinkerFile, LinkerFilterOutPrefix, matchscore, mismatchscore, indelscore, 0, Threads * 4);
+        lk = new SequenceFiltering(FastqFile, LinkerFile, LinkerFilterOutPrefix, matchscore, mismatchscore, indelscore, 0, Threads * 4);
     }
 
     public void Run() throws IOException {

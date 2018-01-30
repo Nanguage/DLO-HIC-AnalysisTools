@@ -16,70 +16,6 @@ public class Routine {
 
 
     /**
-     * <p>将fastq文件转换成一行的fastq文件和只有序列的文件</p>
-     *
-     * @param FastqFile    fastq文件
-     * @param SeqFile      只有序列的文件
-     * @param OneLineFastq 一行的fastq文件
-     * @throws IOException
-     */
-    public void FastqToSeqAndOneLine(String FastqFile, String SeqFile, String OneLineFastq) throws IOException {
-        //将fastq文件每4行的第二行取出来放到seq文件中，将每4行合并成一行放到oneline文件中
-        BufferedReader FastqSeqRead = new BufferedReader(new FileReader(FastqFile));
-        BufferedReader FastqOneLineRead = new BufferedReader(new FileReader(FastqFile));
-        BufferedWriter SeqWrite = new BufferedWriter(new FileWriter(SeqFile));
-        BufferedWriter OneLineWrite = new BufferedWriter(new FileWriter(OneLineFastq));
-
-        Thread SeqProcess = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    System.out.println(new Date() + "\tTrans fastq to seq\t" + FastqFile + " begin");
-                    String line;
-                    FastqSeqRead.readLine();
-                    while ((line = FastqSeqRead.readLine()) != null) {
-                        SeqWrite.write(line + "\n");
-                        FastqSeqRead.readLine();
-                        FastqSeqRead.readLine();
-                        FastqSeqRead.readLine();
-                    }
-                    FastqSeqRead.close();
-                    SeqWrite.close();
-                    System.out.println(new Date() + "\tTrans fastq to seq\t" + FastqFile + " end");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        Thread OneLineProcess = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    System.out.println(new Date() + "\tTrans fastq to one line\t" + FastqFile + " begin");
-                    String line;
-                    while ((line = FastqOneLineRead.readLine()) != null) {
-                        OneLineWrite.write(line + "\t" + FastqOneLineRead.readLine() + "\t" + FastqOneLineRead.readLine() + "\t" + FastqOneLineRead.readLine() + "\n");
-                    }
-                    FastqOneLineRead.close();
-                    OneLineWrite.close();
-                    System.out.println(new Date() + "\tTrans fastq to one line\t" + FastqFile + " end");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        SeqProcess.start();
-        OneLineProcess.start();
-        try {
-            SeqProcess.join();
-            OneLineProcess.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        System.out.println(new Date() + "\tFinish trans\t" + FastqFile);
-    }//OK
-
-    /**
      * <p>比对，调用bwa</p>
      *
      * @param IndexFile 索引文件
@@ -211,7 +147,7 @@ public class Routine {
      * @param ValidFile
      * @throws IOException
      */
-    public void SeperateLigationType(String InFile, String SelfFile, String ReligFile, String ValidFile) throws IOException {
+    public void SeparateLigationType(String InFile, String SelfFile, String ReligFile, String ValidFile) throws IOException {
         Thread[] process = new Thread[Threads];
         BufferedReader infile = new BufferedReader(new FileReader(InFile));
         BufferedWriter selffile = new BufferedWriter(new FileWriter(SelfFile));
@@ -518,7 +454,7 @@ public class Routine {
      * @param OutFile     输出文件名
      * @throws IOException
      */
-    public void WhichEnzy(String BedpeFile, String EnySiteFile, String OutFile) throws IOException {
+    public void WhichEnzymeFragment(String BedpeFile, String EnySiteFile, String OutFile) throws IOException {
         ArrayList<Integer> EnySiteList = new ArrayList<>();
         BufferedReader EnySiteRead = new BufferedReader(new FileReader(EnySiteFile));
         BufferedReader SeqRead = new BufferedReader(new FileReader(BedpeFile));
@@ -610,8 +546,8 @@ public class Routine {
      * @param OutFile    out file
      * @throws IOException throws IOException
      */
-    public void SeperateChromosome(String InFile, int Row, String Chromosome, String OutFile) throws IOException {
-        System.out.println(new Date() + "\tStart to SeperateChromosome\t" + Chromosome + "\t" + InFile);
+    public void SeparateChromosome(String InFile, int Row, String Chromosome, String OutFile) throws IOException {
+        System.out.println(new Date() + "\tStart to SeparateChromosome\t" + Chromosome + "\t" + InFile);
         BufferedReader infile = new BufferedReader(new FileReader(InFile));
         BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
         Thread[] Process = new Thread[Threads];
@@ -646,7 +582,7 @@ public class Routine {
         }
         infile.close();
         outfile.close();
-        System.out.println(new Date() + "\tEnd to SeperateChromosome\t" + Chromosome + "\t" + InFile);
+        System.out.println(new Date() + "\tEnd to SeparateChromosome\t" + Chromosome + "\t" + InFile);
     }//OK
 
     /**
@@ -881,7 +817,7 @@ public class Routine {
                 line2 = infile2.readLine();
                 Flage = false;
             } else {
-                outfile.write(str1[0] + "\t" + str1[1] + "\t" + str1[2] + "\t" + str2[0] + "\t" + str2[1] + "\t" + str2[2] + "\t" + str1[Row - 1] + "\t" + str1[str1.length - 2] + "\t" + str1[str1.length - 1] + "\t" + str2[str2.length - 1] + "\t" + str1[str1.length - 1] + "\t" + str2[str2.length - 1] + "\n");
+                outfile.write(str1[0] + "\t" + str1[1] + "\t" + str1[2] + "\t" + str2[0] + "\t" + str2[1] + "\t" + str2[2] + "\t" + str1[Row - 1] + "\t" + str1[str1.length - 2] + "\t" + str2[str2.length - 2] + "\t" + str1[str1.length - 1] + "\t" + str2[str2.length - 1] + "\n");
                 line1 = infile1.readLine();
                 line2 = infile2.readLine();
                 try {
@@ -908,7 +844,7 @@ public class Routine {
      * @return 拆分成每个染色体的交互bedpe的文件名
      * @throws IOException
      */
-    public String[] SeperateInterBedpe(String InterBedpeFile, String[] Chromosome, String Prefix, String Regex) throws IOException {
+    public String[] SeparateInterBedpe(String InterBedpeFile, String[] Chromosome, String Prefix, String Regex) throws IOException {
         System.out.println(new Date() + "\tSeperate InterBedpe " + InterBedpeFile);
         BufferedReader interfile = new BufferedReader(new FileReader(InterBedpeFile));
         String[] SameChrFile = new String[Chromosome.length];
