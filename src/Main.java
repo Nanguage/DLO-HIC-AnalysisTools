@@ -15,6 +15,7 @@ public class Main {
     private String[] MatchRestriction = new String[2];//匹配的序列
     private String[] AddSeq = new String[2];//延长的序列
     private String EnzyFilePrefix;//酶切位点文件前缀
+    private String AdapterFile;//Adapter文件
     private String[] LinkersType;//linker类型
     private String[] UseLinker;//可用的linker类型
     private String LinkerFile;//linker文件
@@ -69,8 +70,14 @@ public class Main {
         Routine step = new Routine();
         step.Threads = Threads;//设置线程数
         //=========================================linker filter==linker 过滤=============================================
-        PreProcess preprocess = new PreProcess(PreProcessDir, OutPrefix, FastqFile, LinkerFile, MatchScore, MisMatchScore, IndelScore, Threads);
-        preprocess.Run();//运行预处理
+        PreProcess preprocess;
+        if (AdapterFile != null) {
+            preprocess = new PreProcess(PreProcessDir, OutPrefix, FastqFile, LinkerFile, AdapterFile, MatchScore, MisMatchScore, IndelScore, Threads);
+            preprocess.Run();
+        } else {
+            preprocess = new PreProcess(PreProcessDir, OutPrefix, FastqFile, LinkerFile, MatchScore, MisMatchScore, IndelScore, Threads);
+            preprocess.Run();//运行预处理
+        }
         String PastFile = preprocess.getPastFile();//获取past文件位置
         preprocess = null;
         //=======================================Se Process===单端处理=============================================
@@ -294,6 +301,10 @@ public class Main {
                             System.out.print(" " + s);
                         }
                         System.out.println();
+                        break;
+                    case "AdapterFile":
+                        AdapterFile = str[2];
+                        System.out.println("AdapterFile:\t" + AdapterFile);
                         break;
                 }
             } catch (IndexOutOfBoundsException ignored) {

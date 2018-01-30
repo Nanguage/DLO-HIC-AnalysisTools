@@ -124,5 +124,17 @@ public class BedpeProcess {
                 LigationChrFile[j][k] = OutPath + "/" + LigationDir + "/" + OutPrefix + "." + LinkerType + "." + Chromosome[j] + "." + LigationType[k];
             }
         }
+        if (new File(FinalBedpeFile).exists()) {
+            new File(FinalBedpeFile).delete();
+        }
+        if (new File(SelfLigationFile).exists()) {
+            new File(SelfLigationFile).delete();
+        }
+        if (new File(ReLigationFile).exists()) {
+            new File(ReLigationFile).delete();
+        }
+        if (new File(EnzyFragment).exists()) {
+            new File(EnzyFragment).delete();
+        }
     }
 }

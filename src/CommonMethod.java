@@ -249,7 +249,7 @@ public class CommonMethod {
                     SortList.QuickSort(0, SortList.size() - 1, Model, (int) (Math.log(Threads) / Math.log(2)));
                     //====================================排序前后分割线==============================================
                     BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile + ".temp" + bin));
-                    System.out.println(new Date() + "\tWrite " + OutFile + ".temp" + bin);
+//                    System.out.println(new Date() + "\tWrite " + OutFile + ".temp" + bin);
                     for (int i = 0, len = SortList.size(); i < len; i++) {
                         outfile.write(List.get(SortList.get(i)[0]));
                         outfile.write("\n");
@@ -295,7 +295,7 @@ public class CommonMethod {
                     SortList.QuickSort(0, SortList.size() - 1, Model, (int) (Math.log(Threads) / Math.log(2)));
                     //====================================排序前后分割线==============================================
                     BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile + ".temp" + bin));
-                    System.out.println(new Date() + "\tWrite " + OutFile + ".temp" + bin);
+//                    System.out.println(new Date() + "\tWrite " + OutFile + ".temp" + bin);
                     for (int i = 0, len = SortList.size(); i < len; i++) {
                         outfile.write(List.get(Integer.parseInt(String.valueOf(SortList.get(i)[0]))));
                         outfile.write("\n");

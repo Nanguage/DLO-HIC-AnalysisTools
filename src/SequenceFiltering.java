@@ -194,12 +194,12 @@ public class SequenceFiltering {
                             try {
                                 if (MaxIndex < line2.length()) {
                                     if (flip_tail == 1) {
-                                        outfile.write(line2.substring(TagStart, MinIndex) + "\t" + String.valueOf(MinIndex) + "\t" + String.valueOf(MaxIndex - 1) + "\t" + revComplement(line2.substring(MaxIndex)) + "\t" + Index + "\t" + MaxScore);
+                                        outfile.write(line2.substring(TagStart, MinIndex) + "\t" + String.valueOf(MinIndex) + "\t" + String.valueOf(MaxIndex - 1) + "\t" + revComplement(line2.substring(MaxIndex)) + "\t" + Index + "\t" + (int) MaxScore);
                                     } else {
-                                        outfile.write(line2.substring(TagStart, MinIndex) + "\t" + String.valueOf(MinIndex) + "\t" + String.valueOf(MaxIndex - 1) + "\t" + line2.substring(MaxIndex) + "\t" + Index + "\t" + MaxScore);
+                                        outfile.write(line2.substring(TagStart, MinIndex) + "\t" + String.valueOf(MinIndex) + "\t" + String.valueOf(MaxIndex - 1) + "\t" + line2.substring(MaxIndex) + "\t" + Index + "\t" + (int) MaxScore);
                                     }
                                 } else {
-                                    outfile.write(line2.substring(TagStart, MinIndex) + "\t" + String.valueOf(MinIndex) + "\tNA\tNA\t" + Index + "\t" + MaxScore);
+                                    outfile.write(line2.substring(TagStart, MinIndex) + "\t" + String.valueOf(MinIndex) + "\tNA\tNA\t" + Index + "\t" + (int) MaxScore);
                                 }
                                 outfile.write("\t" + line1 + "\t" + line2 + "\t" + line3 + "\t" + line4 + "\n");
                                 Count[0]++;
