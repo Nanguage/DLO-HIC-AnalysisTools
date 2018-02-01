@@ -153,6 +153,7 @@ public class Routine {
         BufferedWriter selffile = new BufferedWriter(new FileWriter(SelfFile));
         BufferedWriter religfile = new BufferedWriter(new FileWriter(ReligFile));
         BufferedWriter valifile = new BufferedWriter(new FileWriter(ValidFile));
+        String[] OutLock = new String[]{"sel", "rel", "val"};
         System.out.println(new Date() + "\tBegin to seperate ligation\t" + InFile);
         for (int i = 0; i < Threads; i++) {
             process[i] = new Thread(new Runnable() {
@@ -165,15 +166,15 @@ public class Routine {
                         while ((line = infile.readLine()) != null) {
                             str = line.split("\\s+");
                             if (str[str.length - 2].equals(str[str.length - 1])) {
-                                synchronized (process) {
+                                synchronized (OutLock[0]) {
                                     selffile.write(line + "\n");
                                 }
                             } else if ((Integer.parseInt(str[str.length - 1]) - Integer.parseInt(str[str.length - 2]) == 1) && (Integer.parseInt(str[4]) < Integer.parseInt(str[2]))) {
-                                synchronized (process) {
+                                synchronized (OutLock[1]) {
                                     religfile.write(line + "\n");
                                 }
                             } else {
-                                synchronized (process) {
+                                synchronized (OutLock[2]) {
                                     valifile.write(line + "\n");
                                 }
                             }
@@ -214,13 +215,13 @@ public class Routine {
      * @param Type                   单端类型（1或2）
      * @throws IOException
      */
-    public void ClusterLinker(String PastFastq, String[] LinkerFastq, int MinReadsLength, int MaxReadsLength, int MinLinkerFilterQuality, String Restriction, String AddSeq, String AddQuality, int Type) throws IOException {
+    public void ClusterLinker(String PastFastq, String[] LinkerFastq, int MinReadsLength, int MaxReadsLength, int MinLinkerFilterQuality, String Restriction, String AddSeq, String AddQuality, String Type) throws IOException {
         BufferedReader fastq_read = new BufferedReader(new FileReader(PastFastq));
         BufferedWriter[] fastq_write = new BufferedWriter[LinkerFastq.length];
         for (int i = 0; i < LinkerFastq.length; i++) {
             fastq_write[i] = new BufferedWriter(new FileWriter(LinkerFastq[i]));
         }
-        if (Type == 1) {
+        if (Type.equals("R1")) {
             Thread[] process = new Thread[Threads];
             System.out.println(new Date() + "\tBegin to cluster linker\t" + Type);
             //多线程读取
@@ -243,7 +244,7 @@ public class Routine {
                                             } else {
                                                 len = MaxReadsLength;
                                             }
-                                            synchronized (process) {
+                                            synchronized (fastq_write[j]) {
                                                 fastq_write[j].write(str[6] + "\n");
                                                 fastq_write[j].write(str[0].substring(len - MaxReadsLength, str[0].length()) + AddSeq + "\n");
                                                 fastq_write[j].write(str[8] + "\n");
@@ -274,7 +275,7 @@ public class Routine {
                 fastq_write[i].close();
             }
             System.out.println(new Date() + "\tEnd to cluster linker\t" + Type);
-        } else if (Type == 2) {
+        } else if (Type.equals("R2")) {
             Thread[] process = new Thread[Threads];
             System.out.println(new Date() + "\tBegin to cluster linker\t" + Type);
             //多线程读取
@@ -343,14 +344,14 @@ public class Routine {
      * @param Type        单端类型（1或2）
      * @return 返回是否可以延长碱基
      */
-    private Boolean AppendBase(String Sequence, String Restriction, int Type) {
-        if (Type == 1) {
+    private Boolean AppendBase(String Sequence, String Restriction, String Type) {
+        if (Type.equals("R1")) {
             if (Sequence.substring(Sequence.length() - Restriction.length(), Sequence.length()).equals(Restriction)) {
                 return true;
             } else {
                 return false;
             }
-        } else if (Type == 2) {
+        } else if (Type.equals("R2")) {
             if (Sequence.substring(0, Restriction.length()).equals(Restriction)) {
                 return true;
             } else {
@@ -505,11 +506,6 @@ public class Routine {
                             }
                             //-----------------------------------------------------------------
                             synchronized (Process) {
-                                //修改了格式
-//                                OutWrite.write(str[0] + "\t" + position[0] + "\t" + str[3] + "\t" + position[1]);
-//                                for (int k = 6; k < str.length; k++) {
-//                                    OutWrite.write("\t" + str[k]);
-//                                }
                                 OutWrite.write(line + "\t" + String.valueOf(index[0]) + "\t" + String.valueOf(index[1]) + "\n");
                             }
                         }

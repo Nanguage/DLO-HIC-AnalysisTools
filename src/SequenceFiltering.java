@@ -177,15 +177,13 @@ public class SequenceFiltering {
                         for (int j = 0; j < linkers.length; j++) {
                             local[finalI].CreatMatrix(line2, linkers[j]);
                             local[finalI].FindMaxIndex();
-                            local[finalI].FindMinIndex();
                             int score = local[finalI].getMaxScore();
-                            int maxindex = local[finalI].getMaxIndex()[0];
-                            int minindex = local[finalI].getMinIndex()[0];
                             if (score > MaxScore) {
+                                local[finalI].FindMinIndex();
                                 MaxScore = score;
                                 Index = j;
-                                MaxIndex = maxindex;
-                                MinIndex = minindex;
+                                MaxIndex = local[finalI].getMaxIndex()[0];
+                                MinIndex = local[finalI].getMinIndex()[0];
                             }
                         }
                         //=====================================================输出结果==========================================

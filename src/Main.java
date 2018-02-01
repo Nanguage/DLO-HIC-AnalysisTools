@@ -11,6 +11,7 @@ public class Main {
     private String OutPath;//输出路径
     private String ChromosomePrefix;//染色体前缀
     private String[] Chromosome;//染色体名
+    private int[] ChrSize;//染色体大小
     private String RestrictionSeq;//酶切位点序列
     private String[] MatchRestriction = new String[2];//匹配的序列
     private String[] AddSeq = new String[2];//延长的序列
@@ -48,6 +49,10 @@ public class Main {
     }
 
     public static void main(String args[]) throws IOException {
+        //==============================================测试区==========================================================
+
+
+        //==============================================================================================================
         if (args.length < 1) {
             System.out.println("Usage:    java -jar HiC-test.jar config.txt");
             System.exit(0);
@@ -57,9 +62,8 @@ public class Main {
     }
 
     public void Run() throws IOException {
-        //==============================================测试区==============================
 
-        //===========================================初始化输出文件=======================================
+        //===========================================初始化输出文件======================================================
         String[] SeBedpeFile = new String[UseLinker.length];
         String[] FinalLinkerBedpe = new String[UseLinker.length];
         for (int i = 0; i < UseLinker.length; i++) {
@@ -69,7 +73,7 @@ public class Main {
         String InterBedpeFile = BedpeProcessDir + "/" + OutPrefix + ".inter.bedpe";
         Routine step = new Routine();
         step.Threads = Threads;//设置线程数
-        //=========================================linker filter==linker 过滤=============================================
+        //=========================================linker filter==linker 过滤===========================================
         PreProcess preprocess;
         if (AdapterFile != null) {
             preprocess = new PreProcess(PreProcessDir, OutPrefix, FastqFile, LinkerFile, AdapterFile, MatchScore, MisMatchScore, IndelScore, Threads);
@@ -80,94 +84,32 @@ public class Main {
         }
         String PastFile = preprocess.getPastFile();//获取past文件位置
         preprocess = null;
-        //=======================================Se Process===单端处理=============================================
-        SeProcess seleft = new SeProcess(SeProcessDir, OutPrefix, PastFile, LinkersType, UseLinker, IndexFile, MatchRestriction[0], AddSeq[0], 1, AlignMisMatch);//左端处理类
-        SeProcess seright = new SeProcess(SeProcessDir, OutPrefix, PastFile, LinkersType, UseLinker, IndexFile, MatchRestriction[1], AddSeq[1], 2, AlignMisMatch);//右端处理类
-        seleft.Threads = Threads;//设置线程数
-        seleft.Phred = Phred;//设置fastq文件格式
-        seleft.MinLinkerFilterQuality = LinkerLength * MatchScore + MaxMisMatchLength * MisMatchScore;//设置linkerfilter最小分数
-        seright.Threads = Threads;
-        seright.Phred = Phred;
-        seright.MinLinkerFilterQuality = LinkerLength * MatchScore + MaxMisMatchLength * MisMatchScore;
-        Thread t1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    seleft.Run();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        Thread t2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    seright.Run();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        //=======================================Se Process===单端处理==================================================
+        Thread sepR1 = SeProcess(PastFile, "R1");
+        Thread sepR2 = SeProcess(PastFile, "R2");
+        sepR1.start();
+        sepR2.start();
         try {
-            t1.start();
-            t2.start();
-            t1.join();
-            t2.join();
+            sepR1.join();
+            sepR2.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        //=======================================================提取染色体大小信息=================================================================================
-        ArrayList<String> list = new ArrayList<>();
-        int[] ChrSize = new int[Chromosome.length];
-        if (EnzyFilePrefix == null) {
-            EnzyFilePrefix = OutPath + "/EnzySiteFile";
-            if (!new File(EnzyFilePrefix).isDirectory()) {
-                new File(EnzyFilePrefix).mkdir();
-            }
-            EnzyFilePrefix = EnzyFilePrefix + "/" + OutPrefix + "." + RestrictionSeq.replace("^", "");
-            Hashtable<String, Integer> temphash = step.FindRestrictionSite(GenomeFile, RestrictionSeq, EnzyFilePrefix);
-            for (int i = 0; i < Chromosome.length; i++) {
-                ChrSize[i] = temphash.get(Chromosome[i]);
-                list.add(Chromosome[i] + "\t" + ChrSize[i]);
-            }
-        } else {
-            Hashtable<String, Integer> temphash = CommonMethod.GetChromosomeSize(IndexFile + ".ann");//获取染色体大小
-            for (int i = 0; i < Chromosome.length; i++) {
-                ChrSize[i] = temphash.get(Chromosome[i]);
-                list.add(Chromosome[i] + "\t" + ChrSize[i]);
-            }
-        }
-        CommonMethod.PrintList(list, SeProcessDir + "/" + OutPrefix + ".ChrSize");//打印染色体大小信息
-        list = null;
-        //==============================================================================================================================================================
-        String[] Test1SortBedFile = seleft.getSortBedFile();//获取排序好的bed文件
-        String[] Test2SortBedFile = seright.getSortBedFile();
+        //=============================================获取排序好的bed文件===============================================
+        String[] Test1SortBedFile = new SeProcess(SeProcessDir, OutPrefix, PastFile, LinkersType, UseLinker, IndexFile, RestrictionSeq, "R1", AlignMisMatch).getSortBedFile();
+        String[] Test2SortBedFile = new SeProcess(SeProcessDir, OutPrefix, PastFile, LinkersType, UseLinker, IndexFile, RestrictionSeq, "R2", AlignMisMatch).getSortBedFile();
         if (!new File(OutPath + "/bedpe").isDirectory()) {
             new File(OutPath + "/bedpe").mkdir();
         }
         for (int i = 0; i < UseLinker.length; i++) {
             step.MergeBedToBedpe(Test1SortBedFile[i], Test2SortBedFile[i], SeBedpeFile[i], 4, "");//合并左右端bed文件，输出bedpe文件
         }
-        //==============================================Bedpe Process====bedpe 处理=========================================================================================
+        //==============================================Bedpe Process====bedpe 处理=====================================
         Thread[] LinkerProcess = new Thread[UseLinker.length];//不同linker类型并行
-        BedpeProcess[] bedpe = new BedpeProcess[UseLinker.length];//bedpe文件处理类
         for (int i = 0; i < UseLinker.length; i++) {
-            int finalI = i;
-            LinkerProcess[i] = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        bedpe[finalI] = new BedpeProcess(BedpeProcessDir, OutPrefix, UseLinker[finalI], Chromosome, EnzyFilePrefix, SeBedpeFile[finalI]);
-                        bedpe[finalI].Threads = Threads;//设置线程数
-                        bedpe[finalI].Run();//运行
-                        FinalLinkerBedpe[finalI] = bedpe[finalI].getFinalBedpeFile();//获取最终的bedpe文件
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
+            LinkerProcess[i] = BedpeProcess(UseLinker[i], SeBedpeFile[i]);
             LinkerProcess[i].start();
+            FinalLinkerBedpe[i] = new BedpeProcess(BedpeProcessDir, OutPrefix, UseLinker[i], Chromosome, EnzyFilePrefix, SeBedpeFile[i]).getFinalBedpeFile();
         }
         for (int i = 0; i < UseLinker.length; i++) {
             try {
@@ -176,12 +118,92 @@ public class Main {
                 e.printStackTrace();
             }
         }
-        //=================================================Bedpe To Inter==================================================
+        //==========================================获取染色体大小=======================================================
+        Thread findchrsize = FindChromosomeSize();
+        findchrsize.start();
+        //=================================================Bedpe To Inter===============================================
         CommonMethod.Merge(FinalLinkerBedpe, FinalBedpeFile);//合并不同linker类型的bedpe文件
         step.BedpeToInter(FinalBedpeFile, InterBedpeFile);//将交互区间转换成交互点
-        //=================================================Make Matrix========================================================================
+        //=================================================Make Matrix==================================================
+        try {
+            findchrsize.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         MakeMatrix matrix = new MakeMatrix(MakeMatrixDir, OutPrefix, InterBedpeFile, Chromosome, ChrSize, Resolution);//生成交互矩阵类
         matrix.Run();//运行
+    }
+
+    public Thread FindChromosomeSize() {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Routine step = new Routine();
+                    ArrayList<String> list = new ArrayList<>();
+                    ChrSize = new int[Chromosome.length];
+                    if (EnzyFilePrefix == null) {
+                        EnzyFilePrefix = OutPath + "/EnzySiteFile";
+                        if (!new File(EnzyFilePrefix).isDirectory()) {
+                            new File(EnzyFilePrefix).mkdir();
+                        }
+                        EnzyFilePrefix = EnzyFilePrefix + "/" + OutPrefix + "." + RestrictionSeq.replace("^", "");
+                        Hashtable<String, Integer> temphash = step.FindRestrictionSite(GenomeFile, RestrictionSeq, EnzyFilePrefix);
+                        for (int i = 0; i < Chromosome.length; i++) {
+                            ChrSize[i] = temphash.get(Chromosome[i]);
+                            list.add(Chromosome[i] + "\t" + ChrSize[i]);
+                        }
+                    } else {
+                        Hashtable<String, Integer> temphash = CommonMethod.GetChromosomeSize(IndexFile + ".ann");//获取染色体大小
+                        for (int i = 0; i < Chromosome.length; i++) {
+                            ChrSize[i] = temphash.get(Chromosome[i]);
+                            list.add(Chromosome[i] + "\t" + ChrSize[i]);
+                        }
+                    }
+                    if (!new File(SeProcessDir).isDirectory()) {
+                        new File(SeProcessDir).mkdirs();
+                    }
+                    CommonMethod.PrintList(list, SeProcessDir + "/" + OutPrefix + ".ChrSize");//打印染色体大小信息
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        return t;
+    }
+
+    public Thread SeProcess(String Infile, String Type) {
+        SeProcess ssp = new SeProcess(SeProcessDir, OutPrefix, Infile, LinkersType, UseLinker, IndexFile, RestrictionSeq, Type, AlignMisMatch);//单端处理类
+        ssp.Threads = Threads;//设置线程数
+        ssp.Phred = Phred;//设置fastq文件格式
+        ssp.MinLinkerFilterQuality = LinkerLength * MatchScore + MaxMisMatchLength * MisMatchScore;//设置linkerfilter最小分数
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    ssp.Run();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        return t;
+    }
+
+    public Thread BedpeProcess(String UseLinker, String SeBedpeFile) {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    BedpeProcess bedpe = new BedpeProcess(BedpeProcessDir, OutPrefix, UseLinker, Chromosome, EnzyFilePrefix, SeBedpeFile);//bedpe文件处理类
+                    bedpe.Threads = Threads;//设置线程数
+                    bedpe.Run();//运行
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        return t;
     }
 
     private void GetOption(String Infile) throws IOException {

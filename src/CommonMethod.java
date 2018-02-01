@@ -332,11 +332,14 @@ public class CommonMethod {
         }
         System.out.print("to " + OutFile + "\n");
         //=========================================================================================
+        BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
+        if (InFile.length == 0) {
+            return;
+        }
         BufferedReader[] infile = new BufferedReader[InFile.length];
         for (int i = 0; i < InFile.length; i++) {
             infile[i] = new BufferedReader(new FileReader(InFile[i]));
         }
-        BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
         String regex = Regex;
         if (Regex.isEmpty()) {
             regex = "\\s+";

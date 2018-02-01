@@ -1,8 +1,6 @@
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.Hashtable;
 
 /**
  * @author snowf
@@ -13,13 +11,14 @@ class SeProcess {
     private String Prefix;//输出前缀
     private String IndexFile;//比对索引文件
     public int Threads = 1;//线程数
-    private int SeNum;//单端类型(R1 or R2)
+    private String SeType;//单端类型(R1 or R2)
     private int MisMatch;//错配数，bwa中使用
+    private String Restriction;//酶切位点（such as A^AGCTT）
     private String RestrictionSeq;//需要匹配的酶切位点序列
     private String AddSeq;//需要延长的序列
+    private String AddQuality;//延长的序列质量
     private String[] LinkersType;//linker类型
     private String[] UseLinkerType;//有用的linker类型
-    private String AddQuality;//延长的序列
     public int Phred = 33;//Fastq格式
     private int MinQuality = 20;//最小比对质量
     private int MaxReadsLength = 20;//最长reads长度
@@ -36,16 +35,15 @@ class SeProcess {
     private String[] BedFile;//Bed文件
     private String[] SortBedFile;//排序后的bed文件
 
-    SeProcess(String outPath, String prefix, String pastfile, String[] linkerstype, String[] uselinker, String index, String restrictionSeq, String addseq, int num, int mismatch) {
+    SeProcess(String outPath, String prefix, String pastfile, String[] linkerstype, String[] uselinker, String index, String restriction, String num, int mismatch) {
         OutPath = outPath;
         Prefix = prefix;
         PastFile = pastfile;
         LinkersType = linkerstype;
         UseLinkerType = uselinker;
         IndexFile = index;
-        RestrictionSeq = restrictionSeq;
-        AddSeq = addseq;
-        SeNum = num;
+        Restriction = restriction;
+        SeType = num;
         MisMatch = mismatch;
         Init();
     }
@@ -70,7 +68,7 @@ class SeProcess {
         Se.Threads = Threads;
         //========================================================================================
         //区分不同类型的linker，并放到不同的文件中（中间会过滤掉比对质量较低，和无法延长的序列）
-        Se.ClusterLinker(PastFile, LinkerFastqFile, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, RestrictionSeq, AddSeq, AddQuality, SeNum);
+        Se.ClusterLinker(PastFile, LinkerFastqFile, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, RestrictionSeq, AddSeq, AddQuality, SeType);
         Thread[] process = new Thread[UseLinkerType.length];
         //处理可用的linker类型（每个线程处理一种linker类型）
         for (int i = 0; i < UseLinkerType.length; i++) {
@@ -154,11 +152,11 @@ class SeProcess {
                     break;
                 case "AlignMinQuality":
                     MinQuality = Integer.parseInt(str[2]);
-                    System.out.println("CreatMatrix Min Quality:\t" + MinQuality);
+                    System.out.println("AlignMinQuality:\t" + MinQuality);
                     break;
                 case "AlignThread":
                     AlignThreads = Integer.parseInt(str[2]);
-                    System.out.println("CreatMatrix Thread:\t" + AlignThreads);
+                    System.out.println("AlignThread:\t" + AlignThreads);
                     break;
                 case "Thread":
                     Threads = Integer.parseInt(str[2]);
@@ -166,19 +164,15 @@ class SeProcess {
                     break;
                 case "AlignMisMatch":
                     MisMatch = Integer.parseInt(str[2]);
-                    System.out.println("CreatMatrix MisMatch:\t" + MisMatch);
+                    System.out.println("AlignMisMatch:\t" + MisMatch);
                     break;
                 case "RestrictionSeq":
-                    RestrictionSeq = str[2];
-                    System.out.println("Restriction Seq:\t" + RestrictionSeq);
-                    break;
-                case "AddSeq":
-                    AddSeq = str[2];
-                    System.out.println("Add Seq:\t" + AddSeq);
+                    Restriction = str[2];
+                    System.out.println("RestrictionSeq:\t" + Restriction);
                     break;
                 case "Type":
-                    SeNum = Integer.parseInt(str[2]);
-                    System.out.println("Type is :\t" + SeNum);
+                    SeType = str[2];
+                    System.out.println("Type:\t" + SeType);
                     break;
                 case "MinReadsLength":
                     MinReadsLength = Integer.parseInt(str[2]);
@@ -195,6 +189,16 @@ class SeProcess {
             }
         }
         file.close();
+    }
+
+    /**
+     * <p>类的初始化</p>
+     * <p>检测输出路径，判断单端类型（哪一端），构建输出文件</p>
+     */
+    private void Init() {
+        if (!new File(OutPath).isDirectory()) {
+            new File(OutPath).mkdirs();
+        }
         if (PastFile == null) {
             System.out.println("Error ! No PastFile");
             System.exit(0);
@@ -215,39 +219,40 @@ class SeProcess {
             System.out.println("Error ! No IndexFile");
             System.exit(0);
         }
-        if (RestrictionSeq == null) {
+        if (Restriction == null) {
             System.out.println("Error ! No RestrictionSeq");
             System.exit(0);
         }
-        if (AddSeq == null) {
-            System.out.println("Error ! No AddSeq");
+        if (!SeType.equals("R1") && !SeType.equals("R2")) {
+            System.out.println("Error ! Unknow Type " + SeType + "\tType should R1 or R2");
             System.exit(0);
         }
-        if (SeNum != 1 && SeNum != 2) {
-            System.out.println("Error ! Unknow Type " + SeNum + "\tType should 1 or 2");
-            System.exit(0);
+        if (!new File(OutPath + "/" + SeType).isDirectory()) {
+            new File(OutPath + "/" + SeType).mkdir();
         }
-    }
-
-    /**
-     * <p>类的初始化</p>
-     * <p>检测输出路径，判断单端类型（哪一端），构建输出文件</p>
-     */
-    private void Init() {
-        if (!new File(OutPath).isDirectory()) {
-            new File(OutPath).mkdirs();
-        }
-        String dir = "";
-        if (SeNum == 1) {
-            dir = "R1";
-        } else if (SeNum == 2) {
-            dir = "R2";
+        //=============================================================================================
+        int restrictionSite = Restriction.indexOf("^");
+        String TempSeq = Restriction.replace("^", "");
+        if (SeType.equals("R1")) {
+            if (restrictionSite < TempSeq.length() - restrictionSite) {
+                restrictionSite = TempSeq.length() - restrictionSite;
+            }
+            RestrictionSeq = TempSeq.substring(0, restrictionSite);
+            try {
+                AddSeq = TempSeq.substring(restrictionSite);
+            } catch (IndexOutOfBoundsException e) {
+                AddSeq = "";
+            }
         } else {
-            System.err.println("Error Single Type!\t" + SeNum);
-            System.exit(0);
-        }
-        if (!new File(OutPath + "/" + dir).isDirectory()) {
-            new File(OutPath + "/" + dir).mkdir();
+            if (restrictionSite > TempSeq.length() - restrictionSite) {
+                restrictionSite = TempSeq.length() - restrictionSite;
+            }
+            RestrictionSeq = TempSeq.substring(restrictionSite);
+            try {
+                AddSeq = TempSeq.substring(0, restrictionSite);
+            } catch (IndexOutOfBoundsException e) {
+                AddSeq = "";
+            }
         }
         LinkerFastqFile = new String[LinkersType.length];
         UseLinkerFastqFile = new String[UseLinkerType.length];
@@ -256,12 +261,11 @@ class SeProcess {
         BamFile = new String[UseLinkerType.length];
         BedFile = new String[UseLinkerType.length];
         SortBedFile = new String[UseLinkerType.length];
-        int restrictionLength = RestrictionSeq.length() + AddSeq.length();
         for (int i = 0; i < LinkersType.length; i++) {
-            LinkerFastqFile[i] = OutPath + "/" + dir + "/" + Prefix + "." + SeNum + "." + restrictionLength + "linker." + LinkersType[i] + ".fastq";
+            LinkerFastqFile[i] = OutPath + "/" + SeType + "/" + Prefix + "." + TempSeq + "." + LinkersType[i] + "." + SeType + ".fastq";
         }
         for (int i = 0; i < UseLinkerType.length; i++) {
-            UseLinkerFastqFile[i] = OutPath + "/" + dir + "/" + Prefix + "." + SeNum + "." + restrictionLength + "linker." + UseLinkerType[i] + ".fastq";
+            UseLinkerFastqFile[i] = OutPath + "/" + SeType + "/" + Prefix + "." + TempSeq + "." + UseLinkerType[i] + "." + SeType + ".fastq";
             SamFile[i] = UseLinkerFastqFile[i].replace(".fastq", "." + MisMatch + ".sam");
             FilterSamFile[i] = SamFile[i].replace(".sam", ".uniq.sam");
             BamFile[i] = FilterSamFile[i].replace(".uniq.sam", ".bam");
