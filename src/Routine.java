@@ -209,23 +209,58 @@ public class Routine {
      * @param MinReadsLength         最小reads长度
      * @param MaxReadsLength         最大reads长度
      * @param MinLinkerFilterQuality linker比对的最小质量
-     * @param Restriction            需要匹配的酶切位点序列
-     * @param AddSeq                 延长的序列
+     * @param Restriction            酶切位点序列
      * @param AddQuality             延长的质量
      * @param Type                   单端类型（1或2）
      * @throws IOException
      */
-    public void ClusterLinker(String PastFastq, String[] LinkerFastq, int MinReadsLength, int MaxReadsLength, int MinLinkerFilterQuality, String Restriction, String AddSeq, String AddQuality, String Type) throws IOException {
+    public void ClusterLinker(String PastFastq, String[] LinkerFastq, int MinReadsLength, int MaxReadsLength, int MinLinkerFilterQuality, String Restriction, String AddQuality, String Type) throws IOException {
         BufferedReader fastq_read = new BufferedReader(new FileReader(PastFastq));
         BufferedWriter[] fastq_write = new BufferedWriter[LinkerFastq.length];
         for (int i = 0; i < LinkerFastq.length; i++) {
             fastq_write[i] = new BufferedWriter(new FileWriter(LinkerFastq[i]));
+        }
+        String add = AddQuality;
+        String MatchRestriction;
+        String AddSeq;
+        String TempSeq = Restriction.replace("^", "");
+        int restrictionSite = Restriction.indexOf("^");
+        if (Type.equals("R1")) {
+            if (restrictionSite < TempSeq.length() - restrictionSite) {
+                restrictionSite = TempSeq.length() - restrictionSite;
+            }
+            MatchRestriction = TempSeq.substring(0, restrictionSite);
+            try {
+                AddSeq = TempSeq.substring(restrictionSite);
+            } catch (IndexOutOfBoundsException e) {
+                AddSeq = "";
+            }
+        } else if (Type.equals("R2")) {
+            if (restrictionSite > TempSeq.length() - restrictionSite) {
+                restrictionSite = TempSeq.length() - restrictionSite;
+            }
+            MatchRestriction = TempSeq.substring(restrictionSite);
+            try {
+                AddSeq = TempSeq.substring(0, restrictionSite);
+            } catch (IndexOutOfBoundsException e) {
+                AddSeq = "";
+            }
+        } else {
+            MatchRestriction = "";
+            AddSeq = "";
+            System.err.println("Wrong Type " + Type);
+            System.exit(0);
+        }
+        for (int i = 1; i < AddSeq.length(); i++) {
+            AddQuality = AddQuality + add;
         }
         if (Type.equals("R1")) {
             Thread[] process = new Thread[Threads];
             System.out.println(new Date() + "\tBegin to cluster linker\t" + Type);
             //多线程读取
             for (int i = 0; i < Threads; i++) {
+                String finalAddSeq = AddSeq;
+                String finalAddQuality = AddQuality;
                 process[i] = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -237,7 +272,7 @@ public class Routine {
                                 str = line.split("\\t+");
                                 for (int j = 0; j < LinkerFastq.length; j++) {
                                     if (str[0].length() >= MinReadsLength && Integer.parseInt(str[5]) >= MinLinkerFilterQuality && Integer.parseInt(str[4]) == j) {
-                                        if (AppendBase(str[0], Restriction, Type)) {
+                                        if (AppendBase(str[0], MatchRestriction, Type)) {
                                             int len = 0;
                                             if (str[0].length() >= MaxReadsLength) {
                                                 len = str[0].length();
@@ -246,9 +281,9 @@ public class Routine {
                                             }
                                             synchronized (fastq_write[j]) {
                                                 fastq_write[j].write(str[6] + "\n");
-                                                fastq_write[j].write(str[0].substring(len - MaxReadsLength, str[0].length()) + AddSeq + "\n");
+                                                fastq_write[j].write(str[0].substring(len - MaxReadsLength, str[0].length()) + finalAddSeq + "\n");
                                                 fastq_write[j].write(str[8] + "\n");
-                                                fastq_write[j].write(str[9].substring(len - MaxReadsLength, str[0].length()) + AddQuality + "\n");
+                                                fastq_write[j].write(str[9].substring(len - MaxReadsLength, str[0].length()) + finalAddQuality + "\n");
                                             }
                                         }
                                         break;
@@ -280,6 +315,8 @@ public class Routine {
             System.out.println(new Date() + "\tBegin to cluster linker\t" + Type);
             //多线程读取
             for (int i = 0; i < Threads; i++) {
+                String finalAddSeq = AddSeq;
+                String finalAddQuality1 = AddQuality;
                 process[i] = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -291,8 +328,8 @@ public class Routine {
                                 str = line.split("\\t+");
                                 for (int j = 0; j < LinkerFastq.length; j++) {
                                     if (str[3].length() >= MinReadsLength && Integer.parseInt(str[5]) >= MinLinkerFilterQuality && Integer.parseInt(str[4]) == j) {
-                                        if (AppendBase(str[3], Restriction, Type)) {
-                                            int len = 0;
+                                        if (AppendBase(str[3], MatchRestriction, Type)) {
+                                            int len;
                                             if (str[3].length() >= MaxReadsLength) {
                                                 len = MaxReadsLength;
                                             } else {
@@ -300,9 +337,9 @@ public class Routine {
                                             }
                                             synchronized (process) {
                                                 fastq_write[j].write(str[6] + "\n");
-                                                fastq_write[j].write(AddSeq + str[3].substring(0, len) + "\n");
+                                                fastq_write[j].write(finalAddSeq + str[3].substring(0, len) + "\n");
                                                 fastq_write[j].write(str[8] + "\n");
-                                                fastq_write[j].write(AddQuality + str[9].substring(Integer.parseInt(str[2]) + 1, Integer.parseInt(str[2]) + 1 + len) + "\n");
+                                                fastq_write[j].write(finalAddQuality1 + str[9].substring(Integer.parseInt(str[2]) + 1, Integer.parseInt(str[2]) + 1 + len) + "\n");
                                             }
                                         }
                                         break;
@@ -346,17 +383,9 @@ public class Routine {
      */
     private Boolean AppendBase(String Sequence, String Restriction, String Type) {
         if (Type.equals("R1")) {
-            if (Sequence.substring(Sequence.length() - Restriction.length(), Sequence.length()).equals(Restriction)) {
-                return true;
-            } else {
-                return false;
-            }
+            return Sequence.substring(Sequence.length() - Restriction.length(), Sequence.length()).equals(Restriction);
         } else if (Type.equals("R2")) {
-            if (Sequence.substring(0, Restriction.length()).equals(Restriction)) {
-                return true;
-            } else {
-                return false;
-            }
+            return Sequence.substring(0, Restriction.length()).equals(Restriction);
         } else {
             System.err.println(new Date() + "\tError parameter in  append one base\t" + Type);
             System.exit(0);
@@ -383,17 +412,17 @@ public class Routine {
             process[i] = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    StringBuilder line = new StringBuilder();
+                    String line;
                     String[] str;
                     try {
 //                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " strat");
-                        while (!line.append(BedpeRead.readLine()).toString().equals("null")) {
-                            str = line.toString().split("\\s+");
+                        while ((line = BedpeRead.readLine()) != null) {
+                            str = line.split("\\s+");
                             //---------------------------取相同染色体上的交互-----------------------
                             if (str[0].equals(str[3])) {
                                 if (Integer.parseInt(str[1]) < Integer.parseInt(str[4])) {
                                     synchronized (process) {
-                                        SameBedpeWrite.write(line.toString() + "\n");
+                                        SameBedpeWrite.write(line + "\n");
                                     }
                                 } else {
                                     synchronized (process) {
@@ -403,29 +432,24 @@ public class Routine {
                             }
                             //--------------------------取不同染色体上的交互----------------------
                             else {
-                                try {
-                                    if (Integer.parseInt(str[0].substring(3)) < Integer.parseInt(str[3].substring(3))) {
-                                        synchronized (process) {
-                                            DiffBedpeWrite.write(line.toString() + "\n");
-                                        }
-                                    } else {
-                                        synchronized (process) {
-                                            DiffBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[7] + "\t" + str[9] + "\t" + str[8] + "\n");
-                                        }
+                                if (str[0].length() < str[3].length()) {
+                                    synchronized (process) {
+                                        DiffBedpeWrite.write(line + "\n");
                                     }
-                                } catch (NumberFormatException e) {//如果有XY染色体就会出现异常，捕捉到异常后就要用字符串来比较大小
-                                    if (str[0].compareTo(str[3]) < 0) {
-                                        synchronized (process) {
-                                            DiffBedpeWrite.write(line.toString() + "\n");
-                                        }
-                                    } else {
-                                        synchronized (process) {
-                                            DiffBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[7] + "\t" + str[9] + "\t" + str[8] + "\n");
-                                        }
+                                } else if (str[0].length() > str[3].length()) {
+                                    synchronized (process) {
+                                        DiffBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[7] + "\t" + str[9] + "\t" + str[8] + "\n");
+                                    }
+                                } else if (str[0].compareTo(str[3]) < 0) {
+                                    synchronized (process) {
+                                        DiffBedpeWrite.write(line + "\n");
+                                    }
+                                } else {
+                                    synchronized (process) {
+                                        DiffBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[7] + "\t" + str[9] + "\t" + str[8] + "\n");
                                     }
                                 }
                             }
-                            line.setLength(0);
                         }
 //                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
                     } catch (IOException e) {

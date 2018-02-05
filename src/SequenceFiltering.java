@@ -109,7 +109,7 @@ public class SequenceFiltering {
             System.out.println("Too many linkers. Please check!!!");
             System.exit(0);
         }
-        if (AdapterFile != null) {
+        if (AdapterFile != null && !AdapterFile.equals("")) {
             ReadAdapter();
         }
         if (Adapters != null) {
