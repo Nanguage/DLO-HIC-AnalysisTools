@@ -81,12 +81,12 @@ public class Main {
         String[] UseLinkerFasqFileR1 = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
         String[] UseLinkerFasqFileR2 = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
         for (int i = 0; i < ParameterList.get(OptLinkersType).split("\\s+").length; i++) {
-            LinkerFasqFileR1[i] = SeProcessDir + "/R1/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptLinkersType).split("\\s+")[i] + ".R1.fastq";
-            LinkerFasqFileR2[i] = SeProcessDir + "/R2/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptLinkersType).split("\\s+")[i] + ".R2.fastq";
+            LinkerFasqFileR1[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptLinkersType).split("\\s+")[i] + ".R1.fastq";
+            LinkerFasqFileR2[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptLinkersType).split("\\s+")[i] + ".R2.fastq";
         }
         for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
-            UseLinkerFasqFileR1[i] = SeProcessDir + "/R1/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".R1.fastq";
-            UseLinkerFasqFileR2[i] = SeProcessDir + "/R2/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".R2.fastq";
+            UseLinkerFasqFileR1[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".R1.fastq";
+            UseLinkerFasqFileR2[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".R2.fastq";
         }
         String FinalBedpeFile = BedpeProcessDir + "/" + ParameterList.get(OptOutPrefix) + ".bedpe";
         String InterBedpeFile = BedpeProcessDir + "/" + ParameterList.get(OptOutPrefix) + ".inter.bedpe";
@@ -135,7 +135,7 @@ public class Main {
         for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
             R1SortBedFile[i] = new SeProcess(UseLinkerFasqFileR1[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), ParameterList.get(OptOutPath), UseLinkerFasqFileR1[i].replace(".R1.fastq", ""), "R1").getSortBedFile();
             R2SortBedFile[i] = new SeProcess(UseLinkerFasqFileR2[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), ParameterList.get(OptOutPath), UseLinkerFasqFileR1[i].replace(".R2.fastq", ""), "R1").getSortBedFile();
-            SeBedpeFile[i] = SeProcessDir + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".bedpe";
+            SeBedpeFile[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".bedpe";
             step.MergeBedToBedpe(R1SortBedFile[i], R2SortBedFile[i], SeBedpeFile[i], 4, "");//合并左右端bed文件，输出bedpe文件
         }
         try {
@@ -339,6 +339,21 @@ public class Main {
         BedpeProcessDir = ParameterList.get(OptOutPath) + "/BedpeProcess";
         MakeMatrixDir = ParameterList.get(OptOutPath) + "/MakeMatrix";
         EnzyPath = ParameterList.get(OptOutPath) + "/EnzySiteFile";
+        if (!new File(PreProcessDir).isDirectory() && !new File(PreProcessDir).mkdirs()) {
+            System.err.println("Can't creat " + PreProcessDir);
+        }
+        if (!new File(SeProcessDir).isDirectory() && !new File(SeProcessDir).mkdirs()) {
+            System.err.println("Can't creat " + SeProcessDir);
+        }
+        if (!new File(BedpeProcessDir).isDirectory() && !new File(BedpeProcessDir).mkdirs()) {
+            System.err.println("Can't creat " + BedpeProcessDir);
+        }
+        if (!new File(MakeMatrixDir).isDirectory() && !new File(MakeMatrixDir).mkdirs()) {
+            System.err.println("Can't creat " + MakeMatrixDir);
+        }
+        if (!new File(EnzyPath).isDirectory() && !new File(EnzyPath).mkdirs()) {
+            System.err.println("Can't creat " + EnzyPath);
+        }
         EnzyFilePrefix = EnzyPath + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptRestriction).replace("^", "");
         step.Threads = Integer.parseInt(ParameterList.get(OptThreads));
     }
