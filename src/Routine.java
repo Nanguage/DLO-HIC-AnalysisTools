@@ -388,10 +388,9 @@ public class Routine {
             return Sequence.substring(0, Restriction.length()).equals(Restriction);
         } else {
             System.err.println(new Date() + "\tError parameter in  append one base\t" + Type);
-            System.exit(0); 
+            System.exit(0);
             return false;
         }
-
     }//OK
 
     /**

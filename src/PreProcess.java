@@ -12,6 +12,13 @@ public class PreProcess {
     private final String OptMisMatchScore = "MisMatchScore";//错配分数
     private final String OptIndelScore = "IndelScore";//插入缺失分数
     private final String OptThreads = "Threads";//线程数，默认1
+    private String FastqFile;//Fastq文件
+    private String LinkerFile;//linker文件
+    private String AdapterFile;//Adapter文件
+    private int MatchScore;//匹配分数
+    private int MisMatchScore;//错配分数
+    private int IndelScore;//插入缺失分数
+    private int Threads;//线程数，默认1
     private String LinkerFilterOutPrefix;//linker过滤输出前缀
     private int ScoreNum;
     private Hashtable<String, String> OptionList = new Hashtable<>();
@@ -73,17 +80,18 @@ public class PreProcess {
 
     public void Run() throws IOException {
         SequenceFiltering lk;//声明一个linkerFiltering类
+
         if (ScoreNum == 3) {
-            lk = new SequenceFiltering(OptionList.get(OptFastqFile), OptionList.get(OptLinkerFile), OptionList.get(OptAdapterFile), LinkerFilterOutPrefix, Integer.parseInt(OptionList.get(OptMatchScore)), Integer.parseInt(OptionList.get(OptMisMatchScore)), Integer.parseInt(OptionList.get(OptIndelScore)), 0, Integer.parseInt(OptionList.get(OptThreads)));
+            lk = new SequenceFiltering(FastqFile, LinkerFile, AdapterFile, LinkerFilterOutPrefix, MatchScore, MisMatchScore, IndelScore, 0, Threads);
         } else {
-            lk = new SequenceFiltering(OptionList.get(OptFastqFile), OptionList.get(OptLinkerFile), OptionList.get(OptAdapterFile), LinkerFilterOutPrefix, 0, Integer.parseInt(OptionList.get(OptThreads)));
+            lk = new SequenceFiltering(FastqFile, LinkerFile, AdapterFile, LinkerFilterOutPrefix, 0, Threads);
         }
         System.out.println(new Date() + "\tStart to linkerfilter");
         lk.Run();
     }
 
     public String getPastFile() throws IOException {
-        return new SequenceFiltering(OptionList.get(OptFastqFile), OptionList.get(OptLinkerFile), LinkerFilterOutPrefix, 0, 1).getOutFile();
+        return new SequenceFiltering(FastqFile, LinkerFile, LinkerFilterOutPrefix, 0, 1).getOutFile();
     }
 
     public static void main(String[] args) throws IOException {
@@ -114,28 +122,37 @@ public class PreProcess {
         optfile.close();
     }
 
-    private void Init() throws IOException {
+    private void Init() {
         for (String opt : RequiredParameter) {
             if (OptionList.get(opt).equals("")) {
                 System.err.println("Error ! No " + opt);
                 System.exit(0);
             }
         }
-        if (!new File(OptionList.get(OptFastqFile)).isFile()) {
-            System.err.println("Wrong " + OptFastqFile + " " + OptionList.get(OptFastqFile) + " is not a file");
+        String OutPath = OptionList.get(OptOutPath);
+        String Prefix = OptionList.get(OptOutPrefix);
+        FastqFile = OptionList.get(OptFastqFile);
+        LinkerFile = OptionList.get(OptLinkerFile);
+        AdapterFile = OptionList.get(OptAdapterFile);
+        MatchScore = Integer.parseInt(OptionList.get(OptMatchScore));
+        MisMatchScore = Integer.parseInt(OptionList.get(OptMisMatchScore));
+        IndelScore = Integer.parseInt(OptionList.get(OptIndelScore));
+        Threads = Integer.parseInt(OptionList.get(OptThreads));
+        if (!new File(FastqFile).isFile()) {
+            System.err.println("Wrong " + OptFastqFile + " " + FastqFile + " is not a file");
             System.exit(0);
         }
-        if (!new File(OptionList.get(OptLinkerFile)).isFile()) {
-            System.err.println("Wrong " + OptLinkerFile + " " + OptionList.get(OptLinkerFile) + " is not a file");
+        if (!new File(LinkerFile).isFile()) {
+            System.err.println("Wrong " + OptLinkerFile + " " + LinkerFile + " is not a file");
             System.exit(0);
         }
-        if (!new File(OptionList.get(OptOutPath)).isDirectory()) {
-            if (!new File(OptionList.get(OptOutPath)).mkdir()) {
-                System.err.println("Can't creat " + OptionList.get(OptOutPath));
+        if (!new File(OutPath).isDirectory()) {
+            if (!new File(OutPath).mkdir()) {
+                System.err.println("Can't creat " + OutPath);
                 System.exit(0);
             }
         }
-        LinkerFilterOutPrefix = OptionList.get(OptOutPath) + "/" + OptionList.get(OptOutPrefix) + ".linkerfilter";
+        LinkerFilterOutPrefix = OutPath + "/" + Prefix + ".linkerfilter";
     }
 
     public void OptionListInit() {

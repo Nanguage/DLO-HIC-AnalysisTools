@@ -61,7 +61,6 @@ public class Main {
     public static void main(String args[]) throws IOException {
         //==============================================测试区==========================================================
 
-
         //==============================================================================================================
         if (args.length < 1) {
             System.out.println("Usage:    java -jar DLO-HIC-AnalysisTools.jar <config.txt>");
@@ -134,7 +133,7 @@ public class Main {
         String[] SeBedpeFile = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
         for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
             R1SortBedFile[i] = new SeProcess(UseLinkerFasqFileR1[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), ParameterList.get(OptOutPath), UseLinkerFasqFileR1[i].replace(".R1.fastq", ""), "R1").getSortBedFile();
-            R2SortBedFile[i] = new SeProcess(UseLinkerFasqFileR2[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), ParameterList.get(OptOutPath), UseLinkerFasqFileR1[i].replace(".R2.fastq", ""), "R1").getSortBedFile();
+            R2SortBedFile[i] = new SeProcess(UseLinkerFasqFileR2[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), ParameterList.get(OptOutPath), UseLinkerFasqFileR1[i].replace(".R2.fastq", ""), "R2").getSortBedFile();
             SeBedpeFile[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".bedpe";
             step.MergeBedToBedpe(R1SortBedFile[i], R2SortBedFile[i], SeBedpeFile[i], 4, "");//合并左右端bed文件，输出bedpe文件
         }
@@ -148,7 +147,7 @@ public class Main {
         for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
             LinkerProcess[i] = BedpeProcess(ParameterList.get(OptUseLinker).split("\\s+")[i], SeBedpeFile[i]);
             LinkerProcess[i].start();
-            FinalLinkerBedpe[i] = new BedpeProcess(BedpeProcessDir, ParameterList.get(OptOutPrefix), ParameterList.get(OptUseLinker).split("\\s+")[i], ParameterList.get(OptChromosome).split("\\s+"), EnzyFilePrefix, SeBedpeFile[i]).getFinalBedpeFile();
+            FinalLinkerBedpe[i] = new BedpeProcess(BedpeProcessDir, ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i], ParameterList.get(OptChromosome).split("\\s+"), EnzyFilePrefix, SeBedpeFile[i]).getValidBedpeFile();
         }
         for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
             try {
@@ -242,8 +241,8 @@ public class Main {
             @Override
             public void run() {
                 try {
-                    BedpeProcess bedpe = new BedpeProcess(BedpeProcessDir, ParameterList.get(OptOutPrefix), UseLinker, ParameterList.get(OptChromosome).split("\\s+"), EnzyFilePrefix, SeBedpeFile);//bedpe文件处理类
-                    bedpe.Threads = Integer.parseInt(ParameterList.get(OptThreads));//设置线程数
+                    BedpeProcess bedpe = new BedpeProcess(BedpeProcessDir, ParameterList.get(OptOutPrefix) + "." + UseLinker, ParameterList.get(OptChromosome).split("\\s+"), EnzyFilePrefix, SeBedpeFile);//bedpe文件处理类
+                    bedpe.SetParameter(bedpe.OptThreads, ParameterList.get(OptThreads));//设置线程数
                     bedpe.Run();//运行
                 } catch (IOException e) {
                     e.printStackTrace();
