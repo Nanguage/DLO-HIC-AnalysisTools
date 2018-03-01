@@ -12,34 +12,30 @@ class SeProcess {
     private final String OptFastqFile = "FastqFile";//不同linker类型的Fastq文件
     private final String OptIndexFile = "Index";//比对索引文件
     private final String OptOutPath = "OutPath";//输出目录
-    private final String OptSeType = "Type";//单端类型(R1 or R2)
+    //    private final String OptSeType = "Type";//单端类型(R1 or R2)
     private final String OptPrefix = "Prefix";//输出前缀
     public final String OptThreads = "Thread";//线程数
-    //    private String OptRestriction;//酶切位点（such as A^AGCTT）
-//    private String RestrictionSeq;//需要匹配的酶切位点序列
-//    private String AddSeq;//需要延长的序列
-//    private String AddQuality;//延长的序列质量
-//    private String LinkersType;//linker类型
-//    private String OptUseLinkerType;//有用的linker类型
-//    public int Phred = 33;//Fastq格式
     private final String OptMinQuality = "MinQuality";//最小比对质量
-    //    private int MaxReadsLength = 20;//最长reads长度
-//    private int MinReadsLength = 16;//最短reads长度
     private final String OptMisMatchNum = "MisMatchNum";//错配数，bwa中使用
     public final String OptAlignThreads = "AlignThreads";//比对线程数
-    //    public int MinLinkerFilterQuality = 34;//最小linker过滤的比对质量
+    //========================================================================
+    private String FastqFile;//不同linker类型的Fastq文件
+    private String IndexFile;//比对索引文件
+    private int Thread;//线程数
+    private int MinQuality;//最小比对质量
+    private int MisMatchNum;//错配数，bwa中使用
+    private int AlignThreads;//比对线程数
+    //========================================================================
     private Hashtable<String, String> ParameterList = new Hashtable<>();
-    private String[] RequiredParameter = new String[]{OptFastqFile, OptIndexFile, OptSeType, OptMinQuality};
+    private String[] RequiredParameter = new String[]{OptFastqFile, OptIndexFile, OptMinQuality};
     private String[] OptionalParameter = new String[]{OptOutPath, OptPrefix, OptMisMatchNum, OptAlignThreads, OptThreads};
-    //    private String PastFile;//输入文件(linker过滤的结果文件)
-    //    private String[] UseLinkerFastqFile;//可用的linker类型的Fastq文件
     private String SamFile;//Sam文件
     private String FilterSamFile;//过滤后的Sam文件
     private String BamFile;//Bam文件
     private String BedFile;//Bed文件
     private String SortBedFile;//排序后的bed文件
 
-    SeProcess(String fastqfile, String index, String mismatch, String minquality, String outpath, String prefix, String type) {
+    SeProcess(String fastqfile, String index, String mismatch, String minquality, String outpath, String prefix) {
         ParameterInit();
         ParameterList.put(OptFastqFile, fastqfile);
         ParameterList.put(OptIndexFile, index);
@@ -47,7 +43,7 @@ class SeProcess {
         ParameterList.put(OptMinQuality, minquality);
         ParameterList.put(OptOutPath, outpath);
         ParameterList.put(OptPrefix, prefix);
-        ParameterList.put(OptSeType, type);
+//        ParameterList.put(OptSeType, type);
         Init();
     }
 
@@ -68,41 +64,22 @@ class SeProcess {
      */
     public void Run() throws IOException {
         Routine Se = new Routine();
-        Se.Threads = Integer.parseInt(ParameterList.get(OptThreads));
+        Se.Threads = Thread;
         //========================================================================================
-        //区分不同类型的linker，并放到不同的文件中（中间会过滤掉比对质量较低，和无法延长的序列）
-//        Se.ClusterLinker(PastFile, LinkerFastqFile, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, RestrictionSeq, AddSeq, AddQuality, SeType);
-        Thread process;
         //处理可用的linker类型（每个线程处理一种linker类型）
-        process = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start\t" + LinkersType[finalI]);
-                    //比对
-                    Se.Align(ParameterList.get(OptIndexFile), ParameterList.get(OptFastqFile), SamFile, Integer.parseInt(ParameterList.get(OptAlignThreads)), Integer.parseInt(ParameterList.get(OptMisMatchNum)));
-                    //Sam文件过滤
-                    Se.SamFilter(SamFile, FilterSamFile, Integer.parseInt(ParameterList.get(OptMinQuality)));
-                    //Sam文件转bam再转bed
-                    Se.SamToBed(FilterSamFile, BamFile, BedFile);
-                    //对bed文件排序（由于在大量数据下bed文件会比较大，所以为了减少内存消耗，bed文件排序使用串行）
-                    CommonMethod.SortFile(BedFile, new int[]{4}, "", "\\s+", SortBedFile, Integer.parseInt(ParameterList.get(OptThreads)));
-//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end\t" + LinkersType[finalI]);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-        process.start();
-        try {
-            process.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+//        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start\t" + LinkersType[finalI]);
+        //比对
+        Se.Align(IndexFile, FastqFile, SamFile, AlignThreads, MisMatchNum);
+        //Sam文件过滤
+        Se.SamFilter(SamFile, FilterSamFile, MinQuality);
+        //Sam文件转bam再转bed
+        Se.SamToBed(FilterSamFile, BamFile, BedFile);
+        //对bed文件排序（由于在大量数据下bed文件会比较大，所以为了减少内存消耗，bed文件排序使用串行）
+        CommonMethod.SortFile(BedFile, new int[]{4}, "", "\\s+", SortBedFile, Thread);
+//        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end\t" + LinkersType[finalI]);
         //删掉过滤后的sam文件（有bam文件，所以不用留sam文件，节省空间）
         System.out.println(new Date() + "\tDelete " + FilterSamFile);
         new File(FilterSamFile).delete();
-
     }
 
     public static void main(String[] args) throws IOException {
@@ -147,25 +124,29 @@ class SeProcess {
                 System.exit(0);
             }
         }
-        if (!ParameterList.get(OptSeType).equals("R1") && !ParameterList.get(OptSeType).equals("R2")) {
-            System.err.println("Error ! Unknow Type " + ParameterList.get(OptSeType) + "\tType should R1 or R2");
-            System.exit(0);
-        }
+//        if (!ParameterList.get(OptSeType).equals("R1") && !ParameterList.get(OptSeType).equals("R2")) {
+//            System.err.println("Error ! Unknow Type " + ParameterList.get(OptSeType) + "\tType should R1 or R2");
+//            System.exit(0);
+//        }
         //=============================================================================================
-        if (ParameterList.get(OptPrefix).equals("")) {
-            if (ParameterList.get(OptFastqFile).lastIndexOf(".") != -1) {
-                ParameterList.put(OptPrefix, ParameterList.get(OptFastqFile).substring(0, ParameterList.get(OptFastqFile).lastIndexOf(".")));
-            } else {
-                ParameterList.put(OptPrefix, OptFastqFile);
-            }
-        }
-        if (!new File(ParameterList.get(OptOutPath) + "/" + ParameterList.get(OptSeType)).isDirectory()) {
-            if (!new File(ParameterList.get(OptOutPath) + "/" + ParameterList.get(OptSeType)).mkdirs()) {
-                System.err.println("Can't creat " + ParameterList.get(OptOutPath) + "/" + ParameterList.get(OptSeType));
+        String OutPath = ParameterList.get(OptOutPath);
+        String Prefix = ParameterList.get(OptPrefix);
+        FastqFile = ParameterList.get(OptFastqFile);
+        IndexFile = ParameterList.get(OptIndexFile);
+//        String seType = ParameterList.get(OptSeType);
+        Thread = Integer.parseInt(ParameterList.get(OptThreads));
+        MinQuality = Integer.parseInt(ParameterList.get(OptMinQuality));
+        MisMatchNum = Integer.parseInt(ParameterList.get(OptMisMatchNum));
+        AlignThreads = Integer.parseInt(ParameterList.get(OptAlignThreads));
+        //=============================================================================================
+        if (!new File(OutPath).isDirectory()) {
+            if (!new File(OutPath).mkdirs()) {
+                System.err.println("Can't creat " + OutPath);
                 System.exit(0);
             }
         }
-        SamFile = ParameterList.get(OptFastqFile).replace(".fastq", "." + ParameterList.get(OptMisMatchNum) + ".sam");
+        SamFile = OutPath + "/" + Prefix + "." + MisMatchNum + ".sam";
+//        SamFile = FastqFile.replace(".fastq", "." + MisMatchNum + ".sam");
         FilterSamFile = SamFile.replace(".sam", ".uniq.sam");
         BamFile = FilterSamFile.replace(".uniq.sam", ".bam");
         BedFile = BamFile.replace(".bam", ".bed");
@@ -180,6 +161,7 @@ class SeProcess {
         for (String opt : OptionalParameter) {
             ParameterList.put(opt, "");
         }
+        ParameterList.put(OptPrefix, "SeProcess_Out");
         ParameterList.put(OptOutPath, "./");
         ParameterList.put(OptMisMatchNum, "0");
         ParameterList.put(OptAlignThreads, "8");

@@ -20,7 +20,7 @@ public class PreProcess {
     private int IndelScore;//插入缺失分数
     private int Threads;//线程数，默认1
     private String LinkerFilterOutPrefix;//linker过滤输出前缀
-    private int ScoreNum;
+    //    private int ScoreNum;
     private Hashtable<String, String> OptionList = new Hashtable<>();
     private String[] RequiredParameter = new String[]{OptFastqFile, OptLinkerFile};
     private String[] OptionalParameter = new String[]{OptOutPath, OptOutPrefix, OptAdapterFile, OptMatchScore, OptMisMatchScore, OptIndelScore, OptThreads};
@@ -80,12 +80,7 @@ public class PreProcess {
 
     public void Run() throws IOException {
         SequenceFiltering lk;//声明一个linkerFiltering类
-
-        if (ScoreNum == 3) {
-            lk = new SequenceFiltering(FastqFile, LinkerFile, AdapterFile, LinkerFilterOutPrefix, MatchScore, MisMatchScore, IndelScore, 0, Threads);
-        } else {
-            lk = new SequenceFiltering(FastqFile, LinkerFile, AdapterFile, LinkerFilterOutPrefix, 0, Threads);
-        }
+        lk = new SequenceFiltering(FastqFile, LinkerFile, AdapterFile, LinkerFilterOutPrefix, MatchScore, MisMatchScore, IndelScore, 0, Threads);
         System.out.println(new Date() + "\tStart to linkerfilter");
         lk.Run();
     }
@@ -129,6 +124,7 @@ public class PreProcess {
                 System.exit(0);
             }
         }
+        //=================================================================
         String OutPath = OptionList.get(OptOutPath);
         String Prefix = OptionList.get(OptOutPrefix);
         FastqFile = OptionList.get(OptFastqFile);
@@ -138,6 +134,7 @@ public class PreProcess {
         MisMatchScore = Integer.parseInt(OptionList.get(OptMisMatchScore));
         IndelScore = Integer.parseInt(OptionList.get(OptIndelScore));
         Threads = Integer.parseInt(OptionList.get(OptThreads));
+        //===================================================================
         if (!new File(FastqFile).isFile()) {
             System.err.println("Wrong " + OptFastqFile + " " + FastqFile + " is not a file");
             System.exit(0);

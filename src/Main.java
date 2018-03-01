@@ -111,8 +111,8 @@ public class Main {
         Thread[] sepR1 = new Thread[ParameterList.get(OptUseLinker).split("\\s+").length];
         Thread[] sepR2 = new Thread[ParameterList.get(OptUseLinker).split("\\s+").length];
         for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
-            sepR1[i] = SeProcess(UseLinkerFasqFileR1[i], UseLinkerFasqFileR1[i].replace(".R1.fastq", ""), "R1");
-            sepR2[i] = SeProcess(UseLinkerFasqFileR2[i], UseLinkerFasqFileR1[i].replace(".R2.fastq", ""), "R2");
+            sepR1[i] = SeProcess(UseLinkerFasqFileR1[i], UseLinkerFasqFileR1[i].replaceAll(".*/", "").replace(".fastq", ""));
+            sepR2[i] = SeProcess(UseLinkerFasqFileR2[i], UseLinkerFasqFileR2[i].replaceAll(".*/", "").replace(".fastq", ""));
             sepR1[i].start();
             sepR2[i].start();
         }
@@ -132,8 +132,8 @@ public class Main {
         String[] R2SortBedFile = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
         String[] SeBedpeFile = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
         for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
-            R1SortBedFile[i] = new SeProcess(UseLinkerFasqFileR1[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), ParameterList.get(OptOutPath), UseLinkerFasqFileR1[i].replace(".R1.fastq", ""), "R1").getSortBedFile();
-            R2SortBedFile[i] = new SeProcess(UseLinkerFasqFileR2[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), ParameterList.get(OptOutPath), UseLinkerFasqFileR1[i].replace(".R2.fastq", ""), "R2").getSortBedFile();
+            R1SortBedFile[i] = new SeProcess(UseLinkerFasqFileR1[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), SeProcessDir, UseLinkerFasqFileR1[i].replaceAll(".*/","").replace(".fastq", "")).getSortBedFile();
+            R2SortBedFile[i] = new SeProcess(UseLinkerFasqFileR2[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), SeProcessDir, UseLinkerFasqFileR2[i].replaceAll(".*/","").replace(".fastq", "")).getSortBedFile();
             SeBedpeFile[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".bedpe";
             step.MergeBedToBedpe(R1SortBedFile[i], R2SortBedFile[i], SeBedpeFile[i], 4, "");//合并左右端bed文件，输出bedpe文件
         }
@@ -147,7 +147,7 @@ public class Main {
         for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
             LinkerProcess[i] = BedpeProcess(ParameterList.get(OptUseLinker).split("\\s+")[i], SeBedpeFile[i]);
             LinkerProcess[i].start();
-            FinalLinkerBedpe[i] = new BedpeProcess(BedpeProcessDir, ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i], ParameterList.get(OptChromosome).split("\\s+"), EnzyFilePrefix, SeBedpeFile[i]).getValidBedpeFile();
+            FinalLinkerBedpe[i] = new BedpeProcess(BedpeProcessDir, ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i], ParameterList.get(OptChromosome).split("\\s+"), EnzyFilePrefix, SeBedpeFile[i]).getFinalBedpeFile();
         }
         for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
             try {
@@ -219,8 +219,8 @@ public class Main {
         return t;
     }
 
-    private Thread SeProcess(String FastqFile, String Prefix, String Type) {
-        SeProcess ssp = new SeProcess(FastqFile, ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), ParameterList.get(OptOutPath), Prefix, Type);//单端处理类
+    private Thread SeProcess(String FastqFile, String Prefix) {
+        SeProcess ssp = new SeProcess(FastqFile, ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), SeProcessDir, Prefix);//单端处理类
         ssp.SetParameter(ssp.OptThreads, ParameterList.get(OptThreads));//设置线程数
         ssp.SetParameter(ssp.OptAlignThreads, ParameterList.get(OptAlignThread));
         Thread t = new Thread(new Runnable() {
