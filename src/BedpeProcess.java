@@ -12,7 +12,7 @@ public class BedpeProcess {
     //======================================================
     private String BedpeFile;
     private String EnzyFilePrefix;
-    private int Thread;
+    public int Thread;
     private String[] Chromosome;
     private String[] LigationType;
     private String FinalBedpeFile;
@@ -39,6 +39,7 @@ public class BedpeProcess {
             System.exit(0);
         }
         BedpeProcess bedpe = new BedpeProcess(args[0]);
+        bedpe.ShowParameter();
         bedpe.Run();
     }
 
@@ -187,6 +188,9 @@ public class BedpeProcess {
         }
         if (new File(EnzyFragment).exists()) {
             new File(EnzyFragment).delete();
+        }
+        if (new File(FinalBedpeFile).exists()) {
+            new File(FinalBedpeFile).delete();
         }
     }
 

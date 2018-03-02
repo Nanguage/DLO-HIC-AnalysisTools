@@ -21,10 +21,10 @@ class SeProcess {
     //========================================================================
     private String FastqFile;//不同linker类型的Fastq文件
     private String IndexFile;//比对索引文件
-    private int Thread;//线程数
+    public int Thread;//线程数
     private int MinQuality;//最小比对质量
     private int MisMatchNum;//错配数，bwa中使用
-    private int AlignThreads;//比对线程数
+    public int AlignThreads;//比对线程数
     //========================================================================
     private Hashtable<String, String> ParameterList = new Hashtable<>();
     private String[] RequiredParameter = new String[]{OptFastqFile, OptIndexFile, OptMinQuality};
@@ -35,12 +35,12 @@ class SeProcess {
     private String BedFile;//Bed文件
     private String SortBedFile;//排序后的bed文件
 
-    SeProcess(String fastqfile, String index, String mismatch, String minquality, String outpath, String prefix) {
+    SeProcess(String fastqfile, String index, int mismatch, int minquality, String outpath, String prefix) {
         ParameterInit();
         ParameterList.put(OptFastqFile, fastqfile);
         ParameterList.put(OptIndexFile, index);
-        ParameterList.put(OptMisMatchNum, mismatch);
-        ParameterList.put(OptMinQuality, minquality);
+        ParameterList.put(OptMisMatchNum, String.valueOf(mismatch));
+        ParameterList.put(OptMinQuality, String.valueOf(minquality));
         ParameterList.put(OptOutPath, outpath);
         ParameterList.put(OptPrefix, prefix);
 //        ParameterList.put(OptSeType, type);

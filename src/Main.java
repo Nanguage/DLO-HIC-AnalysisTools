@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
 
@@ -7,12 +8,10 @@ public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
     private final String OptGenomeFile = "GenomeFile";//基因组文件
     private final String OptPhred = "Phred";//fastq格式
-    private final String OptOutPrefix = "OutPrefix";//输出前缀
+    private final String OptPrefix = "Prefix";//输出前缀
     private final String OptOutPath = "OutPath";//输出路径
     private final String OptChromosome = "Chromosome";//染色体名
     private final String OptRestriction = "Restriction";//酶切位点序列
-    //    private String[] MatchRestriction = new String[2];//匹配的序列
-//    private String[] AddSeq = new String[2];//延长的序列
     private final String OptLinkerFile = "LinkerFile";//linker文件
     private final String OptAdapterFile = "AdapterFile";//Adapter文件
     private final String OptLinkersType = "LinkersType";//linker类型
@@ -28,13 +27,37 @@ public class Main {
     private final String OptMinReadsLength = "MinReadsLength";//最小reads长度
     private final String OptMaxReadsLength = "MaxReadsLength";//最大reads长度
     private final String OptResolution = "Resolution";//分辨率
-    private final String OptThreads = "Threads";//线程数
+    private final String OptThreads = "Thread";//线程数
+    private final String OptStep = "Step";
+    //===================================================================
+    private String FastqFile;
+    private String GenomeFile;
+    private String Prefix;
+    private ArrayList<String> Chromosome = new ArrayList<>();
+    private String Restriction;
+    private String LinkerFile;
+    private String AdapterFile;
+    private ArrayList<String> LinkersType = new ArrayList<>();
+    private ArrayList<String> UseLinker = new ArrayList<>();
+    private int MatchScore;
+    private int MisMatchScore;
+    private int IndelScore;
+    private String IndexFile;
+    private int AlignMisMatch;
+    private int AlignThread;
+    private int AlignMinQuality;
+    private int MinReadsLength;
+    private int MaxReadsLength;
+    private int Resolution;
+    private int Thread;
+    private ArrayList<String> Step = new ArrayList<>();
+
+    //===================================================================
     private String[] RequiredParameter = new String[]{OptFastqFile, OptGenomeFile, OptLinkerFile, OptChromosome, OptRestriction, OptLinkersType, OptIndexFile, OptAlignMinQuality};
-    private String[] OptionalParameter = new String[]{OptOutPath, OptOutPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptPhred, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptAlignMisMatch, OptAlignThread, OptResolution, OptThreads};
-    //    private String ConfigureFile;//配置文件
+    private String[] OptionalParameter = new String[]{OptOutPath, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptPhred, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptThreads};
     private Hashtable<String, String> ParameterList;
     private Hashtable<String, Integer> ChrSize;//染色体大小
-    public int MinLinkerFilterQuality;
+    private int MinLinkerFilterQuality;
     private String AddQuality;
     private String EnzyPath;//酶切位点文件目录
     private String EnzyFilePrefix;//酶切位点文件前缀
@@ -74,49 +97,55 @@ public class Main {
     public void Run() throws IOException {
 
         //===========================================初始化输出文件======================================================
-        String[] FinalLinkerBedpe = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
-        String[] LinkerFasqFileR1 = new String[ParameterList.get(OptLinkersType).split("\\s+").length];
-        String[] LinkerFasqFileR2 = new String[ParameterList.get(OptLinkersType).split("\\s+").length];
-        String[] UseLinkerFasqFileR1 = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
-        String[] UseLinkerFasqFileR2 = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
-        for (int i = 0; i < ParameterList.get(OptLinkersType).split("\\s+").length; i++) {
-            LinkerFasqFileR1[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptLinkersType).split("\\s+")[i] + ".R1.fastq";
-            LinkerFasqFileR2[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptLinkersType).split("\\s+")[i] + ".R2.fastq";
+        String[] FinalLinkerBedpe = new String[UseLinker.size()];
+        String[] LinkerFasqFileR1 = new String[LinkersType.size()];
+        String[] LinkerFasqFileR2 = new String[LinkersType.size()];
+        String[] UseLinkerFasqFileR1 = new String[UseLinker.size()];
+        String[] UseLinkerFasqFileR2 = new String[UseLinker.size()];
+        for (int i = 0; i < LinkersType.size(); i++) {
+            LinkerFasqFileR1[i] = SeProcessDir + "/" + Prefix + "." + LinkersType.get(i) + ".R1.fastq";
+            LinkerFasqFileR2[i] = SeProcessDir + "/" + Prefix + "." + LinkersType.get(i) + ".R2.fastq";
         }
-        for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
-            UseLinkerFasqFileR1[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".R1.fastq";
-            UseLinkerFasqFileR2[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".R2.fastq";
+        for (int i = 0; i < UseLinker.size(); i++) {
+            UseLinkerFasqFileR1[i] = SeProcessDir + "/" + Prefix + "." + UseLinker.get(i) + ".R1.fastq";
+            UseLinkerFasqFileR2[i] = SeProcessDir + "/" + Prefix + "." + UseLinker.get(i) + ".R2.fastq";
         }
-        String FinalBedpeFile = BedpeProcessDir + "/" + ParameterList.get(OptOutPrefix) + ".bedpe";
-        String InterBedpeFile = BedpeProcessDir + "/" + ParameterList.get(OptOutPrefix) + ".inter.bedpe";
-        step.Threads = Integer.parseInt(ParameterList.get(OptThreads));//设置线程数
+        String FinalBedpeFile = BedpeProcessDir + "/" + Prefix + ".bedpe";
+        String InterBedpeFile = BedpeProcessDir + "/" + Prefix + ".inter.bedpe";
+        step.Threads = Thread;//设置线程数
         //=========================================linker filter==linker 过滤===========================================
         PreProcess preprocess;
-        preprocess = new PreProcess(PreProcessDir, ParameterList.get(OptOutPrefix), ParameterList.get(OptFastqFile), ParameterList.get(OptLinkerFile), ParameterList.get(OptAdapterFile), ParameterList.get(OptMatchScore), ParameterList.get(OptMisMatchScore), ParameterList.get(OptIndelScore), String.valueOf(Integer.parseInt(ParameterList.get(OptThreads)) * 4));
-        preprocess.Run();
+        preprocess = new PreProcess(PreProcessDir, Prefix, FastqFile, LinkerFile, AdapterFile, MatchScore, MisMatchScore, IndelScore, Thread * 4);
+        if (StepCheck("LinkerFilter")) {
+            preprocess.Run();
+        }
         String PastFile = preprocess.getPastFile();//获取past文件位置
         preprocess = null;
         //=========================================Linker Cluster=======================================================
         Thread cslR1 = ClusterLinker(PastFile, LinkerFasqFileR1, "R1");
         Thread cslR2 = ClusterLinker(PastFile, LinkerFasqFileR2, "R2");
         try {
-            cslR1.start();
-            cslR2.start();
+            if (StepCheck("ClusterLinker")) {
+                cslR1.start();
+                cslR2.start();
+            }
             cslR1.join();
             cslR2.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
         //=======================================Se Process===单端处理==================================================
-        Thread[] sepR1 = new Thread[ParameterList.get(OptUseLinker).split("\\s+").length];
-        Thread[] sepR2 = new Thread[ParameterList.get(OptUseLinker).split("\\s+").length];
-        for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
+        Thread[] sepR1 = new Thread[UseLinker.size()];
+        Thread[] sepR2 = new Thread[UseLinker.size()];
+        for (int i = 0; i < UseLinker.size(); i++) {
             sepR1[i] = SeProcess(UseLinkerFasqFileR1[i], UseLinkerFasqFileR1[i].replaceAll(".*/", "").replace(".fastq", ""));
             sepR2[i] = SeProcess(UseLinkerFasqFileR2[i], UseLinkerFasqFileR2[i].replaceAll(".*/", "").replace(".fastq", ""));
-            sepR1[i].start();
-            sepR2[i].start();
+            if (StepCheck("SeProcess")) {
+                sepR1[i].start();
+                sepR2[i].start();
+            }
         }
-        for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
+        for (int i = 0; i < UseLinker.size(); i++) {
             try {
                 sepR1[i].join();
                 sepR2[i].join();
@@ -124,18 +153,22 @@ public class Main {
                 e.printStackTrace();
             }
         }
+        //=============================================获取排序好的bed文件===============================================
+        String[] R1SortBedFile = new String[UseLinker.size()];
+        String[] R2SortBedFile = new String[UseLinker.size()];
+        String[] SeBedpeFile = new String[UseLinker.size()];
+        for (int i = 0; i < UseLinker.size(); i++) {
+            R1SortBedFile[i] = new SeProcess(UseLinkerFasqFileR1[i], IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR1[i].replaceAll(".*/", "").replace(".fastq", "")).getSortBedFile();
+            R2SortBedFile[i] = new SeProcess(UseLinkerFasqFileR2[i], IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR2[i].replaceAll(".*/", "").replace(".fastq", "")).getSortBedFile();
+            SeBedpeFile[i] = SeProcessDir + "/" + Prefix + "." + UseLinker.get(i) + ".bedpe";
+            if (StepCheck("Bed2BedPe")) {
+                step.MergeBedToBedpe(R1SortBedFile[i], R2SortBedFile[i], SeBedpeFile[i], 4, "");//合并左右端bed文件，输出bedpe文件
+            }
+        }
         //==========================================获取酶切片段和染色体大小=============================================
         Thread findenzy = FindRestrictionFragment();
-        findenzy.start();
-        //=============================================获取排序好的bed文件===============================================
-        String[] R1SortBedFile = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
-        String[] R2SortBedFile = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
-        String[] SeBedpeFile = new String[ParameterList.get(OptUseLinker).split("\\s+").length];
-        for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
-            R1SortBedFile[i] = new SeProcess(UseLinkerFasqFileR1[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), SeProcessDir, UseLinkerFasqFileR1[i].replaceAll(".*/","").replace(".fastq", "")).getSortBedFile();
-            R2SortBedFile[i] = new SeProcess(UseLinkerFasqFileR2[i], ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), SeProcessDir, UseLinkerFasqFileR2[i].replaceAll(".*/","").replace(".fastq", "")).getSortBedFile();
-            SeBedpeFile[i] = SeProcessDir + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i] + ".bedpe";
-            step.MergeBedToBedpe(R1SortBedFile[i], R2SortBedFile[i], SeBedpeFile[i], 4, "");//合并左右端bed文件，输出bedpe文件
+        if (StepCheck("BedPeProcess")) {
+            findenzy.start();
         }
         try {
             findenzy.join();
@@ -143,13 +176,15 @@ public class Main {
             e.printStackTrace();
         }
         //==============================================Bedpe Process====bedpe 处理=====================================
-        Thread[] LinkerProcess = new Thread[ParameterList.get(OptUseLinker).split("\\s+").length];//不同linker类型并行
-        for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
-            LinkerProcess[i] = BedpeProcess(ParameterList.get(OptUseLinker).split("\\s+")[i], SeBedpeFile[i]);
-            LinkerProcess[i].start();
-            FinalLinkerBedpe[i] = new BedpeProcess(BedpeProcessDir, ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptUseLinker).split("\\s+")[i], ParameterList.get(OptChromosome).split("\\s+"), EnzyFilePrefix, SeBedpeFile[i]).getFinalBedpeFile();
+        Thread[] LinkerProcess = new Thread[UseLinker.size()];//不同linker类型并行
+        for (int i = 0; i < UseLinker.size(); i++) {
+            LinkerProcess[i] = BedpeProcess(UseLinker.get(i), SeBedpeFile[i]);
+            if (StepCheck("BedPeProcess")) {
+                LinkerProcess[i].start();
+            }
+            FinalLinkerBedpe[i] = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker.get(i), Chromosome.toArray(new String[Chromosome.size()]), EnzyFilePrefix, SeBedpeFile[i]).getFinalBedpeFile();
         }
-        for (int i = 0; i < ParameterList.get(OptUseLinker).split("\\s+").length; i++) {
+        for (int i = 0; i < UseLinker.size(); i++) {
             try {
                 LinkerProcess[i].join();
             } catch (InterruptedException e) {
@@ -157,16 +192,22 @@ public class Main {
             }
         }
         //=================================================Bedpe To Inter===============================================
-        CommonMethod.Merge(FinalLinkerBedpe, FinalBedpeFile);//合并不同linker类型的bedpe文件
-        step.BedpeToInter(FinalBedpeFile, InterBedpeFile);//将交互区间转换成交互点
+        if (StepCheck("BedPeProcess")) {
+            CommonMethod.Merge(FinalLinkerBedpe, FinalBedpeFile);//合并不同linker类型的bedpe文件
+        }
+        if (StepCheck("BedPe2Inter")) {
+            step.BedpeToInter(FinalBedpeFile, InterBedpeFile);//将交互区间转换成交互点
+        }
         //=================================================Make Matrix==================================================
-        int[] chrSize = new int[ParameterList.get(OptChromosome).split("\\s+").length];
+        int[] chrSize = new int[Chromosome.size()];
         int i = 0;
-        for (String chr : ParameterList.get(OptChromosome).split("\\s+")) {
+        for (String chr : Chromosome) {
             chrSize[i++] = ChrSize.get(chr);
         }
-        MakeMatrix matrix = new MakeMatrix(MakeMatrixDir, ParameterList.get(OptOutPrefix), InterBedpeFile, ParameterList.get(OptChromosome).split("\\s+"), chrSize, Integer.parseInt(ParameterList.get(OptResolution)));//生成交互矩阵类
-        matrix.Run();//运行
+        MakeMatrix matrix = new MakeMatrix(MakeMatrixDir, Prefix, InterBedpeFile, Chromosome.toArray(new String[Chromosome.size()]), chrSize, Resolution);//生成交互矩阵类
+        if (StepCheck("MakeMatrix")) {
+            matrix.Run();//运行
+        }
     }
 
     /**
@@ -175,11 +216,11 @@ public class Main {
      * @return 线程句柄
      */
     private Thread FindRestrictionFragment() {
-        Thread t = new Thread(new Runnable() {
+        return new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    for (String chr : ParameterList.get(OptChromosome).split("\\s+")) {
+                    for (String chr : Chromosome) {
                         ChrSize.put(chr, 0);
                     }
                     Routine step = new Routine();
@@ -189,70 +230,66 @@ public class Main {
                             System.out.println(new Date() + "\tCreat " + EnzyPath + " false !");
                         }
                     }
-                    Hashtable<String, Integer> temphash = step.FindRestrictionSite(ParameterList.get(OptGenomeFile), ParameterList.get(OptRestriction), EnzyFilePrefix);
+                    Hashtable<String, Integer> temphash = step.FindRestrictionSite(GenomeFile, Restriction, EnzyFilePrefix);
                     for (String chr : temphash.keySet()) {
                         if (ChrSize.containsKey(chr)) {
                             ChrSize.put(chr, temphash.get(chr));
                         }
                         list.add(chr + "\t" + temphash.get(chr));
                     }
-                    CommonMethod.PrintList(list, EnzyPath + "/" + ParameterList.get(OptOutPrefix) + ".ChrSize");//打印染色体大小信息
+                    CommonMethod.PrintList(list, EnzyPath + "/" + Prefix + ".ChrSize");//打印染色体大小信息
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
-        return t;
     }
 
-    private Thread ClusterLinker(String PastFile, String[] LinkerFasqFile, String Type) throws IOException {
-        Thread t = new Thread(new Runnable() {
+    private Thread ClusterLinker(String PastFile, String[] LinkerFasqFile, String Type) {
+        return new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    step.ClusterLinker(PastFile, LinkerFasqFile, Integer.parseInt(ParameterList.get(OptMinReadsLength)), Integer.parseInt(ParameterList.get(OptMaxReadsLength)), MinLinkerFilterQuality, ParameterList.get(OptRestriction), AddQuality, Type);
+                    step.ClusterLinker(PastFile, LinkerFasqFile, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, Restriction, AddQuality, Type);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
-        return t;
     }
 
     private Thread SeProcess(String FastqFile, String Prefix) {
-        SeProcess ssp = new SeProcess(FastqFile, ParameterList.get(OptIndexFile), ParameterList.get(OptAlignMisMatch), ParameterList.get(OptAlignMinQuality), SeProcessDir, Prefix);//单端处理类
-        ssp.SetParameter(ssp.OptThreads, ParameterList.get(OptThreads));//设置线程数
-        ssp.SetParameter(ssp.OptAlignThreads, ParameterList.get(OptAlignThread));
-        Thread t = new Thread(new Runnable() {
+        return new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+                    SeProcess ssp = new SeProcess(FastqFile, IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix);//单端处理类
+                    ssp.Thread = Thread;//设置线程数
+                    ssp.AlignThreads = AlignThread;
                     ssp.Run();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
-        return t;
     }
 
     private Thread BedpeProcess(String UseLinker, String SeBedpeFile) {
-        Thread t = new Thread(new Runnable() {
+        return new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    BedpeProcess bedpe = new BedpeProcess(BedpeProcessDir, ParameterList.get(OptOutPrefix) + "." + UseLinker, ParameterList.get(OptChromosome).split("\\s+"), EnzyFilePrefix, SeBedpeFile);//bedpe文件处理类
-                    bedpe.SetParameter(bedpe.OptThreads, ParameterList.get(OptThreads));//设置线程数
+                    BedpeProcess bedpe = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker, Chromosome.toArray(new String[Chromosome.size()]), EnzyFilePrefix, SeBedpeFile);//bedpe文件处理类
+                    bedpe.Thread = Thread;//设置线程数
                     bedpe.Run();//运行
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
-        return t;
     }
 
-    public void GetOption(String Infile) throws IOException {
+    private void GetOption(String Infile) throws IOException {
         String line;
         String[] str;
         BufferedReader infile = new BufferedReader(new FileReader(Infile));
@@ -288,56 +325,83 @@ public class Main {
         ParameterList.put(OptAlignThread, "8");
         ParameterList.put(OptResolution, "1000000");
         ParameterList.put(OptThreads, "4");
+        ParameterList.put(OptStep, "-");
     }
 
-    public void Init() throws IOException {
+    private void Init() throws IOException {
         for (String opt : RequiredParameter) {
             if (ParameterList.get(opt).equals("")) {
                 System.err.println("Error ! no " + opt);
                 System.exit(0);
             }
         }
-        if (ParameterList.get(OptOutPrefix).equals("")) {
+        //================================================
+        FastqFile = ParameterList.get(OptFastqFile);
+        GenomeFile = ParameterList.get(OptGenomeFile);
+        String Phred = ParameterList.get(OptPhred);
+        Prefix = ParameterList.get(OptPrefix);
+        String OutPath = ParameterList.get(OptOutPath);
+        Chromosome.addAll(Arrays.asList(ParameterList.get(OptChromosome).split("\\s+")));
+        Restriction = ParameterList.get(OptRestriction);
+        LinkerFile = ParameterList.get(OptLinkerFile);
+        AdapterFile = ParameterList.get(OptAdapterFile);
+        LinkersType.addAll(Arrays.asList(ParameterList.get(OptLinkersType).split("\\s+")));
+        UseLinker.addAll(Arrays.asList(ParameterList.get(OptUseLinker).split("\\s+")));
+        MatchScore = Integer.parseInt(ParameterList.get(OptMatchScore));
+        MisMatchScore = Integer.parseInt(ParameterList.get(OptMisMatchScore));
+        IndelScore = Integer.parseInt(ParameterList.get(OptIndelScore));
+        int MaxMisMatchLength = Integer.parseInt(ParameterList.get(OptMaxMisMatchLength));
+        IndexFile = ParameterList.get(OptIndexFile);
+        AlignMisMatch = Integer.parseInt(ParameterList.get(OptAlignMisMatch));
+        AlignThread = Integer.parseInt(ParameterList.get(OptAlignThread));
+        AlignMinQuality = Integer.parseInt(ParameterList.get(OptAlignMinQuality));
+        MinReadsLength = Integer.parseInt(ParameterList.get(OptMinReadsLength));
+        MaxReadsLength = Integer.parseInt(ParameterList.get(OptMaxReadsLength));
+        Resolution = Integer.parseInt(ParameterList.get(OptResolution));
+        Thread = Integer.parseInt(ParameterList.get(OptThreads));
+        Step.addAll(Arrays.asList(ParameterList.get(OptStep).split("\\s+")));
+        //================================================
+        if (Prefix.equals("")) {
             try {
-                ParameterList.put(OptOutPrefix, ParameterList.get(OptFastqFile).substring(0, ParameterList.get(OptFastqFile).lastIndexOf(".")));
+                ParameterList.put(OptPrefix, FastqFile.substring(0, FastqFile.lastIndexOf(".")));
             } catch (IndexOutOfBoundsException e) {
-                ParameterList.put(OptOutPrefix, ParameterList.get(OptFastqFile));
+                ParameterList.put(OptPrefix, FastqFile);
             }
         }
-        if (ParameterList.get(OptUseLinker).equals("")) {
-            ParameterList.put(OptUseLinker, ParameterList.get(OptLinkersType));
+        if (UseLinker.size() == 0) {
+            UseLinker = LinkersType;
         }
-        if (!new File(ParameterList.get(OptOutPath)).isDirectory()) {
-            System.err.println("Wrong OutPath " + ParameterList.get(OptOutPath) + " is not a directory");
+        if (!new File(OutPath).isDirectory()) {
+            System.err.println("Wrong OutPath " + OutPath + " is not a directory");
             System.exit(0);
         }
-        if (!new File(ParameterList.get(OptGenomeFile)).isFile()) {
-            System.err.println("Wrong " + OptGenomeFile + " " + ParameterList.get(OptGenomeFile) + " is not a file");
+        if (!new File(GenomeFile).isFile()) {
+            System.err.println("Wrong " + OptGenomeFile + " " + GenomeFile + " is not a file");
             System.exit(0);
         }
-        if (!new File(ParameterList.get(OptFastqFile)).isFile()) {
-            System.err.println("Wrong " + OptFastqFile + " " + ParameterList.get(OptFastqFile) + " is not a file");
+        if (!new File(FastqFile).isFile()) {
+            System.err.println("Wrong " + OptFastqFile + " " + FastqFile + " is not a file");
             System.exit(0);
         }
-        if (!new File(ParameterList.get(OptLinkerFile)).isFile()) {
-            System.err.println("Wrong " + OptLinkerFile + " " + ParameterList.get(OptLinkerFile) + " is not a file");
+        if (!new File(LinkerFile).isFile()) {
+            System.err.println("Wrong " + OptLinkerFile + " " + LinkerFile + " is not a file");
             System.exit(0);
         }
         //=======================================================================
-        BufferedReader infile = new BufferedReader(new FileReader(ParameterList.get(OptLinkerFile)));
+        BufferedReader infile = new BufferedReader(new FileReader(LinkerFile));
         int linkerLength = infile.readLine().length();
         infile.close();
-        if (ParameterList.get(OptPhred).equals("33")) {
+        if (Phred.equals("33")) {
             AddQuality = "I";
         } else {
             AddQuality = "h";
         }
-        MinLinkerFilterQuality = (linkerLength - Integer.parseInt(ParameterList.get(OptMaxMisMatchLength))) * Integer.parseInt(ParameterList.get(OptMatchScore)) + Integer.parseInt(ParameterList.get(OptMaxMisMatchLength)) * Integer.parseInt(ParameterList.get(OptMisMatchScore));//设置linkerfilter最小分数
-        PreProcessDir = ParameterList.get(OptOutPath) + "/PreProcess";
-        SeProcessDir = ParameterList.get(OptOutPath) + "/SeProcess";
-        BedpeProcessDir = ParameterList.get(OptOutPath) + "/BedpeProcess";
-        MakeMatrixDir = ParameterList.get(OptOutPath) + "/MakeMatrix";
-        EnzyPath = ParameterList.get(OptOutPath) + "/EnzySiteFile";
+        MinLinkerFilterQuality = (linkerLength - MaxMisMatchLength) * MatchScore + MaxMisMatchLength * MisMatchScore;//设置linkerfilter最小分数
+        PreProcessDir = OutPath + "/PreProcess";
+        SeProcessDir = OutPath + "/SeProcess";
+        BedpeProcessDir = OutPath + "/BedpeProcess";
+        MakeMatrixDir = OutPath + "/MakeMatrix";
+        EnzyPath = OutPath + "/EnzySiteFile";
         if (!new File(PreProcessDir).isDirectory() && !new File(PreProcessDir).mkdirs()) {
             System.err.println("Can't creat " + PreProcessDir);
         }
@@ -353,11 +417,29 @@ public class Main {
         if (!new File(EnzyPath).isDirectory() && !new File(EnzyPath).mkdirs()) {
             System.err.println("Can't creat " + EnzyPath);
         }
-        EnzyFilePrefix = EnzyPath + "/" + ParameterList.get(OptOutPrefix) + "." + ParameterList.get(OptRestriction).replace("^", "");
-        step.Threads = Integer.parseInt(ParameterList.get(OptThreads));
+        EnzyFilePrefix = EnzyPath + "/" + Prefix + "." + Restriction.replace("^", "");
+        step.Threads = Thread;
     }
 
-    public void ShowParameter() {
+    private boolean StepCheck(String step) {
+        if (Step.size() > 0) {
+            if (Step.get(0).equals(step)) {
+                Step.remove(0);
+                return true;
+            } else if (Step.get(0).equals("-") && Step.size() > 1) {
+                if (Step.get(1).equals(step)) {
+                    Step.remove(0);
+                    Step.remove(0);
+                }
+                return true;
+            } else if (Step.get(0).equals("-") && Step.size() == 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void ShowParameter() {
         for (String opt : RequiredParameter) {
             System.out.println(opt + ":\t" + ParameterList.get(opt));
         }

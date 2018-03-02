@@ -11,7 +11,7 @@ public class PreProcess {
     private final String OptMatchScore = "MatchScore";//匹配分数
     private final String OptMisMatchScore = "MisMatchScore";//错配分数
     private final String OptIndelScore = "IndelScore";//插入缺失分数
-    private final String OptThreads = "Threads";//线程数，默认1
+    private final String OptThreads = "Thread";//线程数，默认1
     private String FastqFile;//Fastq文件
     private String LinkerFile;//linker文件
     private String AdapterFile;//Adapter文件
@@ -60,21 +60,21 @@ public class PreProcess {
 //        MatchScore = matchscore;
 //        MisMatchScore = mismatchscore;
 //        IndelScore = indelscore;
-//        Threads = threads;
+//        Thread = threads;
 //        Init();
 //    }
 
-    PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, String adapterfile, String matchscore, String mismatchscore, String indelscore, String threads) throws IOException {
+    PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, String adapterfile, int matchscore, int mismatchscore, int indelscore, int threads) throws IOException {
         OptionListInit();
         OptionList.put(OptOutPath, outpath);
         OptionList.put(OptOutPrefix, outprefix);
         OptionList.put(OptFastqFile, fastqfile);
         OptionList.put(OptLinkerFile, linkerfile);
         OptionList.put(OptAdapterFile, adapterfile);
-        OptionList.put(OptMatchScore, matchscore);
-        OptionList.put(OptMisMatchScore, mismatchscore);
-        OptionList.put(OptIndelScore, indelscore);
-        OptionList.put(OptThreads, threads);
+        OptionList.put(OptMatchScore, String.valueOf(matchscore));
+        OptionList.put(OptMisMatchScore, String.valueOf(mismatchscore));
+        OptionList.put(OptIndelScore, String.valueOf(indelscore));
+        OptionList.put(OptThreads, String.valueOf(threads));
         Init();
     }
 
