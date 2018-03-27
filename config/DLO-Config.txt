@@ -1,0 +1,26 @@
+//------------------------------required parameters----------------------------
+FastqFile = DLO-test.fastq
+Chromosome = chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY
+LinkersType = AA
+Restriction = T^TAA
+LinkerFile = DLO-linker_TP.txt
+Index = Hg19
+AlignMinQuality = 20
+GenomeFile = Hg19.clean.fna
+//------------------------------optional parameters---------------------------
+Prefix = DLO-HiC
+OutPath = /home/hjiang/HiC-test/
+AdapterFile = adapter.txt
+Phred = 33
+UseLinker = AA
+MatchScore = 1
+MisMatchScore = -2
+IndelScore = -2
+MaxMisMatchLength = 3
+AlignThread = 10
+Resolution = 1000000
+AlignMisMatch = 0
+MinReadsLength = 16
+MaxReadsLength = 20
+Thread = 4
+Step = -

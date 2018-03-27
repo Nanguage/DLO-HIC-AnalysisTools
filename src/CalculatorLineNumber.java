@@ -12,7 +12,7 @@ public class CalculatorLineNumber {
                 @Override
                 public void run() {
                     try {
-                        long linenumber = CommonMethod.CalculatorLineNumber(args[finalI]);
+                        long linenumber = Statistics.CalculatorLineNumber(args[finalI]);
                         synchronized (Thread.class) {
                             System.out.println(args[finalI] + " line number is:\t" + linenumber);
                         }

@@ -94,6 +94,21 @@ public class BedpeProcess {
                 e.printStackTrace();
             }
         }
+        if (new File(ValidBedpeFile).exists()) {
+            new File(ValidBedpeFile).delete();
+        }
+        if (new File(SelfLigationFile).exists()) {
+            new File(SelfLigationFile).delete();
+        }
+        if (new File(ReLigationFile).exists()) {
+            new File(ReLigationFile).delete();
+        }
+        if (new File(EnzyFragment).exists()) {
+            new File(EnzyFragment).delete();
+        }
+        if (new File(FinalBedpeFile).exists()) {
+            new File(FinalBedpeFile).delete();
+        }
         for (int j = 0; j < Chromosome.length; j++) {
             CommonMethod.Append(LigationChrFile[j][2] + ".clean.sort", FinalBedpeFile);
             CommonMethod.Append(LigationChrFile[j][0], SelfLigationFile);
@@ -114,6 +129,18 @@ public class BedpeProcess {
 
     public String getFinalBedpeFile() {
         return FinalBedpeFile;
+    }
+
+    public String getSelfLigationFile() {
+        return SelfLigationFile;
+    }
+
+    public String getReLigationFile() {
+        return ReLigationFile;
+    }
+
+    public String getValidBedpeFile() {
+        return ValidBedpeFile;
     }
 
     private void Init() {
@@ -176,21 +203,6 @@ public class BedpeProcess {
             for (int k = 0; k < LigationType.length; k++) {
                 LigationChrFile[j][k] = OutPath + "/" + LigationDir + "/" + Prefix + "." + Chromosome[j] + "." + LigationType[k];
             }
-        }
-        if (new File(ValidBedpeFile).exists()) {
-            new File(ValidBedpeFile).delete();
-        }
-        if (new File(SelfLigationFile).exists()) {
-            new File(SelfLigationFile).delete();
-        }
-        if (new File(ReLigationFile).exists()) {
-            new File(ReLigationFile).delete();
-        }
-        if (new File(EnzyFragment).exists()) {
-            new File(EnzyFragment).delete();
-        }
-        if (new File(FinalBedpeFile).exists()) {
-            new File(FinalBedpeFile).delete();
         }
     }
 

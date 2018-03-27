@@ -15,7 +15,7 @@ public class EditConfig {
         String ConfigFile = args[0];
         String Parameter = args[1];
         EditConfig edit = new EditConfig();
-        if (Parameter.equals("All") || Parameter.equals("Pre") || Parameter.equals("Se") || Parameter.equals("Bedpe") || Parameter.equals("Matrix")) {
+        if (Parameter.equals("All") || Parameter.equals("Pre") || Parameter.equals("Se") || Parameter.equals("BedpeFile") || Parameter.equals("Matrix")) {
             edit.Creat(ConfigFile, Parameter);
         } else {
             String[] Value;
@@ -35,7 +35,7 @@ public class EditConfig {
         if (Type.equals("All")) {
             Main m = new Main();
             m.OptionListInit();
-            HashList = m.getParameterList();
+            HashList = m.getArgumentList();
             if (new File(ConfigFile).isFile()) {
                 String line;
                 String[] str;
@@ -107,7 +107,7 @@ public class EditConfig {
                     "MinLinkerFilterQuality = 32\n" +
                     "MinReadsLength = 16\n" +
                     "MaxReadsLength = 20";
-        } else if (Type.equals("Bedpe")) {
+        } else if (Type.equals("BedpeFile")) {
             Config = "//------------------------------Required parameters----------------------------\n" +
                     "BedpeFile = ./Hic.bedpe\n" +
                     "LinkerType = AA\n" +

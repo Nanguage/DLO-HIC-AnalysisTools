@@ -1,5 +1,5 @@
 public class Report {
-    public void Show(){
+    public void Show() {
 
     }
 }

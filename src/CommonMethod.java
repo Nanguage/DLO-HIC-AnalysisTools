@@ -221,7 +221,7 @@ public class CommonMethod {
         if (Regex.isEmpty()) {
             Regex = "\\s+";
         }
-        long LineNumber = CommonMethod.CalculatorLineNumber(InFile);
+        long LineNumber = Statistics.CalculatorLineNumber(InFile);
         System.out.println(new Date() + "\t" + InFile + " Line Number:\t" + LineNumber);
         long LineBin = LineNumber / (Threads * 10) + 1;
         BufferedReader infile = new BufferedReader(new FileReader(InFile));
@@ -580,16 +580,6 @@ public class CommonMethod {
             ChrBinSize[i] = ChrSize[i] / Resolution + 1;
         }
         return ChrBinSize;
-    }
-
-    public static long CalculatorLineNumber(String File) throws IOException {
-        BufferedReader file = new BufferedReader(new FileReader(File));
-        long LineNumber = 0;
-        while (file.readLine() != null) {
-            LineNumber++;
-        }
-        file.close();
-        return LineNumber;
     }
 
     public static int CompareTo(String[] a, String[] b) {

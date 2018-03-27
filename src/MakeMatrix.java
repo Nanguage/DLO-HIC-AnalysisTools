@@ -23,6 +23,7 @@ public class MakeMatrix {
     private String InterMatrixPrefix;
     private String NormalizeMatrixPrefix;
     private String ChrSzieFile;
+    private String[] ChrInterBedpeFile;
     //==============================================================
     private Hashtable<String, String> ParameterList = new Hashtable<>();
     private String[] RequiredParameter = new String[]{OptInterBedpeFile, OptResolution};
@@ -66,7 +67,7 @@ public class MakeMatrix {
         int[][] Matrix = P.CreatInterActionMatrix(InterBedpeFile, Chromosome, ChromosomeSize, Resolution, InterMatrixPrefix);
         double[][] NormalizeMatrix = P.MatrixNormalize(Matrix);
         CommonMethod.PrintMatrix(NormalizeMatrix, NormalizeMatrixPrefix + ".2d.matrix", NormalizeMatrixPrefix + ".spare.matrix");
-        String[] ChrInterBedpeFile = P.SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + Prefix, "");
+        ChrInterBedpeFile = P.SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + Prefix, "");
         for (int i = 0; i < Chromosome.length; i++) {
             String ChrInterMatrixPrefix = OutPath + "/" + Prefix + "." + Chromosome[i] + ".inter";
             String ChrNormalizeMatrixPrefix = OutPath + "/" + Prefix + "." + Chromosome[i] + ".normalize";
@@ -192,4 +193,11 @@ public class MakeMatrix {
         }
     }
 
+    public String[] getChrInterBedpeFile() throws IOException {
+        if (ChrInterBedpeFile == null) {
+            Routine P = new Routine();
+            ChrInterBedpeFile = P.SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + Prefix, "");
+        }
+        return ChrInterBedpeFile;
+    }
 }
