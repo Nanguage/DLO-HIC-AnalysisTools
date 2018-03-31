@@ -12,9 +12,17 @@ public class Statistics {
 
     public String RawDataFile = "";
     public String LinkerFile = "";
+    public String GenomeFile = "";
+    public String GenomeIndex = "";
+    public String AdapterFile = "";
+    public String OutPath = "";
+    public String OutPrefix = "";
+
     public long RawDataReadsNum;
     public String RestrictionSeq = "";
     public ArrayList<String> LinkersType = new ArrayList<>();
+    public ArrayList<String> UseLinker = new ArrayList<>();
+    public ArrayList<String> Chromosome = new ArrayList<>();
     public ArrayList<Long> LinkersNum = new ArrayList<>();
     public ArrayList<String> FastqR1Name = new ArrayList<>();
     public ArrayList<String> FastqR2Name = new ArrayList<>();
@@ -36,6 +44,11 @@ public class Statistics {
     public long InterActionNum;
     public long LongRegionNum;
     public long ShortRegionNum;
+    public int MinAlignQuality;
+    public int MinReadsLength;
+    public int MaxReadsLength;
+    public int Resolution;
+    public int Thread;
 
     public static long RangeCount(String Bedpe, double Min, double Max, int Threads) throws IOException, InterruptedException {
         if (!new File(Bedpe).isFile()) {
@@ -160,7 +173,7 @@ public class Statistics {
         System.out.println("Intra action number:\t" + new DecimalFormat("#,###").format(IntraActionNum) + "\t" + (double) IntraActionNum / FinalBedpeNum * 100 + "%");
         System.out.println("Inter action number:\t" + new DecimalFormat("#,###").format(InterActionNum) + "\t" + (double) InterActionNum / FinalBedpeNum * 100 + "%");
         System.out.println("\n-------------------------------------------------------------");
-        if (RestrictionSeq.length() <= 4) {
+        if (RestrictionSeq.replace("^", "").length() <= 4) {
             System.out.println("Short region <= 5k :\t" + new DecimalFormat("#,###").format(ShortRegionNum) + "\t" + (double) ShortRegionNum / IntraActionNum * 100 + "%");
             System.out.println("Long region > 5k :\t" + new DecimalFormat("#,###").format(LongRegionNum) + "\t" + (double) LongRegionNum / IntraActionNum * 100 + "%");
         } else {
@@ -185,9 +198,26 @@ public class Statistics {
         templateEngine.setTemplateResolver(resolver);
         Context context = new Context();
         context.setVariable("RawDataFile", RawDataFile);
+        context.setVariable("LinkerFile", LinkerFile);
+        context.setVariable("RefGenome", GenomeFile);
+        context.setVariable("GenomeIndex", GenomeIndex);
+        context.setVariable("AdapterFile", AdapterFile);
+        context.setVariable("OutPath", OutPath);
+        context.setVariable("OutPrefix", OutPrefix);
+        context.setVariable("Restriction", RestrictionSeq);
+        context.setVariable("LinkerType", String.join(" ", LinkersType.toArray(new String[LinkersType.size()])));
+        context.setVariable("UseLink", String.join(" ", UseLinker.toArray(new String[UseLinker.size()])));
+        context.setVariable("Chromosome", String.join(" ", Chromosome.toArray(new String[Chromosome.size()])));
+        context.setVariable("MinAlignQ", MinAlignQuality);
+        context.setVariable("MinReadsLen", MinReadsLength);
+        context.setVariable("MaxReadsLen", MaxReadsLength);
+        context.setVariable("Resolution", Resolution);
+        context.setVariable("Thread", Thread);
+
         String html = templateEngine.process("Template", context);
         BufferedWriter out = new BufferedWriter(new FileWriter(outfile));
         out.write(html);
         out.close();
     }
+
 }

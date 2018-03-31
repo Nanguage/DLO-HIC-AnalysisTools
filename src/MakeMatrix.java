@@ -1,5 +1,7 @@
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.Hashtable;
 
 
@@ -64,15 +66,15 @@ public class MakeMatrix {
     public void Run() throws IOException {
         Routine P = new Routine();
         P.Threads = Thread;
-        int[][] Matrix = P.CreatInterActionMatrix(InterBedpeFile, Chromosome, ChromosomeSize, Resolution, InterMatrixPrefix);
-        double[][] NormalizeMatrix = P.MatrixNormalize(Matrix);
+        int[][] Matrix = CreatInterActionMatrix(InterBedpeFile, Chromosome, ChromosomeSize, Resolution, InterMatrixPrefix);
+        double[][] NormalizeMatrix = MatrixNormalize(Matrix);
         CommonMethod.PrintMatrix(NormalizeMatrix, NormalizeMatrixPrefix + ".2d.matrix", NormalizeMatrixPrefix + ".spare.matrix");
-        ChrInterBedpeFile = P.SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + Prefix, "");
+        ChrInterBedpeFile = SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + Prefix, "");
         for (int i = 0; i < Chromosome.length; i++) {
             String ChrInterMatrixPrefix = OutPath + "/" + Prefix + "." + Chromosome[i] + ".inter";
             String ChrNormalizeMatrixPrefix = OutPath + "/" + Prefix + "." + Chromosome[i] + ".normalize";
-            Matrix = P.CreatInterActionMatrix(ChrInterBedpeFile[i], new String[]{Chromosome[i]}, new int[]{ChromosomeSize[i]}, Resolution / 10, ChrInterMatrixPrefix);
-            NormalizeMatrix = P.MatrixNormalize(Matrix);
+            Matrix = CreatInterActionMatrix(ChrInterBedpeFile[i], new String[]{Chromosome[i]}, new int[]{ChromosomeSize[i]}, Resolution / 10, ChrInterMatrixPrefix);
+            NormalizeMatrix = MatrixNormalize(Matrix);
             CommonMethod.PrintMatrix(NormalizeMatrix, ChrNormalizeMatrixPrefix + ".2d.matrix", ChrNormalizeMatrixPrefix + ".spare.matrix");
         }
     }
@@ -196,8 +198,186 @@ public class MakeMatrix {
     public String[] getChrInterBedpeFile() throws IOException {
         if (ChrInterBedpeFile == null) {
             Routine P = new Routine();
-            ChrInterBedpeFile = P.SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + Prefix, "");
+            ChrInterBedpeFile = SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + Prefix, "");
         }
         return ChrInterBedpeFile;
+    }
+    public String[] SeparateInterBedpe(String InterBedpeFile, String[] Chromosome, String Prefix, String Regex) throws IOException {
+        System.out.println(new Date() + "\tSeperate InterBedpe " + InterBedpeFile);
+        BufferedReader interfile = new BufferedReader(new FileReader(InterBedpeFile));
+        String[] SameChrFile = new String[Chromosome.length];
+        BufferedWriter[] chrwrite = new BufferedWriter[Chromosome.length];
+        String DiffFile = Prefix + ".diff.bedpe";
+        BufferedWriter diffwrite = new BufferedWriter(new FileWriter(DiffFile));
+        //------------------------------------------------------------
+        Hashtable<String, Integer> ChrIndex = new Hashtable<>();
+        for (int i = 0; i < Chromosome.length; i++) {
+            ChrIndex.put(Chromosome[i], i);
+            SameChrFile[i] = Prefix + "." + Chromosome[i] + ".same.bedpe";
+            chrwrite[i] = new BufferedWriter(new FileWriter(SameChrFile[i]));
+        }
+        if (Regex.isEmpty()) {
+            Regex = "\\s+";
+        }
+        //================================================================
+        Thread[] Process = new Thread[Thread];
+        for (int i = 0; i < Thread; i++) {
+            String finalRegex = Regex;
+            Process[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String line;
+                    String[] str;
+                    try {
+                        while ((line = interfile.readLine()) != null) {
+                            str = line.split(finalRegex);
+                            if (str[0].equals(str[2])) {
+                                synchronized (Process) {
+                                    chrwrite[ChrIndex.get(str[0])].write(line + "\n");
+                                }
+                            } else {
+                                synchronized (Process) {
+                                    diffwrite.write(line + "\n");
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            Process[i].start();
+        }
+        for (int i = 0; i < Thread; i++) {
+            try {
+                Process[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        for (int i = 0; i < Chromosome.length; i++) {
+            chrwrite[i].close();
+        }
+        diffwrite.close();
+        System.out.println(new Date() + "\tEnd seperate InterBedpe " + InterBedpeFile);
+        return SameChrFile;
+    }
+
+    public int[][] CreatInterActionMatrix(String InterBedpeFile, String[] Chromosome, int[] ChrSize, int Resolution, String Prefix) throws IOException {
+        System.out.println(new Date() + "\tBegin to creat interaction matrix " + InterBedpeFile);
+        int[] ChrBinSize;
+        int SumBin = 0;
+        //计算bin的总数
+        ChrBinSize = CommonMethod.CalculatorBinSize(ChrSize, Resolution);
+        for (int i = 0; i < ChrBinSize.length; i++) {
+            SumBin = SumBin + ChrBinSize[i];
+        }
+        if (SumBin > 50000) {
+            System.err.println("Error ! too many bins, there are " + SumBin + " bins.");
+            System.exit(0);
+        }
+        int[][] InterMatrix = new int[SumBin][SumBin];
+        for (int i = 0; i < InterMatrix.length; i++) {
+            Arrays.fill(InterMatrix[i], 0);//数组初始化为0
+        }
+        BufferedReader infile = new BufferedReader(new FileReader(InterBedpeFile));
+        Thread[] Process = new Thread[Thread];
+        //----------------------------------------------------------------------------
+        for (int i = 0; i < Thread; i++) {
+            int finalSumBin = SumBin;
+            Process[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        String line;
+                        String[] str;
+//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start");
+                        while ((line = infile.readLine()) != null) {
+                            str = line.split("\\s+");
+                            int hang = Integer.parseInt(str[1]) / Resolution;
+                            int lie = Integer.parseInt(str[3]) / Resolution;
+                            for (int j = 0; j < Chromosome.length; j++) {
+                                if (str[0].equals(Chromosome[j])) {
+                                    break;
+                                }
+                                hang = hang + ChrBinSize[j];
+                            }
+                            if (hang >= finalSumBin) {
+                                continue;
+                            }
+                            for (int j = 0; j < Chromosome.length; j++) {
+                                if (str[2].equals(Chromosome[j])) {
+                                    break;
+                                }
+                                lie = lie + ChrBinSize[j];
+                            }
+                            if (lie >= finalSumBin) {
+                                continue;
+                            }
+                            synchronized (Process) {
+                                InterMatrix[hang][lie]++;
+                                if (hang != lie) {
+                                    InterMatrix[lie][hang]++;
+                                }
+                            }
+                        }
+//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            Process[i].start();
+        }
+        //-------------------------------------------------
+        for (int i = 0; i < Thread; i++) {
+            try {
+                Process[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        infile.close();
+        //--------------------------------------------------------
+        //打印矩阵
+        CommonMethod.PrintMatrix(InterMatrix, Prefix + ".2d.matrix", Prefix + ".spare.matrix");
+        System.out.println(new Date() + "\tEnd to creat interaction matrix");
+        //--------------------------------------------------------------------
+        int temp = 0;
+        BufferedWriter outfile = new BufferedWriter(new FileWriter(Prefix + ".matrix.BinSize"));
+        for (int i = 0; i < Chromosome.length; i++) {
+            temp = temp + 1;
+            outfile.write(Chromosome[i] + "\t" + temp + "\t");
+            temp = temp + ChrBinSize[i] - 1;
+            outfile.write(temp + "\n");
+        }
+        outfile.close();
+        return InterMatrix;
+    }//OK
+
+    public double[][] MatrixNormalize(int[][] Matrix) {
+        System.out.println(new Date() + "\tNormalize Matrix");
+        double[][] NormalizeMatrix = new double[Matrix.length][Matrix.length];//定义标准化矩阵
+        double[][] Distance = new double[3][Matrix.length];//定义距离数组
+        for (int i = 0; i < Matrix.length; i++) {
+            for (int j = i; j < Matrix.length; j++) {
+                Distance[0][j - i]++;//计算相同距离的交互点的个数
+                Distance[1][j - i] += Matrix[i][j];//计算相同距离的交互点的总数
+            }
+        }
+        for (int i = 0; i < Matrix.length; i++) {
+            Distance[2][i] = Distance[1][i] / Distance[0][i];//计算平均交互数
+        }
+        for (int i = 0; i < Matrix.length; i++) {
+            for (int j = 0; j < Matrix.length; j++) {
+                if (Distance[2][Math.abs(i - j)] == 0) {
+                    NormalizeMatrix[i][j] = 0;//如果某个距离平均交互数为0，则直接将标准化矩阵对应点设成0
+                } else {
+                    NormalizeMatrix[i][j] = Matrix[i][j] / Distance[2][Math.abs(i - j)];//用对应距离的交互值除以对应的平均交互值
+                }
+            }
+        }
+        System.out.println(new Date() + "\tNormalize Matrix end");
+        return NormalizeMatrix;//返回标准化后的矩阵
     }
 }

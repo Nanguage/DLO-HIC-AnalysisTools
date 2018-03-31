@@ -109,7 +109,20 @@ public class Main {
             UseLinkerFasqFileR2[i] = SeProcessDir + "/" + Prefix + "." + UseLinker.get(i) + ".R2.fastq";
         }
         //==============================================================================================================
-        Stat.RestrictionSeq = Restriction.replace("^", "");
+        Stat.RestrictionSeq = Restriction;
+        Stat.LinkerFile = LinkerFile;
+        Stat.AdapterFile = AdapterFile;
+        Stat.GenomeFile = GenomeFile;
+        Stat.GenomeIndex = IndexFile;
+        Stat.OutPrefix = Prefix;
+        Stat.MinAlignQuality = AlignMinQuality;
+        Stat.MinReadsLength = MinReadsLength;
+        Stat.MaxReadsLength = MaxReadsLength;
+        Stat.Resolution = Resolution;
+        Stat.Thread = Thread;
+        Stat.LinkersType = LinkersType;
+        Stat.UseLinker = UseLinker;
+        Stat.Chromosome = Chromosome;
         Stat.FastqR1Name.addAll(Arrays.asList(LinkerFasqFileR1));
         Stat.FastqR2Name.addAll(Arrays.asList(LinkerFasqFileR2));
         //==============================================================================================================
@@ -321,6 +334,8 @@ public class Main {
         });
         ST.start();
         SThread.add(ST);
+        //=============================================Cluster==========================================================
+
         //===================================Report=====================================================================
         try {
             for (Thread t : SThread) {
@@ -537,6 +552,7 @@ public class Main {
         }
         EnzyFilePrefix = EnzyPath + "/" + Prefix + "." + Restriction.replace("^", "");
         step.Threads = Thread;
+        Stat.OutPath = OutPath;
     }
 
     private boolean StepCheck(String step) {
@@ -550,9 +566,7 @@ public class Main {
                     Step.remove(0);
                 }
                 return true;
-            } else if (Step.get(0).equals("-") && Step.size() == 1) {
-                return true;
-            }
+            } else return Step.get(0).equals("-") && Step.size() == 1;
         }
         return false;
     }

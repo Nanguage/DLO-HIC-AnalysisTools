@@ -17,6 +17,8 @@
       <element id="directory" name="resource">
         <element id="file-copy" path="$PROJECT_DIR$/resource/Template.html" />
       </element>
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/slf4j/slf4j-log4j12/1.7.25/slf4j-log4j12-1.7.25.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/log4j/log4j/1.2.17/log4j-1.2.17.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

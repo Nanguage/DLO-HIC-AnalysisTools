@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org"></html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
+</html>
+
 <head>
 
     <meta charset="utf-8" />
@@ -8914,15 +8917,15 @@ content:"\e260"
                             </tr>
                             <tr>
                                 <td style="text-align:left;">Reference genome file:</td>
-                                <td style="text-align:left;">hg19.fna</td>
+                                <td style="text-align:left;" th:text="${RefGenome}">hg19.fna</td>
                             </tr>
                             <tr>
                                 <td style="text-align:left;">Index Prefix:</td>
-                                <td style="text-align:left;">hg19</td>
+                                <td style="text-align:left;" th:text="${GenomeIndex}">hg19</td>
                             </tr>
                             <tr>
                                 <td style="text-align:left;">Adapter file:</td>
-                                <td style="text-align:left;">None</td>
+                                <td style="text-align:left;" th:text="${AdapterFile}">None</td>
                             </tr>
                         </tbody>
                     </table>
@@ -8934,8 +8937,7 @@ content:"\e260"
                     <h3>
                         <span class="header-section-number">0.1.2</span>
                         <font color="##32CD32">
-                            <strong>Configure information
-                            </strong>
+                            <strong>Configure information</strong>
                         </font>
                     </h3>
                     <hr/>
@@ -8949,37 +8951,37 @@ content:"\e260"
                             <tbody>
                                 <tr>
                                     <td>Out path:</td>
-                                    <td style="text-align:left">./</td>
+                                    <td style="text-align:left" th:text="${OutPath}">./</td>
                                     <td>Min alignment quality:</td>
-                                    <td style="text-align:left">20</td>
+                                    <td style="text-align:left" th:text="${MinAlignQ}">20</td>
                                 </tr>
                                 <tr>
                                     <td>Out prefix:</td>
-                                    <td style="text-align:left">out</td>
+                                    <td style="text-align:left" th:text="${OutPrefix}">out</td>
                                     <td>Min reads length:</td>
-                                    <td style="text-align: left">16</td>
+                                    <td style="text-align:left" th:text="${MinReadsLen}">16</td>
                                 </tr>
                                 <tr>
                                     <td>Restriction:</td>
-                                    <td style="text-align:left">A^ATT</td>
+                                    <td style="text-align:left" th:text="${Restriction}">A^ATT</td>
                                     <td>Max reads length:</td>
-                                    <td style="text-align: left">21</td>
+                                    <td style="text-align:left" th:text="${MaxReadsLen}">21</td>
                                 </tr>
                                 <tr>
                                     <td>Linkers type:</td>
-                                    <td style="text-align:left">AA BB AB BA</td>
+                                    <td style="text-align:left" th:text="${LinkerType}">AA BB AB BA</td>
                                     <td>Resolution:</td>
-                                    <td style="text-align:left">1M</td>
+                                    <td style="text-align:left" th:text="${Resolution}">1M</td>
                                 </tr>
                                 <tr>
                                     <td>Use linkers type:</td>
-                                    <td style="text-align:left">AA BB</td>
+                                    <td style="text-align:left" th:text="${UseLink}">AA BB</td>
                                     <td>Thread:</td>
-                                    <td style="text-align:left">4</td>
+                                    <td style="text-align:left" th:text="${Thread}">4</td>
                                 </tr>
                                 <tr>
                                     <td style="text-align:left;">Chromosome:</td>
-                                    <td style="text-align:left" colspan="3">chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16
+                                    <td style="text-align:left" colspan="3" th:text="${Chromosome}">chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16
                                         chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY
                                     </td>
                                 </tr>
@@ -15668,7 +15670,7 @@ clean data/clean reads：对原始数据进行过滤后，剔除了低质量数�
         $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
     }
     $(document).ready(function () {
-        bootstrapStylePandocTables(); 
+        bootstrapStylePandocTables();
     });
 
 

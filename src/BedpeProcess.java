@@ -1,5 +1,7 @@
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Hashtable;
 
 public class BedpeProcess {
@@ -65,7 +67,7 @@ public class BedpeProcess {
 
         Routine step = new Routine();
         step.Threads = Thread;
-        step.BedpeToSameAndDiff(BedpeFile, SameBedpeFile, DiffBedpeFile);
+        BedpeToSameAndDiff(BedpeFile, SameBedpeFile, DiffBedpeFile);
         Thread[] Process = new Thread[Chromosome.length];
         for (int i = 0; i < Chromosome.length; i++) {
             int finalI = i;
@@ -73,13 +75,13 @@ public class BedpeProcess {
                 @Override
                 public void run() {
                     try {
-                        step.SeparateChromosome(SameBedpeFile, 1, Chromosome[finalI], SameBedpeChrFile[finalI]);
-                        step.SeparateChromosome(DiffBedpeFile, 1, Chromosome[finalI], DiffBedpeChrFile[finalI]);
-                        step.WhichEnzymeFragment(SameBedpeChrFile[finalI], EnzyFilePrefix + "." + Chromosome[finalI] + ".txt", EnzyChrFragment[finalI]);
-                        step.SeparateLigationType(EnzyChrFragment[finalI], LigationChrFile[finalI][0], LigationChrFile[finalI][1], LigationChrFile[finalI][2]);
+                        SeparateChromosome(SameBedpeFile, 1, Chromosome[finalI], SameBedpeChrFile[finalI]);
+                        SeparateChromosome(DiffBedpeFile, 1, Chromosome[finalI], DiffBedpeChrFile[finalI]);
+                        WhichEnzymeFragment(SameBedpeChrFile[finalI], EnzyFilePrefix + "." + Chromosome[finalI] + ".txt", EnzyChrFragment[finalI]);
+                        SeparateLigationType(EnzyChrFragment[finalI], LigationChrFile[finalI][0], LigationChrFile[finalI][1], LigationChrFile[finalI][2]);
                         CommonMethod.Append(DiffBedpeChrFile[finalI], LigationChrFile[finalI][2]);
                         CommonMethod.SortFile(LigationChrFile[finalI][2], new int[]{2, 3, 5, 6}, "n", "", LigationChrFile[finalI][2] + ".sort", Thread);
-                        step.RemoveRepeat(LigationChrFile[finalI][2] + ".sort", new int[]{2, 3, 5, 6}, LigationChrFile[finalI][2] + ".clean.sort");
+                        RemoveRepeat(LigationChrFile[finalI][2] + ".sort", new int[]{2, 3, 5, 6}, LigationChrFile[finalI][2] + ".clean.sort");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -253,4 +255,268 @@ public class BedpeProcess {
             System.out.println(opt + ":\t" + ParameterList.get(opt));
         }
     }
+
+    public void SeparateChromosome(String InFile, int Row, String Chromosome, String OutFile) throws IOException {
+        System.out.println(new Date() + "\tStart to SeparateChromosome\t" + Chromosome + "\t" + InFile);
+        BufferedReader infile = new BufferedReader(new FileReader(InFile));
+        BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
+        Thread[] Process = new Thread[Thread];
+        for (int i = 0; i < Thread; i++) {
+            Process[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String line;
+//                    System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start");
+                    try {
+                        while ((line = infile.readLine()) != null) {
+                            if (line.split("\\s+")[Row - 1].equals(Chromosome)) {
+                                synchronized (Process) {
+                                    outfile.write(line + "\n");
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+//                    System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
+                }
+            });
+            Process[i].start();
+        }
+        for (int i = 0; i < Thread; i++) {
+            try {
+                Process[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        infile.close();
+        outfile.close();
+        System.out.println(new Date() + "\tEnd to SeparateChromosome\t" + Chromosome + "\t" + InFile);
+    }//OK
+
+    public void WhichEnzymeFragment(String BedpeFile, String EnySiteFile, String OutFile) throws IOException {
+        ArrayList<Integer> EnySiteList = new ArrayList<>();
+        BufferedReader EnySiteRead = new BufferedReader(new FileReader(EnySiteFile));
+        BufferedReader SeqRead = new BufferedReader(new FileReader(BedpeFile));
+        BufferedWriter OutWrite = new BufferedWriter(new FileWriter(OutFile));
+        String line;
+        String[] str;
+        System.out.println(new Date() + "\tBegin to find eny site\t" + BedpeFile);
+        //---------------------------------------------------
+        while ((line = EnySiteRead.readLine()) != null) {
+            str = line.split("\\s+");
+            EnySiteList.add(Integer.parseInt(str[str.length - 1]));
+        }
+        EnySiteRead.close();
+        //---------------------多线程-------------------------
+        Thread[] Process = new Thread[Thread];
+        for (int i = 0; i < Thread; i++) {
+            Process[i] = new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    try {
+                        String line;
+                        String[] str;
+//                        System.out.println(new Date() + "\t" + BedpeFile + "\t" + Thread.currentThread().getName() + " start");
+                        while ((line = SeqRead.readLine()) != null) {
+                            str = line.split("\\s+");
+                            int[] position = {(Integer.parseInt(str[1]) + Integer.parseInt(str[2])) / 2, (Integer.parseInt(str[4]) + Integer.parseInt(str[5])) / 2};
+                            //PositionList.add(position);
+                            int[] index = new int[position.length];
+                            //-----------------------二分法查找-----------------
+                            for (int j = 0; j < position.length; j++) {
+                                int start = 0;
+                                int end = EnySiteList.size();
+                                int middle = (start + end) / 2;
+                                while (start < end) {
+                                    middle = (start + end) / 2;
+                                    if (position[j] < EnySiteList.get(middle)) {
+                                        end = middle;
+                                    } else if (position[j] >= EnySiteList.get(middle)) {
+                                        start = middle + 1;
+                                    }
+                                }
+                                if (position[j] < EnySiteList.get(middle)) {
+                                    index[j] = middle;
+                                } else {
+                                    index[j] = middle + 1;
+                                }
+                            }
+                            //-----------------------------------------------------------------
+                            synchronized (Process) {
+                                OutWrite.write(line + "\t" + String.valueOf(index[0]) + "\t" + String.valueOf(index[1]) + "\n");
+                            }
+                        }
+//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
+                    } catch (
+                            IOException e)
+
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            Process[i].start();
+            try {
+                Process[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        //----------------------------------------------------
+        SeqRead.close();
+        OutWrite.close();
+        System.out.println(new
+
+                Date() + "\tEnd to find eny site\t" + BedpeFile);
+    }//OK
+
+    public void SeparateLigationType(String InFile, String SelfFile, String ReligFile, String ValidFile) throws IOException {
+        Thread[] process = new Thread[Thread];
+        BufferedReader infile = new BufferedReader(new FileReader(InFile));
+        BufferedWriter selffile = new BufferedWriter(new FileWriter(SelfFile));
+        BufferedWriter religfile = new BufferedWriter(new FileWriter(ReligFile));
+        BufferedWriter valifile = new BufferedWriter(new FileWriter(ValidFile));
+        String[] OutLock = new String[]{"sel", "rel", "val"};
+        System.out.println(new Date() + "\tBegin to seperate ligation\t" + InFile);
+        for (int i = 0; i < Thread; i++) {
+            process[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String line;
+                    String[] str;
+                    try {
+//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " begin");
+                        while ((line = infile.readLine()) != null) {
+                            str = line.split("\\s+");
+                            if (str[str.length - 2].equals(str[str.length - 1])) {
+                                synchronized (OutLock[0]) {
+                                    selffile.write(line + "\n");
+                                }
+                            } else if ((Integer.parseInt(str[str.length - 1]) - Integer.parseInt(str[str.length - 2]) == 1) && (Integer.parseInt(str[4]) < Integer.parseInt(str[2]))) {
+                                synchronized (OutLock[1]) {
+                                    religfile.write(line + "\n");
+                                }
+                            } else {
+                                synchronized (OutLock[2]) {
+                                    valifile.write(line + "\n");
+                                }
+                            }
+                        }
+//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            process[i].start();
+        }
+        for (int i = 0; i < Thread; i++) {
+            try {
+                process[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        infile.close();
+        selffile.close();
+        religfile.close();
+        valifile.close();
+        System.out.println(new Date() + "\tEnd seperate ligation\t" + InFile);
+    }//OK
+
+    public void RemoveRepeat(String InFile, int[] Row, String OutFile) throws IOException {
+        BufferedReader infile = new BufferedReader(new FileReader(InFile));
+        BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
+        String line;
+        String[] str;
+        String temp1 = "";
+        StringBuilder temp2 = new StringBuilder();
+        System.out.println(new Date() + "\tStart to remove repeat\t" + InFile);
+        while ((line = infile.readLine()) != null) {
+            str = line.split("\\s+");
+            for (int i = 0; i < Row.length; i++) {
+                temp2.append(str[Row[i] - 1]);
+            }
+            if (!temp1.equals(temp2.toString())) {
+                outfile.write(line + "\n");
+                temp1 = temp2.toString();
+            }
+            temp2.setLength(0);
+        }
+        infile.close();
+        outfile.close();
+        System.out.println(new Date() + "\tEnd to remove repeat\t" + InFile);
+    }//OK
+
+    public void BedpeToSameAndDiff(String BedpeFile, String SameBedpeFile, String DiffBedpeFile) throws IOException {
+        BufferedReader BedpeRead = new BufferedReader(new FileReader(BedpeFile));
+        BufferedWriter SameBedpeWrite = new BufferedWriter(new FileWriter(SameBedpeFile));
+        BufferedWriter DiffBedpeWrite = new BufferedWriter(new FileWriter(DiffBedpeFile));
+        Thread[] process = new Thread[Thread];
+        System.out.println(new Date() + "\tBegin to Seperate bedpe file\t" + BedpeFile);
+        for (int i = 0; i < Thread; i++) {
+            process[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String line;
+                    String[] str;
+                    try {
+//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " strat");
+                        while ((line = BedpeRead.readLine()) != null) {
+                            str = line.split("\\s+");
+                            //---------------------------取相同染色体上的交互-----------------------
+                            if (str[0].equals(str[3])) {
+                                if (Integer.parseInt(str[1]) < Integer.parseInt(str[4])) {
+                                    synchronized (process) {
+                                        SameBedpeWrite.write(line + "\n");
+                                    }
+                                } else {
+                                    synchronized (process) {
+                                        SameBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[7] + "\t" + str[9] + "\t" + str[8] + "\n");
+                                    }
+                                }
+                            }
+                            //--------------------------取不同染色体上的交互----------------------
+                            else {
+                                if (str[0].length() < str[3].length()) {
+                                    synchronized (process) {
+                                        DiffBedpeWrite.write(line + "\n");
+                                    }
+                                } else if (str[0].length() > str[3].length()) {
+                                    synchronized (process) {
+                                        DiffBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[7] + "\t" + str[9] + "\t" + str[8] + "\n");
+                                    }
+                                } else if (str[0].compareTo(str[3]) < 0) {
+                                    synchronized (process) {
+                                        DiffBedpeWrite.write(line + "\n");
+                                    }
+                                } else {
+                                    synchronized (process) {
+                                        DiffBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[7] + "\t" + str[9] + "\t" + str[8] + "\n");
+                                    }
+                                }
+                            }
+                        }
+//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            process[i].start();
+        }
+        for (int i = 0; i < Thread; i++) {
+            try {
+                process[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        BedpeRead.close();
+        SameBedpeWrite.close();
+        DiffBedpeWrite.close();
+    }//OK
 }
