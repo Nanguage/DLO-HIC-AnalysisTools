@@ -35,8 +35,6 @@ public class PetCluster {
             }
         }
         BufferedReader in = new BufferedReader(new FileReader(infile));
-        // ArrayList<int[]> r1 = new ArrayList<>();
-        // ArrayList<int[]> r2 = new ArrayList<>();
         Hashtable<String, ArrayList<int[]>> ChrMatrix = new Hashtable<>();
         while ((line = in.readLine()) != null) {
             String[] str = line.split("\\s+");
@@ -45,7 +43,7 @@ public class PetCluster {
             String key = chr1 + "-" + chr2;
             int count = 1;
             if (!ChrMatrix.containsKey(key)) {
-                ChrMatrix.put(key, new ArrayList<int[]>());
+                ChrMatrix.put(key, new ArrayList<>());
             }
             if (str.length >= 5) {
                 try {
@@ -74,26 +72,21 @@ public class PetCluster {
 
     public void Run() {
         ArrayList<int[]> temp = Region;
-        boolean Flag = true;
-//        while (Flag) {
-//            Flag = FindCluster(temp);
-//            temp = Cluster;
-//        }
         FindCluster(temp);
     }
 
     public void FindCluster(ArrayList<int[]> r) {
-//        ArrayList<Long> MaxNum = new ArrayList<>();
         ArrayList<Integer> OldUpDate = new ArrayList<>();
-        for (int i = r.size() - 1; i >= 0; i--) {
-            OldUpDate.add(i);
-        }
         ArrayList<Integer> NewUpDate = new ArrayList<>();
+        for (int i = 0; i < r.size(); i++) {
+            NewUpDate.add(i);
+        }
         int Flag = -1;
-//        MaxNum.add(r.get(0)[1]);
-        while (OldUpDate.size() > 0) {
+        while (OldUpDate.size() != NewUpDate.size()) {
+            OldUpDate.clear();
+            OldUpDate.addAll(NewUpDate);
+            NewUpDate.clear();
             for (int i = 0; i < OldUpDate.size(); i++) {
-                int UpdateIndex = -1;
                 int index = OldUpDate.get(i);
                 if (r.get(index)[0] == Flag) {
                     continue;
@@ -112,37 +105,12 @@ public class PetCluster {
                         if ((RMax - RMin) <= (r.get(index)[3] + r.get(j)[3] - r.get(index)[2] - r.get(j)[2])) {
                             r.set(index, new int[]{LMin, LMax, RMin, RMax, r.get(index)[4] + r.get(j)[4]});
                             r.set(j, new int[]{Flag});
-                            UpdateIndex = index;
                         }
                     }
                     j++;
                 }
-                j = index - 1;
-                while (j >= 0) {
-                    if (r.get(j)[0] != Flag) {
-                        if (r.get(j)[1] < r.get(index)[0]) {
-                            break;
-                        }
-                        int RMax = Math.max(r.get(index)[3], r.get(j)[3]);
-                        int RMin = Math.min(r.get(index)[2], r.get(j)[2]);
-                        int LMax = Math.max(r.get(index)[1], r.get(j)[1]);
-                        int LMin = r.get(j)[0];
-                        if ((RMax - RMin) <= (r.get(index)[3] + r.get(j)[3] - r.get(index)[2] - r.get(j)[2])) {
-                            r.set(j, new int[]{LMin, LMax, RMin, RMax, r.get(index)[4] + r.get(j)[4]});
-                            r.set(index, new int[]{Flag});
-                            UpdateIndex = j;
-                            break;
-                        }
-                    }
-                    j--;
-                }
-                if (UpdateIndex != -1) {
-                    NewUpDate.add(UpdateIndex);
-                }
+                NewUpDate.add(index);
             }
-            OldUpDate.clear();
-            OldUpDate.addAll(NewUpDate);
-            NewUpDate.clear();
         }
         for (int[] item : r) {
             if (item[0] != Flag) {
@@ -150,7 +118,6 @@ public class PetCluster {
             }
         }
     }
-
 
     public ArrayList<int[]> getCluster() {
         return Cluster;
