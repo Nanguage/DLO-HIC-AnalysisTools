@@ -59,18 +59,18 @@ MaxReadsLength      Int         Max reads length when extract interaction reads 
 Thread              Int         Number of thread    (default    "4")
 Step                String      assign  where start and end (default    "-")
 
-//Step include "LinkerFilter" "ClusterLinker" "SeProcess" "Bed2BedPe" "BedPeProcess" "BedPe2Inter" "MakeMatrix"
-//If we want to run from "Bed2BedPe" to "MakeMatrix", we can set "Bed2BedPe - MakeMatrix"
-//If we only want to run from "SeProcess" to end, we can set "SeProcess -"
+//Step include "LinkerFilter" "ClusterLinker" "bin.SeProcess" "Bed2BedPe" "BedPeProcess" "BedPe2Inter" "bin.MakeMatrix"
+//If we want to run from "Bed2BedPe" to "bin.MakeMatrix", we can set "Bed2BedPe - bin.MakeMatrix"
+//If we only want to run from "bin.SeProcess" to end, we can set "bin.SeProcess -"
 //If we want to run all, we can set "-"
 
 =====================================Sub Class=============================================
 
-PreProcess:     usage:      java -cp DLO-HIC-AnalysisTools.jar PreProcess <Config.txt>
+bin.PreProcess:     usage:      java -cp DLO-HIC-AnalysisTools.jar bin.PreProcess <Config.txt>
                 include:    linker filter
-SeProcess:      usage:      java -cp DLO-HIC-AnalysisTools.jar SeProcess <Config.txt>
+bin.SeProcess:      usage:      java -cp DLO-HIC-AnalysisTools.jar bin.SeProcess <Config.txt>
                 include:    alignment, sam filter, sam to bed, sort bed file
-BedPeProcess:   usage:      java -cp DLO-HIC-AnalysisTools.jar BedpeProcess <Config.txt>
+BedPeProcess:   usage:      java -cp DLO-HIC-AnalysisTools.jar bin.BedpeProcess <Config.txt>
                 include:    extract interaction in same and diff chromosome, separate chromosome, find enzyme fragment, separate ligation type, sort file
-MakeMatrix:     usage:      java -cp DLO-HIC-AnalysisTools.jar MakeMatrix <Config.txt>
+bin.MakeMatrix:     usage:      java -cp DLO-HIC-AnalysisTools.jar bin.MakeMatrix <Config.txt>
                 include:    creat interaction matrix, creat interaction matrix for every chromosome, matrix normalize

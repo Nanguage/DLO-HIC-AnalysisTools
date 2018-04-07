@@ -1,5 +1,7 @@
 import java.io.IOException;
 
+import lib.tool.Statistic;
+
 public class RangeCount {
     public static void main(String[] args) throws IOException {
         if (args.length <= 1) {
@@ -25,7 +27,7 @@ public class RangeCount {
             Threads = 1;
         }
         try {
-            System.out.println("Rabge between " + range[0] + " to " + range[1] + " :\t" + Statistics.RangeCount(File, range[0], range[1], Threads));
+            System.out.println("Rabge between " + range[0] + " to " + range[1] + " :\t" + Statistic.RangeCount(File, range[0], range[1], Threads));
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

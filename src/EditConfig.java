@@ -1,7 +1,11 @@
 
+import bin.PreProcess;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Hashtable;
+
+import bin.*;
 
 public class EditConfig {
     private ArrayList<String[]> List;
@@ -96,7 +100,7 @@ public class EditConfig {
                     "Type = R1\n" +
                     "GenomeFile = Hg19.clean.fna\n" +
                     "//------------------------------Optional parameters---------------------------\n" +
-                    "OutPath = ./SeProcess\n" +
+                    "OutPath = ./bin.SeProcess\n" +
                     "OutPrefix = test\n" +
                     "Phred = 33\n" +
                     "UseLinker = AA\n" +
@@ -114,7 +118,7 @@ public class EditConfig {
                     "Chromosome = chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY" +
                     "EnzyFilePrefix = " +
                     "//------------------------------Optional parameters---------------------------\n" +
-                    "OutPath = ./BedpeProcess\n" +
+                    "OutPath = ./bin.BedpeProcess\n" +
                     "OutPrefix = test\n" +
                     "Thread = 4\n";
         } else {
@@ -124,7 +128,7 @@ public class EditConfig {
                     "Resolution = 1000000" +
                     "ChrSizeFile = Chromosome.chrsize.txt" +
                     "//------------------------------Optional parameters---------------------------\n" +
-                    "OutPath = ./MakeMatrix\n" +
+                    "OutPath = ./bin.MakeMatrix\n" +
                     "OutPrefix = test\n" +
                     "Thread = 4\n";
         }

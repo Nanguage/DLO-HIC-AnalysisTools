@@ -1,0 +1,36 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="DLO-HIC-AnalysisTools-src">
+    <output-path>$PROJECT_DIR$/out/artifacts/DLO_HIC_AnalysisTools_src</output-path>
+    <root id="archive" name="DLO-HIC-AnalysisTools-src.jar">
+      <element id="directory" name="src">
+        <element id="directory" name="lib">
+          <element id="dir-copy" path="$PROJECT_DIR$/src/lib" />
+        </element>
+        <element id="directory" name="bin">
+          <element id="dir-copy" path="$PROJECT_DIR$/src/bin" />
+        </element>
+        <element id="file-copy" path="$PROJECT_DIR$/src/bin/BedpeProcess.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/CalculatorLineNumber.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/EditConfig.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/FindRestrictionSite.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/lib/unit/LocalAlignment.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/Main.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/bin/MakeMatrix.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/bin/PetCluster.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/bin/PreProcess.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/RangeCount.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/Report.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/bin/SeProcess.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/lib/tool/SequenceFiltering.java" />
+        <element id="file-copy" path="$PROJECT_DIR$/src/Report.java" />
+      </element>
+      <element id="directory" name="resource">
+        <element id="file-copy" path="$PROJECT_DIR$/resource/Template.html" />
+        <element id="file-copy" path="$PROJECT_DIR$/resource/DLO-linker_TP.txt" />
+      </element>
+      <element id="directory" name="config">
+        <element id="file-copy" path="$PROJECT_DIR$/config/DLO-Config.txt" />
+      </element>
+    </root>
+  </artifact>
+</component>

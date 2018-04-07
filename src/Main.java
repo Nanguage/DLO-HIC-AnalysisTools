@@ -4,6 +4,13 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
 
+import bin.BedpeProcess;
+import bin.MakeMatrix;
+import bin.SeProcess;
+import lib.File.*;
+import bin.PreProcess;
+import lib.tool.*;
+
 public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
     private final String OptGenomeFile = "GenomeFile";//基因组文件
@@ -66,8 +73,8 @@ public class Main {
     private String SeProcessDir;//单端处理输出目录
     private String BedpeProcessDir;//bedpe处理输出目录
     private String MakeMatrixDir;//建立矩阵输出目录
-    private Routine step = new Routine();
-    private Statistics Stat = new Statistics();
+//    private Routine step = new Routine();
+    private Report Stat = new Report();
 
     Main(String ConfigFile) throws IOException {
         OptionListInit();
@@ -128,7 +135,7 @@ public class Main {
         //==============================================================================================================
         String FinalBedpeFile = BedpeProcessDir + "/" + Prefix + ".bedpe";
         String InterBedpeFile = BedpeProcessDir + "/" + Prefix + ".inter.bedpe";
-        step.Threads = Thread;//设置线程数
+//        step.Threads = Thread;//设置线程数
         Thread ST;
         //=========================================linker filter==linker 过滤===========================================
         PreProcess preprocess;
@@ -142,7 +149,7 @@ public class Main {
             public void run() {
                 try {
                     Stat.RawDataFile = FastqFile;
-                    Stat.RawDataReadsNum = Statistics.CalculatorLineNumber(FastqFile) / 4;
+                    Stat.RawDataReadsNum = Statistic.CalculatorLineNumber(FastqFile) / 4;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -172,8 +179,8 @@ public class Main {
                 try {
                     Stat.LinkersType = LinkersType;
                     for (int i = 0; i < LinkersType.size(); i++) {
-                        Long R1Num = Statistics.CalculatorLineNumber(LinkerFasqFileR1[i]);
-                        Long R2Num = Statistics.CalculatorLineNumber(LinkerFasqFileR2[i]);
+                        Long R1Num = Statistic.CalculatorLineNumber(LinkerFasqFileR1[i]);
+                        Long R2Num = Statistic.CalculatorLineNumber(LinkerFasqFileR2[i]);
                         Stat.FastqR1Num.add(R1Num / 4);
                         Stat.FastqR2Num.add(R2Num / 4);
                         Stat.LinkersNum.add((R1Num + R2Num) / 4);
@@ -191,7 +198,7 @@ public class Main {
         for (int i = 0; i < UseLinker.size(); i++) {
             sepR1[i] = SeProcess(UseLinkerFasqFileR1[i], UseLinkerFasqFileR1[i].replaceAll(".*/", "").replace(".fastq", ""));
             sepR2[i] = SeProcess(UseLinkerFasqFileR2[i], UseLinkerFasqFileR2[i].replaceAll(".*/", "").replace(".fastq", ""));
-            if (StepCheck("SeProcess")) {
+            if (StepCheck("bin.SeProcess")) {
                 sepR1[i].start();
                 sepR2[i].start();
             }
@@ -213,7 +220,7 @@ public class Main {
             R2SortBedFile[i] = new SeProcess(UseLinkerFasqFileR2[i], IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR2[i].replaceAll(".*/", "").replace(".fastq", "")).getSortBedFile();
             SeBedpeFile[i] = SeProcessDir + "/" + Prefix + "." + UseLinker.get(i) + ".bedpe";
             if (StepCheck("Bed2BedPe")) {
-                step.MergeBedToBedpe(R1SortBedFile[i], R2SortBedFile[i], SeBedpeFile[i], 4, "");//合并左右端bed文件，输出bedpe文件
+                new MergeBedToBedpe(R1SortBedFile[i], R2SortBedFile[i], SeBedpeFile[i], 4, "");//合并左右端bed文件，输出bedpe文件
             }
             //==========================================================================================================
             Stat.UseBed1.add(R1SortBedFile[i]);
@@ -223,10 +230,10 @@ public class Main {
                 @Override
                 public void run() {
                     try {
-                        Stat.UniqMapR1Num.add(Statistics.CalculatorLineNumber(R1SortBedFile[finalI]));
-                        Stat.UniqMapR2Num.add(Statistics.CalculatorLineNumber(R2SortBedFile[finalI]));
+                        Stat.UniqMapR1Num.add(Statistic.CalculatorLineNumber(R1SortBedFile[finalI]));
+                        Stat.UniqMapR2Num.add(Statistic.CalculatorLineNumber(R2SortBedFile[finalI]));
                         Stat.BedpeFile.add(SeBedpeFile[finalI]);
-                        Stat.BedpeNum.add(Statistics.CalculatorLineNumber(SeBedpeFile[finalI]));
+                        Stat.BedpeNum.add(Statistic.CalculatorLineNumber(SeBedpeFile[finalI]));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -272,8 +279,8 @@ public class Main {
                 @Override
                 public void run() {
                     try {
-                        Stat.LigationNum.add(new Long[]{Statistics.CalculatorLineNumber(Temp.getSelfLigationFile()), Statistics.CalculatorLineNumber(Temp.getReLigationFile()), Statistics.CalculatorLineNumber(Temp.getValidBedpeFile())});
-                        Stat.NoRmdupNum.add(Statistics.CalculatorLineNumber(Temp.getFinalBedpeFile()));
+                        Stat.LigationNum.add(new Long[]{Statistic.CalculatorLineNumber(Temp.getSelfLigationFile()), Statistic.CalculatorLineNumber(Temp.getReLigationFile()), Statistic.CalculatorLineNumber(Temp.getValidBedpeFile())});
+                        Stat.NoRmdupNum.add(Statistic.CalculatorLineNumber(Temp.getFinalBedpeFile()));
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -284,10 +291,10 @@ public class Main {
         }
         //=================================================BedpeFile To Inter===========================================
         if (StepCheck("BedPeProcess")) {
-            CommonMethod.Merge(FinalLinkerBedpe, FinalBedpeFile);//合并不同linker类型的bedpe文件
+            new Merge(FinalLinkerBedpe, FinalBedpeFile);//合并不同linker类型的bedpe文件
         }
         if (StepCheck("BedPe2Inter")) {
-            step.BedpeToInter(FinalBedpeFile, InterBedpeFile);//将交互区间转换成交互点
+            new BedpeToInter(FinalBedpeFile, InterBedpeFile);//将交互区间转换成交互点
         }
         //=================================================Make Matrix==================================================
         int i = 0;
@@ -307,7 +314,7 @@ public class Main {
         }
         MakeMatrix matrix = new MakeMatrix(MakeMatrixDir, Prefix, InterBedpeFile, Chromosome.toArray(new String[Chromosome.size()]), chrSize, Resolution);//生成交互矩阵类
         String[] IntraActionFile = matrix.getChrInterBedpeFile();
-        if (StepCheck("MakeMatrix")) {
+        if (StepCheck("bin.MakeMatrix")) {
             matrix.Run();//运行
         }
         //==============================================================================================================
@@ -316,13 +323,13 @@ public class Main {
             public void run() {
                 try {
                     Stat.FinalBedpeName = FinalBedpeFile;
-                    Stat.FinalBedpeNum = Statistics.CalculatorLineNumber(Stat.FinalBedpeName);
+                    Stat.FinalBedpeNum = Statistic.CalculatorLineNumber(Stat.FinalBedpeName);
                     for (String s : IntraActionFile) {
-                        Stat.IntraActionNum = Stat.IntraActionNum + Statistics.CalculatorLineNumber(s);
+                        Stat.IntraActionNum = Stat.IntraActionNum + Statistic.CalculatorLineNumber(s);
                         if (Stat.RestrictionSeq.length() <= 4) {
-                            Stat.ShortRegionNum += Statistics.RangeCount(s, 0, 5000, 4);
+                            Stat.ShortRegionNum += Statistic.RangeCount(s, 0, 5000, 4);
                         } else {
-                            Stat.ShortRegionNum += Statistics.RangeCount(s, 0, 20000, 4);
+                            Stat.ShortRegionNum += Statistic.RangeCount(s, 0, 20000, 4);
                         }
                     }
                     Stat.InterActionNum = Stat.FinalBedpeNum - Stat.IntraActionNum;
@@ -358,19 +365,19 @@ public class Main {
             @Override
             public void run() {
                 try {
-                    Routine step = new Routine();
+//                    Routine step = new Routine();
                     ArrayList<String> list = new ArrayList<>();
                     if (!new File(EnzyPath).isDirectory() && !new File(EnzyPath).mkdir()) {
                         System.out.println(new Date() + "\tCreat " + EnzyPath + " false !");
                     }
-                    Hashtable<String, Integer> temphash = step.FindRestrictionSite(GenomeFile, Restriction, EnzyFilePrefix);
+                    Hashtable<String, Integer> temphash = Statistic.FindRestrictionSite(GenomeFile, Restriction, EnzyFilePrefix);
                     for (String chr : Chromosome) {
                         if (temphash.containsKey(chr)) {
                             ChrSize.put(chr, temphash.get(chr));
                         }
                         list.add(chr + "\t" + temphash.get(chr));
                     }
-                    CommonMethod.PrintList(list, EnzyPath + "/" + Prefix + ".ChrSize");//打印染色体大小信息
+                    new PrintList(list, EnzyPath + "/" + Prefix + ".ChrSize");//打印染色体大小信息
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -383,7 +390,7 @@ public class Main {
             @Override
             public void run() {
                 try {
-                    step.ClusterLinker(PastFile, LinkerFasqFile, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, Restriction, AddQuality, Type);
+                    new ClusterLinker(PastFile, LinkerFasqFile, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, Restriction, AddQuality, Type, Thread);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -530,10 +537,10 @@ public class Main {
             AddQuality = "h";
         }
         MinLinkerFilterQuality = (linkerLength - MaxMisMatchLength) * MatchScore + MaxMisMatchLength * MisMatchScore;//设置linkerfilter最小分数
-        PreProcessDir = OutPath + "/PreProcess";
-        SeProcessDir = OutPath + "/SeProcess";
-        BedpeProcessDir = OutPath + "/BedpeProcess";
-        MakeMatrixDir = OutPath + "/MakeMatrix";
+        PreProcessDir = OutPath + "/bin.PreProcess";
+        SeProcessDir = OutPath + "/bin.SeProcess";
+        BedpeProcessDir = OutPath + "/bin.BedpeProcess";
+        MakeMatrixDir = OutPath + "/bin.MakeMatrix";
         EnzyPath = OutPath + "/EnzySiteFile";
         if (!new File(PreProcessDir).isDirectory() && !new File(PreProcessDir).mkdirs()) {
             System.err.println("Can't creat " + PreProcessDir);
@@ -551,7 +558,7 @@ public class Main {
             System.err.println("Can't creat " + EnzyPath);
         }
         EnzyFilePrefix = EnzyPath + "/" + Prefix + "." + Restriction.replace("^", "");
-        step.Threads = Thread;
+//        step.Threads = Thread;
         Stat.OutPath = OutPath;
     }
 
