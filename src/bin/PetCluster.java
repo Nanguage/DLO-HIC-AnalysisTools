@@ -7,7 +7,6 @@ import java.util.Hashtable;
 
 public class PetCluster {
     private ArrayList<int[]> Region;
-    // private ArrayList<int[]> Region2;
     private ArrayList<int[]> Cluster = new ArrayList<>();
     private Hashtable<Integer, Integer> CountStat = new Hashtable<>();
 
@@ -18,7 +17,7 @@ public class PetCluster {
 
     public static void main(String args[]) throws IOException {
         if (args.length < 1) {
-            System.err.println("Usage: java bin.PetCluster <file> [<length>]");
+            System.err.println("Usage: java bin.PetCluster <file> [length] [prefix]");
             System.exit(0);
         }
         String infile = args[0];
@@ -59,25 +58,34 @@ public class PetCluster {
         }
         in.close();
         BufferedWriter out = new BufferedWriter(new FileWriter(outprefix + ".cluster"));
-        for (String key : ChrMatrix.keySet()) {
-            String chr1 = key.split("-")[0];
-            String chr2 = key.split("-")[1];
-            PetCluster pet = new PetCluster(ChrMatrix.get(key));
+        Hashtable<Integer, Integer> countstat = new Hashtable<>();
+        for (String chrinter : ChrMatrix.keySet()) {
+            String chr1 = chrinter.split("-")[0];
+            String chr2 = chrinter.split("-")[1];
+            PetCluster pet = new PetCluster(ChrMatrix.get(chrinter));
             pet.Run();
             ArrayList<int[]> clustr = pet.getCluster();
             for (int[] aClustr : clustr) {
                 out.write(chr1 + "\t" + aClustr[0] + "\t" + aClustr[1] + "\t" + chr2 + "\t" + aClustr[2] + "\t" + aClustr[3] + "\t" + aClustr[4] + "\n");
             }
-            out.close();
-            out = new BufferedWriter(new FileWriter(outprefix + ".count"));
-            Hashtable<Integer, Integer> countstat = pet.getCountStat();
-            ArrayList<Integer> keylist = new ArrayList<>(countstat.keySet());
-            Collections.sort(keylist);
-            for (int k : keylist) {
-                out.write(k + "\t" + countstat.get(k) + "\n");
+//            out.close();
+            Hashtable<Integer, Integer> tempstat = pet.getCountStat();
+            for (Integer count : tempstat.keySet()) {
+                if (countstat.containsKey(count)) {
+                    countstat.put(count, countstat.get(count) + tempstat.get(count));
+                } else {
+                    countstat.put(count, tempstat.get(count));
+                }
             }
-            out.close();
         }
+        out.close();
+        out = new BufferedWriter(new FileWriter(outprefix + ".count"));
+        ArrayList<Integer> keylist = new ArrayList<>(countstat.keySet());
+        Collections.sort(keylist);
+        for (int k : keylist) {
+            out.write(k + "\t" + countstat.get(k) + "\n");
+        }
+        out.close();
     }
 
     public void Run() {

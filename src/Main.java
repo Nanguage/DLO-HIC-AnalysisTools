@@ -4,11 +4,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
 
-import bin.BedpeProcess;
-import bin.MakeMatrix;
-import bin.SeProcess;
+import bin.*;
 import lib.File.*;
-import bin.PreProcess;
 import lib.tool.*;
 
 public class Main {
@@ -73,7 +70,7 @@ public class Main {
     private String SeProcessDir;//单端处理输出目录
     private String BedpeProcessDir;//bedpe处理输出目录
     private String MakeMatrixDir;//建立矩阵输出目录
-//    private Routine step = new Routine();
+    //    private Routine step = new Routine();
     private Report Stat = new Report();
 
     Main(String ConfigFile) throws IOException {

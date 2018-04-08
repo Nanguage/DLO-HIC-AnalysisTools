@@ -67,17 +67,15 @@ public class SeProcess {
      * @throws IOException
      */
     public void Run() throws IOException {
-//        Routine Se = new Routine();
-//        Se.Threads = Thread;
         //========================================================================================
         //处理可用的linker类型（每个线程处理一种linker类型）
 //        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start\t" + LinkersType[finalI]);
         //比对
-        Align(IndexFile, FastqFile, SamFile, AlignThreads, MisMatchNum);
+        Align();
         //Sam文件过滤
-        SamFilter(SamFile, FilterSamFile, MinQuality);
+        SamFilter();
         //Sam文件转bam再转bed
-        SamToBed(FilterSamFile, BamFile, BedFile);
+        SamToBed();
         //对bed文件排序（由于在大量数据下bed文件会比较大，所以为了减少内存消耗，bed文件排序使用串行）
         new SortFile(BedFile, new int[]{4}, "", "\\s+", SortBedFile, Thread);
 //        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end\t" + LinkersType[finalI]);
@@ -181,7 +179,7 @@ public class SeProcess {
         }
     }
 
-    public void ShowParameter() {
+    private void ShowParameter() {
         for (String opt : RequiredParameter) {
             System.out.println(opt + ":\t" + ArgumentList.get(opt));
         }
@@ -191,11 +189,10 @@ public class SeProcess {
         }
     }
 
-    public void Align(String IndexFile, String FastqFile, String SamFile, int Threads, int MisMatch) throws IOException {
+    private void Align() throws IOException {
         //比对
-        int ExitValue;//命令行退出值
         System.out.println(new Date() + "\tBegin to align\t" + FastqFile);
-        String CommandStr = "bwa aln -t " + Threads + " -n " + MisMatch + " -f " + FastqFile + ".sai " + IndexFile + " " + FastqFile;
+        String CommandStr = "bwa aln -t " + Thread + " -n " + MisMatchNum + " -f " + FastqFile + ".sai " + IndexFile + " " + FastqFile;
         new Execute(CommandStr);//执行命令行
         System.out.println(new Date() + "\tsai to sam\t" + FastqFile);
         CommandStr = "bwa samse -f " + SamFile + " " + IndexFile + " " + FastqFile + ".sai " + FastqFile;
@@ -205,11 +202,11 @@ public class SeProcess {
         System.out.println(new Date() + "\tEnd align\t" + FastqFile);
     }//OK
 
-    public void SamFilter(String SameFile, String FilterSameFile, int MinAlignQuality) throws IOException {
+    private void SamFilter() throws IOException {
         //sam文件过滤
-        BufferedReader sam_read = new BufferedReader(new FileReader(SameFile));
-        BufferedWriter sam_write = new BufferedWriter(new FileWriter(FilterSameFile));
-        System.out.println(new Date() + "\tBegin to sam filter\t" + SameFile);
+        BufferedReader sam_read = new BufferedReader(new FileReader(SamFile));
+        BufferedWriter sam_write = new BufferedWriter(new FileWriter(FilterSamFile));
+        System.out.println(new Date() + "\tBegin to sam filter\t" + SamFile);
         Thread[] process = new Thread[Thread];
         for (int i = 0; i < Thread; i++) {
             process[i] = new Thread(new Runnable() {
@@ -222,7 +219,7 @@ public class SeProcess {
 //                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " begin");
                         while ((line = sam_read.readLine()) != null) {
                             str = line.split("\\s+");
-                            if (str[0].matches("^@.+") || (Integer.parseInt(str[4]) >= MinAlignQuality)) {
+                            if (str[0].matches("^@.+") || (Integer.parseInt(str[4]) >= MinQuality)) {
                                 synchronized (process) {
                                     sam_write.write(line + "\n");
                                 }
@@ -243,10 +240,10 @@ public class SeProcess {
         }
         sam_read.close();
         sam_write.close();
-        System.out.println(new Date() + "\tEnd to sam filter\t" + SameFile);
+        System.out.println(new Date() + "\tEnd to sam filter\t" + SamFile);
     }//OK
 
-    public void SamToBed(String SamFile, String BamFile, String BedFile) throws IOException {
+    private void SamToBed() throws IOException {
         System.out.println(new Date() + "\tBegin\t" + SamFile + " to " + BedFile);
         String CommandStr = "samtools view -Sb -o " + BamFile + " " + SamFile;
         new Execute(CommandStr, SamFile + ".log");
