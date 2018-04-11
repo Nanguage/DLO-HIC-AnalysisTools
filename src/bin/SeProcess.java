@@ -89,7 +89,7 @@ public class SeProcess {
             System.out.println("usage:    java -cp DLO-HIC-AnalysisTools.jar bin.SeProcess Config.txt");
             System.exit(0);
         }
-        bin.SeProcess se = new bin.SeProcess(args[0]);
+        SeProcess se = new SeProcess(args[0]);
         se.ShowParameter();
         se.Run();
     }

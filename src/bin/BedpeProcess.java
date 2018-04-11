@@ -478,7 +478,7 @@ public class BedpeProcess {
                                     }
                                 } else {
                                     synchronized (process) {
-                                        SameBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[7] + "\t" + str[9] + "\t" + str[8] + "\n");
+                                        SameBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[8] + "\t" + str[7] + "\t" + str[10] + "\t" + str[9] + "\n");
                                     }
                                 }
                             }
@@ -490,7 +490,7 @@ public class BedpeProcess {
                                     }
                                 } else if (str[0].length() > str[3].length()) {
                                     synchronized (process) {
-                                        DiffBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[7] + "\t" + str[9] + "\t" + str[8] + "\n");
+                                        DiffBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[8] + "\t" + str[7] + "\t" + str[10] + "\t" + str[9] + "\n");
                                     }
                                 } else if (str[0].compareTo(str[3]) < 0) {
                                     synchronized (process) {
@@ -498,7 +498,7 @@ public class BedpeProcess {
                                     }
                                 } else {
                                     synchronized (process) {
-                                        DiffBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[7] + "\t" + str[9] + "\t" + str[8] + "\n");
+                                        DiffBedpeWrite.write(str[3] + "\t" + str[4] + "\t" + str[5] + "\t" + str[0] + "\t" + str[1] + "\t" + str[2] + "\t" + str[6] + "\t" + str[8] + "\t" + str[7] + "\t" + str[10] + "\t" + str[9] + "\n");
                                     }
                                 }
                             }

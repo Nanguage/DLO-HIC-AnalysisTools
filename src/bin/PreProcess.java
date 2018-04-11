@@ -37,7 +37,7 @@ public class PreProcess {
 
     public PreProcess() {
     }
-//    bin.PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, int threads) throws IOException {
+//    PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, int threads) throws IOException {
 //        OptionList.put(OptOutPath, outpath);
 //        OptionList.put(OptOutPrefix, outprefix);
 //        OptionList.put(OptFastqFile, fastqfile);
@@ -46,7 +46,7 @@ public class PreProcess {
 //        Init();
 //    }
 //
-//    bin.PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, String adapterfile, int threads) throws IOException {
+//    PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, String adapterfile, int threads) throws IOException {
 //        OptionList.put(OptOutPath, outpath);
 //        OptionList.put(OptOutPrefix, outprefix);
 //        OptionList.put(OptFastqFile, fastqfile);
@@ -56,7 +56,7 @@ public class PreProcess {
 //        Init();
 //    }
 //
-//    bin.PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, int matchscore, int mismatchscore, int indelscore, int threads) throws IOException {
+//    PreProcess(String outpath, String outprefix, String fastqfile, String linkerfile, int matchscore, int mismatchscore, int indelscore, int threads) throws IOException {
 //        OutPath = outpath;
 //        OutPrefix = outprefix;
 //        FastqFile = fastqfile;

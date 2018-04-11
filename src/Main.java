@@ -195,7 +195,7 @@ public class Main {
         for (int i = 0; i < UseLinker.size(); i++) {
             sepR1[i] = SeProcess(UseLinkerFasqFileR1[i], UseLinkerFasqFileR1[i].replaceAll(".*/", "").replace(".fastq", ""));
             sepR2[i] = SeProcess(UseLinkerFasqFileR2[i], UseLinkerFasqFileR2[i].replaceAll(".*/", "").replace(".fastq", ""));
-            if (StepCheck("bin.SeProcess")) {
+            if (StepCheck("SeProcess")) {
                 sepR1[i].start();
                 sepR2[i].start();
             }
@@ -311,7 +311,7 @@ public class Main {
         }
         MakeMatrix matrix = new MakeMatrix(MakeMatrixDir, Prefix, InterBedpeFile, Chromosome.toArray(new String[Chromosome.size()]), chrSize, Resolution);//生成交互矩阵类
         String[] IntraActionFile = matrix.getChrInterBedpeFile();
-        if (StepCheck("bin.MakeMatrix")) {
+        if (StepCheck("MakeMatrix")) {
             matrix.Run();//运行
         }
         //==============================================================================================================
@@ -534,10 +534,10 @@ public class Main {
             AddQuality = "h";
         }
         MinLinkerFilterQuality = (linkerLength - MaxMisMatchLength) * MatchScore + MaxMisMatchLength * MisMatchScore;//设置linkerfilter最小分数
-        PreProcessDir = OutPath + "/bin.PreProcess";
-        SeProcessDir = OutPath + "/bin.SeProcess";
-        BedpeProcessDir = OutPath + "/bin.BedpeProcess";
-        MakeMatrixDir = OutPath + "/bin.MakeMatrix";
+        PreProcessDir = OutPath + "/PreProcess";
+        SeProcessDir = OutPath + "/SeProcess";
+        BedpeProcessDir = OutPath + "/BedpeProcess";
+        MakeMatrixDir = OutPath + "/MakeMatrix";
         EnzyPath = OutPath + "/EnzySiteFile";
         if (!new File(PreProcessDir).isDirectory() && !new File(PreProcessDir).mkdirs()) {
             System.err.println("Can't creat " + PreProcessDir);
