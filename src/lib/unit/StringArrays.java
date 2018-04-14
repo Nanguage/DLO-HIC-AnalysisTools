@@ -31,6 +31,14 @@ public class StringArrays implements Comparable {
         return result;
     }
 
+    public static int[] toInteger(String[] s) {
+        int[] i = new int[s.length];
+        for (int j = 0; j < s.length; j++) {
+            i[j] = Integer.parseInt(s[j]);
+        }
+        return i;
+    }
+
     public String[] getItem() {
         return item;
     }

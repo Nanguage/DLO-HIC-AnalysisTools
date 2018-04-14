@@ -374,7 +374,7 @@ public class Main {
                         }
                         list.add(chr + "\t" + temphash.get(chr));
                     }
-                    new PrintList(list, EnzyPath + "/" + Prefix + ".ChrSize");//打印染色体大小信息
+                    Tools.PrintList(list, EnzyPath + "/" + Prefix + ".ChrSize");//打印染色体大小信息
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

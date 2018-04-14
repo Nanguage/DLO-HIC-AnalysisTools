@@ -71,14 +71,14 @@ public class MakeMatrix {
 //        P.Threads = Thread;
         int[][] Matrix = CreatInterActionMatrix(InterBedpeFile, Chromosome, ChromosomeSize, Resolution, InterMatrixPrefix);
         double[][] NormalizeMatrix = MatrixNormalize(Matrix);
-        new PrintMatrix(NormalizeMatrix, NormalizeMatrixPrefix + ".2d.matrix", NormalizeMatrixPrefix + ".spare.matrix");
+        Tools.PrintMatrix(NormalizeMatrix, NormalizeMatrixPrefix + ".2d.matrix", NormalizeMatrixPrefix + ".spare.matrix");
         ChrInterBedpeFile = SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + Prefix, "");
         for (int i = 0; i < Chromosome.length; i++) {
             String ChrInterMatrixPrefix = OutPath + "/" + Prefix + "." + Chromosome[i] + ".inter";
             String ChrNormalizeMatrixPrefix = OutPath + "/" + Prefix + "." + Chromosome[i] + ".normalize";
             Matrix = CreatInterActionMatrix(ChrInterBedpeFile[i], new String[]{Chromosome[i]}, new int[]{ChromosomeSize[i]}, Resolution / 10, ChrInterMatrixPrefix);
             NormalizeMatrix = MatrixNormalize(Matrix);
-            new PrintMatrix(NormalizeMatrix, ChrNormalizeMatrixPrefix + ".2d.matrix", ChrNormalizeMatrixPrefix + ".spare.matrix");
+            Tools.PrintMatrix(NormalizeMatrix, ChrNormalizeMatrixPrefix + ".2d.matrix", ChrNormalizeMatrixPrefix + ".spare.matrix");
         }
     }
 
@@ -344,7 +344,7 @@ public class MakeMatrix {
         infile.close();
         //--------------------------------------------------------
         //打印矩阵
-        new PrintMatrix(InterMatrix, Prefix + ".2d.matrix", Prefix + ".spare.matrix");
+        Tools.PrintMatrix(InterMatrix, Prefix + ".2d.matrix", Prefix + ".spare.matrix");
         System.out.println(new Date() + "\tEnd to creat interaction matrix");
         //--------------------------------------------------------------------
         int temp = 0;

@@ -1,6 +1,9 @@
 package lib.tool;
 
+import lib.unit.IntegerArrays;
+
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Hashtable;
 
 public class Statistic {
@@ -16,6 +19,7 @@ public class Statistic {
         file.close();
         return LineNumber;
     }
+
     public static long RangeCount(String Bedpe, double Min, double Max, int Threads) throws IOException, InterruptedException {
         if (!new File(Bedpe).isFile()) {
             return 0;
@@ -91,6 +95,7 @@ public class Statistic {
         bedpe.close();
         return Count[0];
     }
+
     public static int[] CalculatorBinSize(int[] ChrSize, int Resolution) {
         int[] ChrBinSize = new int[ChrSize.length];
         for (int i = 0; i < ChrSize.length; i++) {
@@ -98,6 +103,7 @@ public class Statistic {
         }
         return ChrBinSize;
     }
+
     public static Hashtable<String, Integer> GetChromosomeSize(String InFile) throws IOException {
         BufferedReader infile = new BufferedReader(new FileReader(InFile));
         Hashtable<String, Integer> ChrSizeList = new Hashtable<>();
@@ -140,6 +146,7 @@ public class Statistic {
         infile.close();
         return ChrSizeList;
     }
+
     public static Hashtable<String, Integer> FindRestrictionSite(String FastFile, String Restriction, String Prefix) throws IOException {
         BufferedReader fastfile = new BufferedReader(new FileReader(FastFile));
         BufferedWriter chrwrite;
@@ -194,5 +201,63 @@ public class Statistic {
         chrwrite.close();
         Seq.setLength(0);
         return ChrSize;
+    }
+
+    public static ArrayList<int[]> PowerLaw(String BedpeFile, int StepLength) throws IOException {
+        ArrayList<int[]> List = new ArrayList<>();
+        List.add(new int[]{0, StepLength, 0});
+        BufferedReader infile = new BufferedReader(new FileReader(BedpeFile));
+        String line;
+        String[] str;
+        int distant;
+        if (Tools.BedpeDetect(BedpeFile) == 1) {
+            while ((line = infile.readLine()) != null) {
+                str = line.split("\\s+");
+                distant = Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3]));
+                int i = 0;
+                while (i < List.size()) {
+                    if (distant > List.get(i)[1]) {
+                        i++;
+                    } else {
+                        List.get(i)[2]++;
+                        break;
+                    }
+                }
+                if (i == List.size()) {
+                    List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
+                    while (List.get(i)[1] < distant) {
+                        i++;
+                        List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
+                    }
+                    List.get(i)[2]++;
+                }
+            }
+        } else if (Tools.BedpeDetect(BedpeFile) == 2) {
+            while ((line = infile.readLine()) != null) {
+                str = line.split("\\s+");
+                distant = Math.abs(Integer.parseInt(str[5]) + Integer.parseInt(str[4]) - Integer.parseInt(str[2]) - Integer.parseInt(str[1])) / 2;
+                int i = 0;
+                while (i < List.size()) {
+                    if (distant > List.get(i)[1]) {
+                        i++;
+                    } else {
+                        List.get(i)[2]++;
+                        break;
+                    }
+                }
+                if (i == List.size()) {
+                    List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
+                    while (List.get(i)[1] < distant) {
+                        i++;
+                        List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
+                    }
+                    List.get(i)[2]++;
+                }
+            }
+        } else {
+            System.err.println("Error format!");
+            System.exit(0);
+        }
+        return List;
     }
 }
