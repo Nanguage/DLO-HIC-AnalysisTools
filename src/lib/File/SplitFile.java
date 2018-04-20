@@ -9,7 +9,7 @@ public class SplitFile {
     private int LineNum;
     private ArrayList<String> SplitFile = new ArrayList<>();
 
-    SplitFile(String file, String prefix, int line_num) {
+    public SplitFile(String file, String prefix, int line_num) {
         this.InFile = file;
         this.Prefix = prefix;
         this.LineNum = line_num;

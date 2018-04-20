@@ -12,8 +12,8 @@
       <element id="directory" name="config">
         <element id="file-copy" path="$PROJECT_DIR$/config/DLO-Config.txt" />
       </element>
-      <element id="directory" name="scripts">
-        <element id="file-copy" path="$PROJECT_DIR$/src/script/CreatMatrix.java" />
+      <element id="directory" name="script">
+        <element id="dir-copy" path="$PROJECT_DIR$/script" />
       </element>
     </root>
   </artifact>

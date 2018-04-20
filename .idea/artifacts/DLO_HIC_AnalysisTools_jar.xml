@@ -25,6 +25,9 @@
         <element id="file-copy" path="$PROJECT_DIR$/config/DLO-Config.txt" />
       </element>
       <element id="extracted-dir" path="$PROJECT_DIR$/src/lib/commons-cli-1.4.jar" path-in-jar="/" />
+      <element id="directory" name="script">
+        <element id="file-copy" path="$PROJECT_DIR$/script/PlotHeatmap.py" />
+      </element>
     </root>
   </artifact>
 </component>

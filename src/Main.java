@@ -288,7 +288,7 @@ public class Main {
         }
         //=================================================BedpeFile To Inter===========================================
         if (StepCheck("BedPeProcess")) {
-            new Merge(FinalLinkerBedpe, FinalBedpeFile);//合并不同linker类型的bedpe文件
+            FileTool.Merge(FinalLinkerBedpe, FinalBedpeFile);//合并不同linker类型的bedpe文件
         }
         if (StepCheck("BedPe2Inter")) {
             new BedpeToInter(FinalBedpeFile, InterBedpeFile);//将交互区间转换成交互点
@@ -396,19 +396,93 @@ public class Main {
     }
 
     private Thread SeProcess(String FastqFile, String Prefix) {
-        return new Thread(new Runnable() {
+        Thread t1 = new Thread(new Runnable() {
             @Override
             public void run() {
+                ArrayList<String> SplitFile = new ArrayList<>();
                 try {
-                    SeProcess ssp = new SeProcess(FastqFile, IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix);//单端处理类
-                    ssp.Thread = Thread;//设置线程数
-                    ssp.AlignThreads = AlignThread;
-                    ssp.Run();
+                    SplitFile = new SplitFile(FastqFile, FastqFile, 100000000).Run();
                 } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                String SamFile = new SeProcess(FastqFile, IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getSamFile();
+                String BamFile = new SeProcess(FastqFile, IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getBamFile();
+                String SortBedFile = new SeProcess(FastqFile, IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getSortBedFile();
+                Thread[] t2 = new Thread[SplitFile.size()];
+                String[] SplitSamFile = new String[SplitFile.size()];
+                String[] SplitBamFile = new String[SplitFile.size()];
+                String[] SplitSortBedFile = new String[SplitFile.size()];
+                for (int i = 0; i < SplitFile.size(); i++) {
+                    int finalI = i;
+                    String finalSplitFile = SplitFile.get(finalI);
+                    t2[i] = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                SeProcess ssp = new SeProcess(finalSplitFile, IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + "." + finalI);//单端处理类
+                                ssp.Thread = Thread;//设置线程数
+                                ssp.AlignThreads = AlignThread;
+                                ssp.Run();
+                                SplitSamFile[finalI] = ssp.getSamFile();
+                                SplitBamFile[finalI] = ssp.getBamFile();
+                                SplitSortBedFile[finalI] = ssp.getSortBedFile();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                    t2[i].start();
+                }
+                for (int i = 0; i < SplitFile.size(); i++) {
+                    try {
+                        t2[i].join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                for (String s : SplitFile) {
+                    new File(s).delete();
+                }
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            FileTool.MergeSamFile(SplitSamFile, SamFile);
+//                            FileTool.Merge(SplitBamFile, BamFile);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        for (String s : SplitSamFile) {
+                            new File(s).delete();
+                        }
+                        for (String s : SplitBamFile) {
+                            new File(s).delete();
+                        }
+                    }
+                }).start();
+                Thread t3 = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            new MergeSortFile(SplitSortBedFile, SortBedFile, new int[]{4}, "", "\\s+");
+                            for (String s : SplitSamFile) {
+                                new File(s).delete();
+                            }
+//                            FileTool.Merge(SplitBedFile, BedFile);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                t3.start();
+                try {
+                    t3.join();
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
         });
+        return t1;
     }
 
     private Thread BedpeProcess(String UseLinker, String SeBedpeFile) {

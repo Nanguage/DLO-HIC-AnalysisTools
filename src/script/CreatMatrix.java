@@ -1,6 +1,5 @@
 package script;
 
-import lib.tool.PrintMatrix;
 import lib.tool.Statistic;
 import lib.tool.Tools;
 import lib.unit.*;
@@ -28,21 +27,20 @@ public class CreatMatrix {
     }
 
     public static void main(String[] args) throws IOException {
-        Options Arguement = new Options();
-//        Arguement.addOption("h", "help", false, "print help message");
-        Arguement.addOption(Option.builder("f").hasArg().argName("file").desc("[required] bedpefile").build());
-        Arguement.addOption(Option.builder("c").longOpt("chr").hasArgs().argName("strings").desc("[required, need't when region has set] the chromosome name that you want to calculator").build());
-        Arguement.addOption(Option.builder("s").longOpt("size").hasArgs().argName("ints").desc("[required, need't when region has set] the chromosome size that you want to calculator").build());
-        Arguement.addOption(Option.builder("r").longOpt("res").hasArg().argName("int").desc("resolution (default 1M)").build());
-        Arguement.addOption(Option.builder("region").hasArgs().argName("strings").desc("(sample chr1:0:100 chr4:100:400) region you want to calculator, if not set, will calculator chromosome size").build());
-        Arguement.addOption("t", true, "thread (default 1)");
-        Arguement.addOption("p", true, "out prefix (default bedpefile)");
+        Options Argument = new Options();
+        Argument.addOption(Option.builder("f").hasArg().argName("file").desc("[required] bedpefile").build());
+        Argument.addOption(Option.builder("chr").hasArgs().argName("strings").desc("[required, need't when region has set] the chromosome name that you want to calculator").build());
+        Argument.addOption(Option.builder("size").hasArgs().argName("ints").desc("[required, need't when region has set] the chromosome size that you want to calculator").build());
+        Argument.addOption(Option.builder("res").hasArg().argName("int").desc("resolution (default 1M)").build());
+        Argument.addOption(Option.builder("region").hasArgs().argName("strings").desc("(sample chr1:0:100 chr4:100:400) region you want to calculator, if not set, will calculator chromosome size").build());
+        Argument.addOption("t", true, "thread (default 1)");
+        Argument.addOption("p", true, "out prefix (default bedpefile)");
         if (args.length == 0) {
-            new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreatMatrix [option]", Arguement);
+            new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreatMatrix [option]", Argument);
             System.exit(1);
         }
         try {
-            CommandLine line = new DefaultParser().parse(Arguement, args);
+            CommandLine line = new DefaultParser().parse(Argument, args);
             String BedpeFile = line.getOptionValue("f");
             String[] Chromosome = line.hasOption("chr") ? line.getOptionValues("chr") : null;
             int[] ChrSize = line.hasOption("size") ? StringArrays.toInteger(line.getOptionValues("size")) : null;
@@ -58,7 +56,7 @@ public class CreatMatrix {
             }
         } catch (ParseException e) {
             e.printStackTrace();
-            new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreatMatrix [option]", Arguement);
+            new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreatMatrix [option]", Argument);
             System.exit(1);
         }
     }
@@ -66,13 +64,12 @@ public class CreatMatrix {
     public void Run() throws IOException {
         if (Chromosome == null || ChrSize == null) {
             System.err.println("Error! no -chr and -size arguement");
-            System.exit(0);
+            System.exit(1);
         }
         System.out.println(new Date() + "\tBegin to creat interaction matrix " + BedpeFile);
-        int[] ChrBinSize;
         int SumBin = 0;
+        int[] ChrBinSize = Statistic.CalculatorBinSize(ChrSize, Resolution);
         //计算bin的总数
-        ChrBinSize = Statistic.CalculatorBinSize(ChrSize, Resolution);
         for (int i = 0; i < ChrBinSize.length; i++) {
             SumBin = SumBin + ChrBinSize[i];
         }
@@ -95,37 +92,70 @@ public class CreatMatrix {
                     try {
                         String line;
                         String[] str;
-//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start");
-                        while ((line = infile.readLine()) != null) {
-                            str = line.split("\\s+");
-                            int hang = Integer.parseInt(str[1]) / Resolution;
-                            int lie = Integer.parseInt(str[3]) / Resolution;
-                            for (int j = 0; j < Chromosome.length; j++) {
-                                if (str[0].equals(Chromosome[j])) {
-                                    break;
+                        if (Tools.BedpeDetect(BedpeFile) == 1) {
+                            while ((line = infile.readLine()) != null) {
+                                str = line.split("\\s+");
+                                int hang = Integer.parseInt(str[1]) / Resolution;
+                                int lie = Integer.parseInt(str[3]) / Resolution;
+                                for (int j = 0; j < Chromosome.length; j++) {
+                                    if (str[0].equals(Chromosome[j])) {
+                                        break;
+                                    }
+                                    hang = hang + ChrBinSize[j];
                                 }
-                                hang = hang + ChrBinSize[j];
-                            }
-                            if (hang >= finalSumBin) {
-                                continue;
-                            }
-                            for (int j = 0; j < Chromosome.length; j++) {
-                                if (str[2].equals(Chromosome[j])) {
-                                    break;
+                                if (hang >= finalSumBin) {
+                                    continue;
                                 }
-                                lie = lie + ChrBinSize[j];
-                            }
-                            if (lie >= finalSumBin) {
-                                continue;
-                            }
-                            synchronized (Process) {
-                                InterMatrix[hang][lie]++;
-                                if (hang != lie) {
-                                    InterMatrix[lie][hang]++;
+                                for (int j = 0; j < Chromosome.length; j++) {
+                                    if (str[2].equals(Chromosome[j])) {
+                                        break;
+                                    }
+                                    lie = lie + ChrBinSize[j];
+                                }
+                                if (lie >= finalSumBin) {
+                                    continue;
+                                }
+                                synchronized (Process) {
+                                    InterMatrix[hang][lie]++;
+                                    if (hang != lie) {
+                                        InterMatrix[lie][hang]++;
+                                    }
                                 }
                             }
+                        } else if (Tools.BedpeDetect(BedpeFile) == 2) {
+                            while ((line = infile.readLine()) != null) {
+                                str = line.split("\\s+");
+                                int hang = (Integer.parseInt(str[1]) + Integer.parseInt(str[2])) / 2 / Resolution;
+                                int lie = (Integer.parseInt(str[4]) + Integer.parseInt(str[5])) / 2 / Resolution;
+                                for (int j = 0; j < Chromosome.length; j++) {
+                                    if (str[0].equals(Chromosome[j])) {
+                                        break;
+                                    }
+                                    hang = hang + ChrBinSize[j];
+                                }
+                                if (hang >= finalSumBin) {
+                                    continue;
+                                }
+                                for (int j = 0; j < Chromosome.length; j++) {
+                                    if (str[3].equals(Chromosome[j])) {
+                                        break;
+                                    }
+                                    lie = lie + ChrBinSize[j];
+                                }
+                                if (lie >= finalSumBin) {
+                                    continue;
+                                }
+                                synchronized (Process) {
+                                    InterMatrix[hang][lie]++;
+                                    if (hang != lie) {
+                                        InterMatrix[lie][hang]++;
+                                    }
+                                }
+                            }
+                        } else {
+                            System.err.println("Error format!");
+                            System.exit(1);
                         }
-//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

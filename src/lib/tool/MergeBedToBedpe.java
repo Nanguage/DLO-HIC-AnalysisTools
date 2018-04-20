@@ -9,10 +9,7 @@ public class MergeBedToBedpe {
         BufferedReader infile1 = new BufferedReader(new FileReader(InFile1));
         BufferedReader infile2 = new BufferedReader(new FileReader(InFile2));
         BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
-        String regex = Regex;
-        if (Regex.isEmpty()) {
-            regex = "\\s+";
-        }
+        String regex = Regex.isEmpty() ? "\\s+" : Regex;
         String line1, line2;
         String[] str1, str2;
         line1 = infile1.readLine();

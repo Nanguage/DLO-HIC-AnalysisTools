@@ -47,10 +47,6 @@ public class StringArrays implements Comparable {
         return length;
     }
 
-    public void setLength(int length) {
-        this.length = length;
-    }
-
     public void set(int index, String s) {
         this.item[index] = s;
     }

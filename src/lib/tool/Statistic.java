@@ -1,6 +1,5 @@
 package lib.tool;
 
-import lib.unit.IntegerArrays;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -26,14 +25,15 @@ public class Statistic {
         }
         BufferedReader bedpe = new BufferedReader(new FileReader(Bedpe));
         final long[] Count = {0};
-        String line;
-        String[] str;
-        line = bedpe.readLine();
-        str = line.split("\\s+");
-        try {
-            if (Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3])) <= Max && Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3])) >= Min) {
-                Count[0]++;
-            }
+//        String line;
+//        String[] str;
+//        line = bedpe.readLine();
+//        str = line.split("\\s+");
+//        try {
+//            if (Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3])) <= Max && Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3])) >= Min) {
+//                Count[0]++;
+//            }
+        if (Tools.BedpeDetect(Bedpe) == 1) {
             Thread[] Process = new Thread[Threads];
             for (int i = 0; i < Threads; i++) {
                 Process[i] = new Thread(new Runnable() {
@@ -61,10 +61,10 @@ public class Statistic {
             for (int i = 0; i < Threads; i++) {
                 Process[i].join();
             }
-        } catch (NumberFormatException e) {
-            if (Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[4])) <= Max && Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[4])) >= Min) {
-                Count[0]++;
-            }
+        } else if (Tools.BedpeDetect(Bedpe) == 2) {
+//            if (Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[4])) <= Max && Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[4])) >= Min) {
+//                Count[0]++;
+//            }
             Thread[] Process = new Thread[Threads];
             for (int i = 0; i < Threads; i++) {
                 Process[i] = new Thread(new Runnable() {
@@ -256,7 +256,7 @@ public class Statistic {
             }
         } else {
             System.err.println("Error format!");
-            System.exit(0);
+            System.exit(1);
         }
         return List;
     }

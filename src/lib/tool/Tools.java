@@ -62,6 +62,7 @@ public class Tools {
         String[] str;
         line = infile.readLine();
         if (line == null) {
+            infile.close();
             return 0;
         }
         str = line.split("\\s+");
@@ -76,10 +77,13 @@ public class Tools {
                 Integer.parseInt(str[3]);
             } catch (IndexOutOfBoundsException | NumberFormatException e) {
                 e.printStackTrace();
+                infile.close();
                 return 0;
             }
+            infile.close();
             return 1;
         }
+        infile.close();
         return 2;
     }
 }

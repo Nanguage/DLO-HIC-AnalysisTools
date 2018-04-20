@@ -20,7 +20,7 @@ public class SortFile {
         }
         long LineNumber = Statistic.CalculatorLineNumber(InFile);
         System.out.println(new Date() + "\t" + InFile + " Line Number:\t" + LineNumber);
-        long LineBin = LineNumber / (Threads * 10) + 1;
+        long LineBin = LineNumber / (Threads * 10) + 1;//计算每个文件的行数
         BufferedReader infile = new BufferedReader(new FileReader(InFile));
         if (Model.matches(".*n.*")) {
             //数字排序

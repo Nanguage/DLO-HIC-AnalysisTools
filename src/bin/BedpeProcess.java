@@ -82,7 +82,7 @@ public class BedpeProcess {
                         SeparateChromosome(DiffBedpeFile, 1, Chromosome[finalI], DiffBedpeChrFile[finalI]);
                         WhichEnzymeFragment(SameBedpeChrFile[finalI], EnzyFilePrefix + "." + Chromosome[finalI] + ".txt", EnzyChrFragment[finalI]);
                         SeparateLigationType(EnzyChrFragment[finalI], LigationChrFile[finalI][0], LigationChrFile[finalI][1], LigationChrFile[finalI][2]);
-                        new Append(DiffBedpeChrFile[finalI], LigationChrFile[finalI][2]);
+                        FileTool.Append(DiffBedpeChrFile[finalI], LigationChrFile[finalI][2]);
                         new SortFile(LigationChrFile[finalI][2], new int[]{2, 3, 5, 6}, "n", "", LigationChrFile[finalI][2] + ".sort", Thread);
                         RemoveRepeat(LigationChrFile[finalI][2] + ".sort", new int[]{2, 3, 5, 6}, LigationChrFile[finalI][2] + ".clean.sort");
                     } catch (IOException e) {
@@ -115,11 +115,11 @@ public class BedpeProcess {
             new File(FinalBedpeFile).delete();
         }
         for (int j = 0; j < Chromosome.length; j++) {
-            new Append(LigationChrFile[j][2] + ".clean.sort", FinalBedpeFile);
-            new Append(LigationChrFile[j][0], SelfLigationFile);
-            new Append(LigationChrFile[j][1], ReLigationFile);
-            new Append(LigationChrFile[j][2], ValidBedpeFile);
-            new Append(EnzyChrFragment[j], EnzyFragment);
+            FileTool.Append(LigationChrFile[j][2] + ".clean.sort", FinalBedpeFile);
+            FileTool.Append(LigationChrFile[j][0], SelfLigationFile);
+            FileTool.Append(LigationChrFile[j][1], ReLigationFile);
+            FileTool.Append(LigationChrFile[j][2], ValidBedpeFile);
+            FileTool.Append(EnzyChrFragment[j], EnzyFragment);
             //删除中间文件
             for (int i = 0; i < LigationType.length; i++) {
                 new File(LigationChrFile[j][i]).delete();

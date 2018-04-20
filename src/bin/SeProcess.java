@@ -82,6 +82,8 @@ public class SeProcess {
         //删掉过滤后的sam文件（有bam文件，所以不用留sam文件，节省空间）
         System.out.println(new Date() + "\tDelete " + FilterSamFile);
         new File(FilterSamFile).delete();
+        System.out.println(new Date() + "\tDelete " + BedFile);
+        new File(BedFile).delete();
     }
 
     public static void main(String[] args) throws IOException {
@@ -94,9 +96,6 @@ public class SeProcess {
         se.Run();
     }
 
-    public String getSortBedFile() {
-        return SortBedFile;
-    }
 
     private void GetOption(String ConfigFile) throws IOException {
         BufferedReader file = new BufferedReader(new FileReader(ConfigFile));
@@ -251,4 +250,20 @@ public class SeProcess {
         new Execute(CommandStr, BedFile, BedFile + ".log");
         System.out.println(new Date() + "\tEnd\t" + SamFile + " to " + BedFile);
     }//OK
+
+    public String getBedFile() {
+        return BedFile;
+    }
+
+    public String getBamFile() {
+        return BamFile;
+    }
+
+    public String getSamFile() {
+        return SamFile;
+    }
+
+    public String getSortBedFile() {
+        return SortBedFile;
+    }
 }

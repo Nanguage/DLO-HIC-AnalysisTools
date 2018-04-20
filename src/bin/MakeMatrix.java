@@ -6,12 +6,14 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
 
+import lib.File.FileTool;
 import lib.tool.*;
+import lib.Command.*;
 
 public class MakeMatrix {
     private String OptOutPath = "OutPath";
     private String OptPrefix = "Prefix";
-    private String OptInterBedpeFile = "InterBedpeFile";
+    private String OptBedpeFile = "BedpeFile";
     private String OptChromosome = "Chromosome";
     public String OptThread = "Thread";
     private String OptResolution = "Resolution";
@@ -20,7 +22,7 @@ public class MakeMatrix {
     //===============================================================
     private String OutPath;//输出路径
     private String Prefix;//输出前缀
-    private String InterBedpeFile;
+    private String BedpeFile;
     private String[] Chromosome;
     private int[] ChromosomeSize;
     private int Resolution;
@@ -29,9 +31,10 @@ public class MakeMatrix {
     private String NormalizeMatrixPrefix;
     private String ChrSzieFile;
     private String[] ChrInterBedpeFile;
+    private String ClassPath = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
     //==============================================================
     private Hashtable<String, String> ParameterList = new Hashtable<>();
-    private String[] RequiredParameter = new String[]{OptInterBedpeFile, OptResolution};
+    private String[] RequiredParameter = new String[]{OptBedpeFile, OptResolution};
     private String[] OptionalParameter = new String[]{OptChromosome, OptOutPath, OptPrefix, OptThread, OptChrSzieFile};
 
 
@@ -39,7 +42,7 @@ public class MakeMatrix {
         ParameterInit();
         ParameterList.put(OptOutPath, outpath);
         ParameterList.put(OptPrefix, outprefix);
-        ParameterList.put(OptInterBedpeFile, validpairs);
+        ParameterList.put(OptBedpeFile, validpairs);
         String temp = "";
         if (chrosomose.length > 0) {
             temp = chrosomose[0];
@@ -67,18 +70,25 @@ public class MakeMatrix {
     }
 
     public void Run() throws IOException {
-//        Routine P = new Routine();
-//        P.Threads = Thread;
-        int[][] Matrix = CreatInterActionMatrix(InterBedpeFile, Chromosome, ChromosomeSize, Resolution, InterMatrixPrefix);
+        String ImageDir = "image";
+        String PlotScriptFile = FileTool.GetJarFile().getParent() + "/script/PlotHeatmap.py";
+        if (!new File(OutPath + "/" + ImageDir).isDirectory()) {
+            new File(OutPath + "/" + ImageDir).mkdir();
+        }
+        int[][] Matrix = CreatInterActionMatrix(BedpeFile, Chromosome, ChromosomeSize, Resolution, InterMatrixPrefix);
+        String PlotCom = "python " + PlotScriptFile + " -m A -i " + InterMatrixPrefix + ".2d.matrix -o " + OutPath + "/" + ImageDir + "/" + Prefix + ".png -r " + Resolution + " -c " + InterMatrixPrefix + ".matrix.BinSize" + " -q 98";
+        new Execute(PlotCom, OutPath + "/" + ImageDir + "/" + Prefix + ".plot.out", OutPath + "/" + ImageDir + "/" + Prefix + ".plot.err");
         double[][] NormalizeMatrix = MatrixNormalize(Matrix);
         Tools.PrintMatrix(NormalizeMatrix, NormalizeMatrixPrefix + ".2d.matrix", NormalizeMatrixPrefix + ".spare.matrix");
-        ChrInterBedpeFile = SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + Prefix, "");
+        ChrInterBedpeFile = SeparateInterBedpe(BedpeFile, Chromosome, OutPath + "/" + Prefix, "");
         for (int i = 0; i < Chromosome.length; i++) {
             String ChrInterMatrixPrefix = OutPath + "/" + Prefix + "." + Chromosome[i] + ".inter";
             String ChrNormalizeMatrixPrefix = OutPath + "/" + Prefix + "." + Chromosome[i] + ".normalize";
             Matrix = CreatInterActionMatrix(ChrInterBedpeFile[i], new String[]{Chromosome[i]}, new int[]{ChromosomeSize[i]}, Resolution / 10, ChrInterMatrixPrefix);
             NormalizeMatrix = MatrixNormalize(Matrix);
             Tools.PrintMatrix(NormalizeMatrix, ChrNormalizeMatrixPrefix + ".2d.matrix", ChrNormalizeMatrixPrefix + ".spare.matrix");
+            PlotCom = "python " + PlotScriptFile + " -t localGenome -m A -i " + ChrInterMatrixPrefix + ".2d.matrix -o " + OutPath + "/" + ImageDir + "/" + Prefix + "." + Chromosome[i] + ".png -r " + Resolution / 10 + " -p " + Chromosome[i] + ":0" + ":" + Chromosome[i] + ":0" + "  -q 95";
+            new Execute(PlotCom);
         }
     }
 
@@ -150,7 +160,7 @@ public class MakeMatrix {
         //=======================================================
         OutPath = ParameterList.get(OptOutPath);
         Prefix = ParameterList.get(OptPrefix);
-        InterBedpeFile = ParameterList.get(OptInterBedpeFile);
+        BedpeFile = ParameterList.get(OptBedpeFile);
         ChrSzieFile = ParameterList.get(OptChrSzieFile);
         Chromosome = ParameterList.get(OptChromosome).split("\\s+");
         ChromosomeSize = new int[ParameterList.get(OptChromosomeSize).split("\\s+").length];
@@ -201,7 +211,7 @@ public class MakeMatrix {
     public String[] getChrInterBedpeFile() throws IOException {
         if (ChrInterBedpeFile == null) {
 //            Routine P = new Routine();
-            ChrInterBedpeFile = SeparateInterBedpe(InterBedpeFile, Chromosome, OutPath + "/" + Prefix, "");
+            ChrInterBedpeFile = SeparateInterBedpe(BedpeFile, Chromosome, OutPath + "/" + Prefix, "");
         }
         return ChrInterBedpeFile;
     }
@@ -267,12 +277,11 @@ public class MakeMatrix {
         return SameChrFile;
     }
 
-    public int[][] CreatInterActionMatrix(String InterBedpeFile, String[] Chromosome, int[] ChrSize, int Resolution, String Prefix) throws IOException {
-        System.out.println(new Date() + "\tBegin to creat interaction matrix " + InterBedpeFile);
-        int[] ChrBinSize;
+    public int[][] CreatInterActionMatrix(String bedpeFile, String[] chromosome, int[] chrSize, int resolution, String prefix) throws IOException {
+        System.out.println(new Date() + "\tBegin to creat interaction matrix " + bedpeFile);
         int SumBin = 0;
+        int[] ChrBinSize = Statistic.CalculatorBinSize(chrSize, resolution);
         //计算bin的总数
-        ChrBinSize = Statistic.CalculatorBinSize(ChrSize, Resolution);
         for (int i = 0; i < ChrBinSize.length; i++) {
             SumBin = SumBin + ChrBinSize[i];
         }
@@ -284,7 +293,7 @@ public class MakeMatrix {
         for (int i = 0; i < InterMatrix.length; i++) {
             Arrays.fill(InterMatrix[i], 0);//数组初始化为0
         }
-        BufferedReader infile = new BufferedReader(new FileReader(InterBedpeFile));
+        BufferedReader infile = new BufferedReader(new FileReader(bedpeFile));
         Thread[] Process = new Thread[Thread];
         //----------------------------------------------------------------------------
         for (int i = 0; i < Thread; i++) {
@@ -295,37 +304,70 @@ public class MakeMatrix {
                     try {
                         String line;
                         String[] str;
-//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start");
-                        while ((line = infile.readLine()) != null) {
-                            str = line.split("\\s+");
-                            int hang = Integer.parseInt(str[1]) / Resolution;
-                            int lie = Integer.parseInt(str[3]) / Resolution;
-                            for (int j = 0; j < Chromosome.length; j++) {
-                                if (str[0].equals(Chromosome[j])) {
-                                    break;
+                        if (Tools.BedpeDetect(bedpeFile) == 1) {
+                            while ((line = infile.readLine()) != null) {
+                                str = line.split("\\s+");
+                                int hang = Integer.parseInt(str[1]) / resolution;
+                                int lie = Integer.parseInt(str[3]) / resolution;
+                                for (int j = 0; j < chromosome.length; j++) {
+                                    if (str[0].equals(chromosome[j])) {
+                                        break;
+                                    }
+                                    hang = hang + ChrBinSize[j];
                                 }
-                                hang = hang + ChrBinSize[j];
-                            }
-                            if (hang >= finalSumBin) {
-                                continue;
-                            }
-                            for (int j = 0; j < Chromosome.length; j++) {
-                                if (str[2].equals(Chromosome[j])) {
-                                    break;
+                                if (hang >= finalSumBin) {
+                                    continue;
                                 }
-                                lie = lie + ChrBinSize[j];
-                            }
-                            if (lie >= finalSumBin) {
-                                continue;
-                            }
-                            synchronized (Process) {
-                                InterMatrix[hang][lie]++;
-                                if (hang != lie) {
-                                    InterMatrix[lie][hang]++;
+                                for (int j = 0; j < chromosome.length; j++) {
+                                    if (str[2].equals(chromosome[j])) {
+                                        break;
+                                    }
+                                    lie = lie + ChrBinSize[j];
+                                }
+                                if (lie >= finalSumBin) {
+                                    continue;
+                                }
+                                synchronized (Process) {
+                                    InterMatrix[hang][lie]++;
+                                    if (hang != lie) {
+                                        InterMatrix[lie][hang]++;
+                                    }
                                 }
                             }
+                        } else if (Tools.BedpeDetect(bedpeFile) == 2) {
+                            while ((line = infile.readLine()) != null) {
+                                str = line.split("\\s+");
+                                int hang = (Integer.parseInt(str[1]) + Integer.parseInt(str[2])) / 2 / resolution;
+                                int lie = (Integer.parseInt(str[4]) + Integer.parseInt(str[5])) / 2 / resolution;
+                                for (int j = 0; j < chromosome.length; j++) {
+                                    if (str[0].equals(chromosome[j])) {
+                                        break;
+                                    }
+                                    hang = hang + ChrBinSize[j];
+                                }
+                                if (hang >= finalSumBin) {
+                                    continue;
+                                }
+                                for (int j = 0; j < chromosome.length; j++) {
+                                    if (str[3].equals(chromosome[j])) {
+                                        break;
+                                    }
+                                    lie = lie + ChrBinSize[j];
+                                }
+                                if (lie >= finalSumBin) {
+                                    continue;
+                                }
+                                synchronized (Process) {
+                                    InterMatrix[hang][lie]++;
+                                    if (hang != lie) {
+                                        InterMatrix[lie][hang]++;
+                                    }
+                                }
+                            }
+                        } else {
+                            System.err.println("Error format!");
+                            System.exit(1);
                         }
-//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -344,14 +386,14 @@ public class MakeMatrix {
         infile.close();
         //--------------------------------------------------------
         //打印矩阵
-        Tools.PrintMatrix(InterMatrix, Prefix + ".2d.matrix", Prefix + ".spare.matrix");
+        Tools.PrintMatrix(InterMatrix, prefix + ".2d.matrix", prefix + ".spare.matrix");
         System.out.println(new Date() + "\tEnd to creat interaction matrix");
         //--------------------------------------------------------------------
         int temp = 0;
-        BufferedWriter outfile = new BufferedWriter(new FileWriter(Prefix + ".matrix.BinSize"));
-        for (int i = 0; i < Chromosome.length; i++) {
+        BufferedWriter outfile = new BufferedWriter(new FileWriter(prefix + ".matrix.BinSize"));
+        for (int i = 0; i < chromosome.length; i++) {
             temp = temp + 1;
-            outfile.write(Chromosome[i] + "\t" + temp + "\t");
+            outfile.write(chromosome[i] + "\t" + temp + "\t");
             temp = temp + ChrBinSize[i] - 1;
             outfile.write(temp + "\n");
         }
