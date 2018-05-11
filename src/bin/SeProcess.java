@@ -243,12 +243,12 @@ public class SeProcess {
     }//OK
 
     private void SamToBed() throws IOException {
-        System.out.println(new Date() + "\tBegin\t" + SamFile + " to " + BedFile);
-        String CommandStr = "samtools view -Sb -o " + BamFile + " " + SamFile;
-        new Execute(CommandStr, SamFile + ".log");
+        System.out.println(new Date() + "\tBegin\t" + FilterSamFile + " to " + BedFile);
+        String CommandStr = "samtools view -Sb -o " + BamFile + " " + FilterSamFile;
+        new Execute(CommandStr, FilterSamFile + ".log");
         CommandStr = "bedtools bamtobed -i " + BamFile;
         new Execute(CommandStr, BedFile, BedFile + ".log");
-        System.out.println(new Date() + "\tEnd\t" + SamFile + " to " + BedFile);
+        System.out.println(new Date() + "\tEnd\t" + FilterSamFile + " to " + BedFile);
     }//OK
 
     public String getBedFile() {

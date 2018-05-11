@@ -5,6 +5,8 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import org.apache.commons.math3.distribution.*;
+
 public class Statistic {
     public static long CalculatorLineNumber(String InFile) throws IOException {
         if (!new File(InFile).isFile()) {
@@ -260,4 +262,18 @@ public class Statistic {
         }
         return List;
     }
+
+
+    public static long Factorial(int k) {
+        return k == 0 ? 1 : k * Factorial(k - 1);
+    }
+
+    public static void main(String[] args) {
+        double s = 0;
+        int num = 7;
+        PoissonDistribution p = new PoissonDistribution(4.56);
+        s = p.cumulativeProbability(num);
+        System.out.println(s);
+    }
+
 }

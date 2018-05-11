@@ -39,6 +39,14 @@ public class StringArrays implements Comparable {
         return i;
     }
 
+    public static double[] toDouble(String[] s) {
+        double[] d = new double[s.length];
+        for (int i = 0; i < s.length; i++) {
+            d[i] = Double.parseDouble(s[i]);
+        }
+        return d;
+    }
+
     public String[] getItem() {
         return item;
     }

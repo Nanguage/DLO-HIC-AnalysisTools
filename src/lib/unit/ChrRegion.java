@@ -3,20 +3,23 @@ package lib.unit;
 import org.jetbrains.annotations.NotNull;
 
 public class ChrRegion implements Comparable {
-    public String Chr;
+    public Chromosome Chr;
     public int Begin;
     public int Terminal;
+    public int Length;
 
     public ChrRegion(String[] s) {
-        Chr = s[0];
+        Chr = new Chromosome(s[0]);
         Begin = Integer.parseInt(s[1]);
         Terminal = Integer.parseInt(s[2]);
+        Length = Terminal - Begin;
     }
 
-    public ChrRegion(String s, int l, int r) {
+    public ChrRegion(Chromosome s, int l, int r) {
         Chr = s;
         Begin = l;
         Terminal = r;
+        Length = Terminal - Begin;
     }
 
     public boolean IsOverlap(ChrRegion reg) {
@@ -39,5 +42,9 @@ public class ChrRegion implements Comparable {
         } else {
             return this.Chr.compareTo(b.Chr);
         }
+    }
+
+    public String toString() {
+        return Chr.Name + "\t" + Begin + "\t" + Terminal;
     }
 }

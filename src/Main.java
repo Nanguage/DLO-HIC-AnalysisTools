@@ -11,7 +11,7 @@ import lib.tool.*;
 public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
     private final String OptGenomeFile = "GenomeFile";//基因组文件
-    private final String OptPhred = "Phred";//fastq格式
+    //    private final String OptPhred = "Phred";//fastq格式
     private final String OptPrefix = "Prefix";//输出前缀
     private final String OptOutPath = "OutPath";//输出路径
     private final String OptChromosome = "Chromosome";//染色体名
@@ -59,7 +59,7 @@ public class Main {
 
     //===================================================================
     private String[] RequiredParameter = new String[]{OptFastqFile, OptGenomeFile, OptLinkerFile, OptChromosome, OptRestriction, OptLinkersType, OptIndexFile, OptAlignMinQuality};
-    private String[] OptionalParameter = new String[]{OptOutPath, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptPhred, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptThreads};
+    private String[] OptionalParameter = new String[]{OptOutPath, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptThreads};
     private Hashtable<String, String> ArgumentList = new Hashtable<>();
     private Hashtable<String, Integer> ChrSize = new Hashtable<>();//染色体大小
     private int MinLinkerFilterQuality;
@@ -465,7 +465,7 @@ public class Main {
                     public void run() {
                         try {
                             new MergeSortFile(SplitSortBedFile, SortBedFile, new int[]{4}, "", "\\s+");
-                            for (String s : SplitSamFile) {
+                            for (String s : SplitSortBedFile) {
                                 new File(s).delete();
                             }
 //                            FileTool.Merge(SplitBedFile, BedFile);
@@ -528,7 +528,7 @@ public class Main {
         ArgumentList.put(OptMaxMisMatchLength, "3");
         ArgumentList.put(OptMinReadsLength, "16");
         ArgumentList.put(OptMaxReadsLength, "20");
-        ArgumentList.put(OptPhred, "33");
+//        ArgumentList.put(OptPhred, "33");
         ArgumentList.put(OptMatchScore, "1");
         ArgumentList.put(OptMisMatchScore, "-2");
         ArgumentList.put(OptIndelScore, "-2");
@@ -549,7 +549,7 @@ public class Main {
         //================================================
         FastqFile = ArgumentList.get(OptFastqFile);
         GenomeFile = ArgumentList.get(OptGenomeFile);
-        String Phred = ArgumentList.get(OptPhred);
+//        String Phred = ArgumentList.get(OptPhred);
         Prefix = ArgumentList.get(OptPrefix);
         String OutPath = ArgumentList.get(OptOutPath);
         Chromosome.addAll(Arrays.asList(ArgumentList.get(OptChromosome).split("\\s+")));
@@ -602,7 +602,7 @@ public class Main {
         BufferedReader infile = new BufferedReader(new FileReader(LinkerFile));
         int linkerLength = infile.readLine().length();
         infile.close();
-        if (Phred.equals("33")) {
+        if (FileTool.FastqPhred(FastqFile) == 33) {
             AddQuality = "I";
         } else {
             AddQuality = "h";

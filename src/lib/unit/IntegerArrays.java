@@ -39,6 +39,14 @@ public class IntegerArrays implements Comparable {
         return s;
     }
 
+    public static double[] toDouble(int[] i) {
+        double[] d = new double[i.length];
+        for (int j = 0; j < i.length; j++) {
+            d[j] = i[j];
+        }
+        return d;
+    }
+
     public int[] getItem() {
         return item;
     }

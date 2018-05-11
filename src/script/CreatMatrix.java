@@ -47,12 +47,12 @@ public class CreatMatrix {
             int Resolution = line.hasOption("res") ? Integer.parseInt(line.getOptionValue("res")) : 1000000;
             String Prefix = line.hasOption("p") ? line.getOptionValue("p") : BedpeFile;
             int Thread = line.hasOption("t") ? Integer.parseInt(line.getOptionValue("t")) : 1;
-            ChrRegion Chr1 = line.hasOption("region") ? new ChrRegion(line.getOptionValue("region").split(":")) : null;
-            ChrRegion Chr2 = line.hasOption("region") && line.getOptionValues("region").length > 1 ? new ChrRegion(line.getOptionValues("region")[1].split(":")) : Chr1;
-            if (Chr1 == null) {
+            ChrRegion Reg1 = line.hasOption("region") ? new ChrRegion(line.getOptionValue("region").split(":")) : null;
+            ChrRegion Reg2 = line.hasOption("region") && line.getOptionValues("region").length > 1 ? new ChrRegion(line.getOptionValues("region")[1].split(":")) : Reg1;
+            if (Reg1 == null) {
                 new CreatMatrix(BedpeFile, Chromosome, ChrSize, Resolution, Prefix, Thread).Run();
             } else {
-                new CreatMatrix(BedpeFile, Chromosome, ChrSize, Resolution, Prefix, Thread).Run(Chr1, Chr2);
+                new CreatMatrix(BedpeFile, Chromosome, ChrSize, Resolution, Prefix, Thread).Run(Reg1, Reg2);
             }
         } catch (ParseException e) {
             e.printStackTrace();
@@ -188,10 +188,10 @@ public class CreatMatrix {
         outfile.close();
     }//OK
 
-    public void Run(ChrRegion chr1, ChrRegion chr2) throws IOException {
+    public void Run(ChrRegion reg1, ChrRegion reg2) throws IOException {
         System.out.println(new Date() + "\tBegin to creat interaction matrix " + BedpeFile);
         int[] ChrBinSize;
-        ChrBinSize = Statistic.CalculatorBinSize(new int[]{chr1.Terminal - chr1.Begin, chr2.Terminal - chr2.Begin}, Resolution);
+        ChrBinSize = Statistic.CalculatorBinSize(new int[]{reg1.Length, reg2.Length}, Resolution);
         if (Math.max(ChrBinSize[0], ChrBinSize[1]) > 50000) {
             System.err.println("Error ! too many bins, there are " + Math.max(ChrBinSize[0], ChrBinSize[1]) + " bins.");
             System.exit(0);
@@ -216,9 +216,15 @@ public class CreatMatrix {
                                 str = line.split("\\s+");
                                 ChrRegion left = new ChrRegion(new String[]{str[0], str[1], str[1]});
                                 ChrRegion right = new ChrRegion(new String[]{str[2], str[3], str[3]});
-                                if (left.IsBelong(chr1) && right.IsBelong(chr2)) {
-                                    int hang = (left.Begin - chr1.Begin) / Resolution + 1;
-                                    int lie = (right.Begin - chr2.Begin) / Resolution + 1;
+                                if (left.IsBelong(reg1) && right.IsBelong(reg2)) {
+                                    int hang = (left.Begin - reg1.Begin) / Resolution + 1;
+                                    int lie = (right.Begin - reg2.Begin) / Resolution + 1;
+                                    synchronized (Process) {
+                                        InterMatrix[hang - 1][lie - 1]++;
+                                    }
+                                } else if (right.IsBelong(reg1) && left.IsBelong(reg2)) {
+                                    int hang = (right.Begin - reg1.Begin) / Resolution + 1;
+                                    int lie = (left.Begin - reg2.Begin) / Resolution + 1;
                                     synchronized (Process) {
                                         InterMatrix[hang - 1][lie - 1]++;
                                     }
@@ -229,9 +235,15 @@ public class CreatMatrix {
                                 str = line.split("\\s+");
                                 ChrRegion left = new ChrRegion(new String[]{str[0], str[1], str[2]});
                                 ChrRegion right = new ChrRegion(new String[]{str[3], str[4], str[5]});
-                                if (left.IsBelong(chr1) && right.IsBelong(chr2)) {
-                                    int hang = ((left.Begin + left.Terminal) / 2 - chr1.Begin) / Resolution + 1;
-                                    int lie = ((right.Begin + right.Terminal) / 2 - chr2.Begin) / Resolution + 1;
+                                if (left.IsBelong(reg1) && right.IsBelong(reg2)) {
+                                    int hang = ((left.Begin + left.Terminal) / 2 - reg1.Begin) / Resolution + 1;
+                                    int lie = ((right.Begin + right.Terminal) / 2 - reg2.Begin) / Resolution + 1;
+                                    synchronized (Process) {
+                                        InterMatrix[hang - 1][lie - 1]++;
+                                    }
+                                } else if (right.IsBelong(reg1) && left.IsBelong(reg2)) {
+                                    int hang = ((right.Begin + right.Terminal) / 2 - reg1.Begin) / Resolution + 1;
+                                    int lie = ((left.Begin + left.Terminal) / 2 - reg2.Begin) / Resolution + 1;
                                     synchronized (Process) {
                                         InterMatrix[hang - 1][lie - 1]++;
                                     }
@@ -263,14 +275,9 @@ public class CreatMatrix {
         Tools.PrintMatrix(InterMatrix, Prefix + ".2d.matrix", Prefix + ".spare.matrix");
         System.out.println(new Date() + "\tEnd to creat interaction matrix");
         //--------------------------------------------------------------------
-        int temp = 0;
-        BufferedWriter outfile = new BufferedWriter(new FileWriter(Prefix + ".matrix.BinSize"));
-        for (int i = 0; i < Chromosome.length; i++) {
-            temp = temp + 1;
-            outfile.write(Chromosome[i] + "\t" + temp + "\t");
-            temp = temp + ChrBinSize[i] - 1;
-            outfile.write(temp + "\n");
-        }
+        BufferedWriter outfile = new BufferedWriter(new FileWriter(Prefix + ".matrix.Region"));
+        outfile.write(reg1.toString() + "\n");
+        outfile.write(reg2.toString() + "\n");
         outfile.close();
     }
 }

@@ -68,7 +68,7 @@ public class Report {
         }
         System.out.println("\n-----------------------------------------\nBed file\tUniq reads number\tPercent\tBed file\tUniq reads number\tPercent");
         for (int i = 0; i < UseBed1.size(); i++) {
-            System.out.println(UseBed1.get(i).replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(UniqMapR1Num.get(i)) + "\t" + (double) UniqMapR1Num.get(i) / FastqR1Num.get(i) * 100 + "%" + "\t" + UseBed2.get(i).replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(UniqMapR2Num.get(i)) + "\t" + (double) UniqMapR1Num.get(i) / FastqR2Num.get(i) * 100 + "%");
+            System.out.println(UseBed1.get(i).replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(UniqMapR1Num.get(i)) + "\t" + (double) UniqMapR1Num.get(i) / FastqR1Num.get(i) * 100 + "%" + "\t" + UseBed2.get(i).replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(UniqMapR2Num.get(i)) + "\t" + (double) UniqMapR2Num.get(i) / FastqR2Num.get(i) * 100 + "%");
         }
         long sum = 0;
         System.out.println("\n-----------------------------------------\nBedpe file\tReads number\tPercent");

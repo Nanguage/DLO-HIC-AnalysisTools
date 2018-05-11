@@ -56,6 +56,32 @@ public class Tools {
         twodfile.close();
     }
 
+    public static void PrintMatrix(boolean[][] Matrix, String TwoDMatrixFile, String SpareMatrix) throws IOException {
+        BufferedWriter twodfile = new BufferedWriter(new FileWriter(TwoDMatrixFile));
+        BufferedWriter sparefile = new BufferedWriter(new FileWriter(SpareMatrix));
+        //打印二维矩阵
+        for (int i = 0; i < Matrix.length; i++) {
+            for (int j = 0; j < Matrix[i].length; j++) {
+                if (Matrix[i][j]) {
+                    twodfile.write(1 + "\t");
+                } else {
+                    twodfile.write(0 + "\t");
+                }
+            }
+            twodfile.write("\n");
+        }
+        //打印稀疏矩阵
+        for (int i = 0; i < Matrix.length; i++) {
+            for (int j = 0; j < Matrix[i].length; j++) {
+                if (Matrix[i][j]) {
+                    sparefile.write(String.valueOf(i + 1) + "\t" + String.valueOf(j + 1) + "\t" + 1 + "\n");
+                }
+            }
+        }
+        sparefile.close();
+        twodfile.close();
+    }
+
     public static int BedpeDetect(String BedpeFile) throws IOException {
         BufferedReader infile = new BufferedReader(new FileReader(BedpeFile));
         String line;
