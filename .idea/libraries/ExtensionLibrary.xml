@@ -3,8 +3,13 @@
     <CLASSES>
       <root url="jar://$PROJECT_DIR$/src/lib/commons-cli-1.4.jar!/" />
       <root url="jar://$PROJECT_DIR$/src/lib/commons-math3-3.6.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/lib/commons-io-2.6.jar!/" />
+      <root url="jar://$PROJECT_DIR$/src/lib/opencv-341.jar!/" />
     </CLASSES>
     <JAVADOC />
+    <NATIVE>
+      <root url="file://$PROJECT_DIR$/src/lib" />
+    </NATIVE>
     <SOURCES />
   </library>
 </component>

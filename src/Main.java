@@ -1,4 +1,5 @@
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -7,6 +8,9 @@ import java.util.Hashtable;
 import bin.*;
 import lib.File.*;
 import lib.tool.*;
+import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
+import org.apache.commons.math3.stat.correlation.SpearmansCorrelation;
+import org.opencv.core.Mat;
 
 public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
@@ -54,6 +58,7 @@ public class Main {
     private int MaxReadsLength;
     private int Resolution;
     private int Thread;
+    private Date PreTime, SeTime, BedpeTime, MatrixTime, TransTime, EndTime;
     private ArrayList<String> Step = new ArrayList<>();
     private ArrayList<Thread> SThread = new ArrayList<>();
 
@@ -85,6 +90,8 @@ public class Main {
 
     public static void main(String args[]) throws IOException {
         //==============================================测试区==========================================================
+
+
 
         //==============================================================================================================
         if (args.length < 1) {
@@ -132,9 +139,9 @@ public class Main {
         //==============================================================================================================
         String FinalBedpeFile = BedpeProcessDir + "/" + Prefix + ".bedpe";
         String InterBedpeFile = BedpeProcessDir + "/" + Prefix + ".inter.bedpe";
-//        step.Threads = Thread;//设置线程数
         Thread ST;
         //=========================================linker filter==linker 过滤===========================================
+        PreTime = new Date();
         PreProcess preprocess;
         preprocess = new PreProcess(PreProcessDir, Prefix, FastqFile, LinkerFile, AdapterFile, MatchScore, MisMatchScore, IndelScore, Thread * 4);
         if (StepCheck("LinkerFilter")) {
@@ -190,6 +197,7 @@ public class Main {
         ST.start();
         SThread.add(ST);
         //=======================================Se Process===单端处理==================================================
+        SeTime = new Date();
         Thread[] sepR1 = new Thread[UseLinker.size()];
         Thread[] sepR2 = new Thread[UseLinker.size()];
         for (int i = 0; i < UseLinker.size(); i++) {
@@ -241,6 +249,7 @@ public class Main {
             //==========================================================================================================
         }
         //==========================================获取酶切片段和染色体大小=============================================
+        BedpeTime = new Date();
         Thread findenzy = FindRestrictionFragment();
         if (StepCheck("BedPeProcess")) {
             findenzy.start();
@@ -294,6 +303,7 @@ public class Main {
             new BedpeToInter(FinalBedpeFile, InterBedpeFile);//将交互区间转换成交互点
         }
         //=================================================Make Matrix==================================================
+        MatrixTime = new Date();
         int i = 0;
         if (ChrSize.keySet().size() == 0) {
             findenzy.start();
@@ -339,7 +349,15 @@ public class Main {
         ST.start();
         SThread.add(ST);
         //=============================================Cluster==========================================================
-
+        TransTime = new Date();
+        EndTime = new Date();
+        System.out.println("\n-------------------------------Time----------------------------------------");
+        System.out.println("PreProcess:\t" + Tools.DateFormat((SeTime.getTime() - PreTime.getTime()) / 1000));
+        System.out.println("SeProcess:\t" + Tools.DateFormat((BedpeTime.getTime() - SeTime.getTime()) / 1000));
+        System.out.println("BedpeProcess:\t" + Tools.DateFormat((MatrixTime.getTime() - BedpeTime.getTime()) / 1000));
+        System.out.println("MakeMatrix:\t" + Tools.DateFormat((TransTime.getTime() - MatrixTime.getTime()) / 1000));
+        System.out.println("Translocation:\t" + Tools.DateFormat((EndTime.getTime() - TransTime.getTime()) / 1000));
+        System.out.println("Total:\t" + Tools.DateFormat((EndTime.getTime() - PreTime.getTime()) / 1000));
         //===================================Report=====================================================================
         try {
             for (Thread t : SThread) {
@@ -401,7 +419,7 @@ public class Main {
             public void run() {
                 ArrayList<String> SplitFile = new ArrayList<>();
                 try {
-                    SplitFile = new SplitFile(FastqFile, FastqFile, 100000000).Run();
+                    SplitFile = new SplitFile(FastqFile, FastqFile, 400000000).Run();//4亿行作为一个单位拆分
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

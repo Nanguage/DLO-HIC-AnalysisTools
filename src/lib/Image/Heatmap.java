@@ -4,6 +4,7 @@ import lib.File.FileTool;
 import lib.unit.Chromosome;
 import org.apache.commons.cli.*;
 import org.apache.commons.math3.distribution.PoissonDistribution;
+//import org.opencv.core.Mat;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -58,7 +59,7 @@ public class Heatmap {
         }
     }
 
-    public void Draw() {
+    public Heatmap Draw() {
         HeatmapImage = new BufferedImage(Width, Height, BufferedImage.TYPE_INT_RGB);
         for (int i = 0; i < Height; i++) {
             for (int j = 0; j < Width; j++) {
@@ -66,23 +67,15 @@ public class Heatmap {
                     HeatmapImage.setRGB(j, i, Color.WHITE.getRGB());
                 } else {
 //                    im.setRGB(j, i, new Color(255, 255 - (int) (Math.sqrt(Matrix[i][j] / Max) * 255), 255 - (int) (Math.sqrt(Matrix[i][j] / Max) * 255)).getRGB());
-                    HeatmapImage.setRGB(j , i, new Color(255, 0, 0).getRGB());
+                    HeatmapImage.setRGB(j, i, new Color(255, 0, 0).getRGB());
                 }
             }
         }
+        return this;
     }
 
     public void Test() throws IOException {
-        BufferedWriter writer = new BufferedWriter(new FileWriter("Test.out"));
-        for (int i = 0; i < RowCount.length; i++) {
-            writer.write(RowCount[i] + "\t");
-        }
-        writer.write("\n");
-        for (int i = 0; i < ColCount.length; i++) {
-            writer.write(ColCount[i] + "\t");
-        }
-        writer.write("\n");
-        writer.close();
+
     }
 
     public static void main(String[] args) throws IOException, ParseException {
@@ -97,9 +90,9 @@ public class Heatmap {
         String MatrixFile = Comline.getOptionValue("f");
         String OutFile = Comline.getOptionValue("o");
         Heatmap map = new Heatmap(MatrixFile);
-        map.Draw();
-        map.Test();
-        BufferedImage im = map.getImage();
+//        map.Draw();
+//        map.Test();
+        BufferedImage im = map.Draw().getImage();
         ImageIO.write(im, "png", new File(OutFile));
     }
 

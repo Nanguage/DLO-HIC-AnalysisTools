@@ -229,7 +229,7 @@ public class LocalAlignment {
             localAligner.FindMaxIndex();
             localAligner.FindMinIndex();
             localAligner.PrintMatrix();
-            //localAligner.CreatMatrix("AACCGGTT", "ACCGTATT");
+            //localAligner.CreateMatrix("AACCGGTT", "ACCGTATT");
         } else {
             LocalAlignment localAligner = new LocalAlignment(Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]));
             localAligner.CreatMatrix(args[0], args[1]);

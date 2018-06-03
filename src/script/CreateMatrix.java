@@ -1,5 +1,6 @@
 package script;
 
+import kotlin.text.Charsets;
 import lib.tool.Statistic;
 import lib.tool.Tools;
 import lib.unit.*;
@@ -8,19 +9,22 @@ import java.io.*;
 import java.util.*;
 
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 
-public class CreatMatrix {
+public class CreateMatrix {
     private String BedpeFile;
-    private String[] Chromosome;
-    private int[] ChrSize;
+    private Chromosome[] Chromosome;
+    //    private String[] Chromosome;
+//    private int[] ChrSize;
     private int Resolution;
     private String Prefix;
     private int Thread;
 
-    CreatMatrix(String BedpeFile, String[] Chromosome, int[] ChrSize, int Resolution, String Prefix, int Thread) throws IOException {
+    public CreateMatrix(String BedpeFile, Chromosome[] Chr, int Resolution, String Prefix, int Thread) throws IOException {
         this.BedpeFile = BedpeFile;
-        this.Chromosome = Chromosome;
-        this.ChrSize = ChrSize;
+        Chromosome = Chr;
+//        this.Chromosome = Chromosome;
+//        this.ChrSize = ChrSize;
         this.Resolution = Resolution;
         this.Prefix = Prefix;
         this.Thread = Thread;
@@ -29,44 +33,77 @@ public class CreatMatrix {
     public static void main(String[] args) throws IOException {
         Options Argument = new Options();
         Argument.addOption(Option.builder("f").hasArg().argName("file").desc("[required] bedpefile").build());
+        Argument.addOption(Option.builder("s").hasArg().argName("file").longOpt("size").desc("Chromosome size file").build());
         Argument.addOption(Option.builder("chr").hasArgs().argName("strings").desc("[required, need't when region has set] the chromosome name that you want to calculator").build());
-        Argument.addOption(Option.builder("size").hasArgs().argName("ints").desc("[required, need't when region has set] the chromosome size that you want to calculator").build());
+//        Argument.addOption(Option.builder("size").hasArgs().argName("ints").desc("[required, need't when region has set] the chromosome size that you want to calculator").build());
         Argument.addOption(Option.builder("res").hasArg().argName("int").desc("resolution (default 1M)").build());
         Argument.addOption(Option.builder("region").hasArgs().argName("strings").desc("(sample chr1:0:100 chr4:100:400) region you want to calculator, if not set, will calculator chromosome size").build());
         Argument.addOption("t", true, "thread (default 1)");
         Argument.addOption("p", true, "out prefix (default bedpefile)");
         if (args.length == 0) {
-            new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreatMatrix [option]", Argument);
+            new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreateMatrix [option]", Argument);
             System.exit(1);
         }
+        CommandLine line = null;
         try {
-            CommandLine line = new DefaultParser().parse(Argument, args);
-            String BedpeFile = line.getOptionValue("f");
-            String[] Chromosome = line.hasOption("chr") ? line.getOptionValues("chr") : null;
-            int[] ChrSize = line.hasOption("size") ? StringArrays.toInteger(line.getOptionValues("size")) : null;
-            int Resolution = line.hasOption("res") ? Integer.parseInt(line.getOptionValue("res")) : 1000000;
-            String Prefix = line.hasOption("p") ? line.getOptionValue("p") : BedpeFile;
-            int Thread = line.hasOption("t") ? Integer.parseInt(line.getOptionValue("t")) : 1;
-            ChrRegion Reg1 = line.hasOption("region") ? new ChrRegion(line.getOptionValue("region").split(":")) : null;
-            ChrRegion Reg2 = line.hasOption("region") && line.getOptionValues("region").length > 1 ? new ChrRegion(line.getOptionValues("region")[1].split(":")) : Reg1;
-            if (Reg1 == null) {
-                new CreatMatrix(BedpeFile, Chromosome, ChrSize, Resolution, Prefix, Thread).Run();
-            } else {
-                new CreatMatrix(BedpeFile, Chromosome, ChrSize, Resolution, Prefix, Thread).Run(Reg1, Reg2);
-            }
+            line = new DefaultParser().parse(Argument, args);
         } catch (ParseException e) {
             e.printStackTrace();
-            new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreatMatrix [option]", Argument);
+            new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreateMatrix [option]", Argument);
             System.exit(1);
+        }
+        String BedpeFile = line.getOptionValue("f");
+        String[] Chr = line.hasOption("chr") ? line.getOptionValues("chr") : null;
+        Chromosome[] Chromosome = null;
+        if (Chr != null) {
+            Chromosome = new Chromosome[Chr.length];
+            for (int i = 0; i < Chr.length; i++) {
+                Chromosome[i] = new Chromosome(Chr[i].split(":"));
+            }
+        }
+        String SizeFile = line.hasOption("size") ? line.getOptionValue("size") : null;
+        int Resolution = line.hasOption("res") ? Integer.parseInt(line.getOptionValue("res")) : 1000000;
+        String Prefix = line.hasOption("p") ? line.getOptionValue("p") : BedpeFile;
+        int Thread = line.hasOption("t") ? Integer.parseInt(line.getOptionValue("t")) : 1;
+        ChrRegion Reg1 = line.hasOption("region") ? new ChrRegion(line.getOptionValue("region").split(":")) : null;
+        ChrRegion Reg2 = line.hasOption("region") && line.getOptionValues("region").length > 1 ? new ChrRegion(line.getOptionValues("region")[1].split(":")) : Reg1;
+        if (SizeFile != null) {
+            List<String> ChrSizeList = FileUtils.readLines(new File(SizeFile), Charsets.UTF_8);
+            if (Chromosome == null) {
+                Chromosome = new Chromosome[ChrSizeList.size()];
+                for (int i = 0; i < Chromosome.length; i++) {
+                    Chromosome[i] = new Chromosome(ChrSizeList.get(i).split("\\s+"));
+                }
+            } else {
+                for (String aChrSizeList : ChrSizeList) {
+                    for (lib.unit.Chromosome aChromosome : Chromosome) {
+                        if (aChromosome.Name.equals(aChrSizeList.split("\\s+")[0])) {
+                            aChromosome.Size = Integer.parseInt(aChrSizeList.split("\\s+")[1]);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if (Reg1 == null) {
+            new CreateMatrix(BedpeFile, Chromosome, Resolution, Prefix, Thread).Run();
+        } else {
+            new CreateMatrix(BedpeFile, Chromosome, Resolution, Prefix, Thread).Run(Reg1, Reg2);
         }
     }
 
     public void Run() throws IOException {
-        if (Chromosome == null || ChrSize == null) {
-            System.err.println("Error! no -chr and -size arguement");
+        if (Chromosome == null) {
+            System.err.println("Error! no -chr  argument");
             System.exit(1);
         }
-        System.out.println(new Date() + "\tBegin to creat interaction matrix " + BedpeFile);
+        int[] ChrSize = new int[Chromosome.length];
+        System.out.print(new Date() + "\tBegin to creat interaction matrix ");
+        for (int i = 0; i < Chromosome.length; i++) {
+            System.out.print(Chromosome[i].toString() + " ");
+            ChrSize[i] = Chromosome[i].Size;
+        }
+        System.out.println();
         int SumBin = 0;
         int[] ChrBinSize = Statistic.CalculatorBinSize(ChrSize, Resolution);
         //计算bin的总数
@@ -98,7 +135,7 @@ public class CreatMatrix {
                                 int hang = Integer.parseInt(str[1]) / Resolution;
                                 int lie = Integer.parseInt(str[3]) / Resolution;
                                 for (int j = 0; j < Chromosome.length; j++) {
-                                    if (str[0].equals(Chromosome[j])) {
+                                    if (str[0].equals(Chromosome[j].Name)) {
                                         break;
                                     }
                                     hang = hang + ChrBinSize[j];
@@ -107,7 +144,7 @@ public class CreatMatrix {
                                     continue;
                                 }
                                 for (int j = 0; j < Chromosome.length; j++) {
-                                    if (str[2].equals(Chromosome[j])) {
+                                    if (str[2].equals(Chromosome[j].Name)) {
                                         break;
                                     }
                                     lie = lie + ChrBinSize[j];
@@ -128,7 +165,7 @@ public class CreatMatrix {
                                 int hang = (Integer.parseInt(str[1]) + Integer.parseInt(str[2])) / 2 / Resolution;
                                 int lie = (Integer.parseInt(str[4]) + Integer.parseInt(str[5])) / 2 / Resolution;
                                 for (int j = 0; j < Chromosome.length; j++) {
-                                    if (str[0].equals(Chromosome[j])) {
+                                    if (str[0].equals(Chromosome[j].Name)) {
                                         break;
                                     }
                                     hang = hang + ChrBinSize[j];
@@ -137,7 +174,7 @@ public class CreatMatrix {
                                     continue;
                                 }
                                 for (int j = 0; j < Chromosome.length; j++) {
-                                    if (str[3].equals(Chromosome[j])) {
+                                    if (str[3].equals(Chromosome[j].Name)) {
                                         break;
                                     }
                                     lie = lie + ChrBinSize[j];
@@ -189,7 +226,7 @@ public class CreatMatrix {
     }//OK
 
     public void Run(ChrRegion reg1, ChrRegion reg2) throws IOException {
-        System.out.println(new Date() + "\tBegin to creat interaction matrix " + BedpeFile);
+        System.out.println(new Date() + "\tBegin to creat interaction matrix " + reg1.toString().replace("\t", ":") + " " + reg2.toString().replace("\t", ":"));
         int[] ChrBinSize;
         ChrBinSize = Statistic.CalculatorBinSize(new int[]{reg1.Length, reg2.Length}, Resolution);
         if (Math.max(ChrBinSize[0], ChrBinSize[1]) > 50000) {

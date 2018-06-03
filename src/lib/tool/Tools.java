@@ -2,8 +2,11 @@ package lib.tool;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
+
 
 public class Tools {
+
     public static void PrintList(ArrayList<String> List, String OutFile) throws IOException {
         BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
         for (String s : List) {
@@ -112,4 +115,19 @@ public class Tools {
         infile.close();
         return 2;
     }
+
+    public static String DateFormat(long Date) {
+        return Date / 3600 + "H" + (Date % 3600) / 60 + "M" + (Date % 3600) % 60 + "S";
+    }
+
+    public static double UnitTrans(double Num, String PrimaryUint, String TransedUint) {
+        String[] Unit = new String[]{"B", "b", "K", "k", "M", "m", "G", "g"};
+        Double[] Value = new Double[]{1.0, 1.0, 1000.0, 1000.0, 1000000.0, 1000000.0, 1000000000.0, 1000000000.0};
+        HashMap<String, Double> UnitMap = new HashMap<>();
+        for (int i = 0; i < Unit.length; i++) {
+            UnitMap.put(Unit[i], Value[i]);
+        }
+        return Num * UnitMap.get(PrimaryUint) / UnitMap.get(TransedUint);
+    }
+
 }

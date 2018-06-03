@@ -15,23 +15,23 @@ public class ChrRegion implements Comparable {
         Length = Terminal - Begin;
     }
 
-    public ChrRegion(Chromosome s, int l, int r) {
+    public ChrRegion(Chromosome s, int left, int right) {
         Chr = s;
-        Begin = l;
-        Terminal = r;
+        Begin = left;
+        Terminal = right;
         Length = Terminal - Begin;
     }
 
     public boolean IsOverlap(ChrRegion reg) {
-        return this.Chr.equals(reg.Chr) && (this.Terminal + reg.Terminal - this.Begin - reg.Begin) >= (Math.max(this.Terminal, reg.Terminal) - Math.min(this.Begin, reg.Begin));
+        return this.Chr.Name.equals(reg.Chr.Name) && (this.Terminal + reg.Terminal - this.Begin - reg.Begin) >= (Math.max(this.Terminal, reg.Terminal) - Math.min(this.Begin, reg.Begin));
     }
 
     public boolean IsBelong(ChrRegion reg) {
-        return this.Chr.equals(reg.Chr) && (this.Begin >= reg.Begin && this.Terminal <= reg.Terminal);
+        return this.Chr.Name.equals(reg.Chr.Name) && (this.Begin >= reg.Begin && this.Terminal <= reg.Terminal);
     }
 
     public boolean IsContain(ChrRegion reg) {
-        return this.Chr.equals(reg.Chr) && (this.Begin <= reg.Begin && this.Terminal >= reg.Terminal);
+        return this.Chr.Name.equals(reg.Chr.Name) && (this.Begin <= reg.Begin && this.Terminal >= reg.Terminal);
     }
 
     @Override

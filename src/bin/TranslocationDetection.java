@@ -1,25 +1,37 @@
+
 package bin;
 
+import kotlin.text.Charsets;
 import lib.Command.Execute;
 import lib.File.FileTool;
 import lib.Image.Heatmap;
 import lib.tool.Tools;
 import lib.unit.*;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.distribution.PoissonDistribution;
+//import org.opencv.core.Mat;
+//import org.opencv.imgcodecs.Imgcodecs;
+import script.CreateMatrix;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.nio.charset.Charset;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * @author snowf
+ * @version 1.0
+ */
 public class TranslocationDetection {
-    private Chromosome Chr1;
-    private Chromosome Chr2;
+    private ChrRegion Chr1;
+    private ChrRegion Chr2;
     private InterActMatrix InterMatrix;
     private InterActMatrix FilteredMatrix;
-    private ArrayList<InterAction> InterList = new ArrayList<>();
+    private String BedpeFile;
     private int Resolution;
     private double Area;
     private double VacancyArea;
@@ -28,123 +40,154 @@ public class TranslocationDetection {
     private double P_Value = 0.01;
     private PoissonDistribution BackgroundDistribution = new PoissonDistribution(1);
 
+//    static {
+//        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+//    }
+
     public static void main(String[] args) throws ParseException, IOException {
         Options Arguement = new Options();
-        Arguement.addOption(Option.builder("chr").hasArgs().argName("name:size").desc("Chromosome name and size").build());
-        Arguement.addOption(Option.builder("r").required().hasArg().argName("int").desc("Resolution").build());
+        Arguement.addOption(Option.builder("chr").hasArgs().argName("name:size").desc("Chromosome name and region (such as chr1:100:500)").build());
+        Arguement.addOption(Option.builder("r").required().longOpt("res").hasArg().argName("int").desc("Resolution").build());
         Arguement.addOption(Option.builder("m").required().longOpt("matrix").argName("file").hasArg().desc("Inter action matrix").build());
-        Arguement.addOption(Option.builder("l").required().longOpt("list").argName("file").hasArg().desc("Clustered bedpe file").build());
+        Arguement.addOption(Option.builder("f").required().longOpt("bedpe").hasArg().argName("string").desc("Interaction bedpe file").build());
         Arguement.addOption(Option.builder("p").hasArg().argName("string").desc("out prefix").build());
         Arguement.addOption("v", true, "p value");
+        if (args.length == 0) {
+            new HelpFormatter().printHelp("java -cp " + FileTool.GetJarFile().getName() + " " + TranslocationDetection.class.getName() + " [option]", Arguement);
+            System.exit(1);
+        }
         CommandLine Comline = new DefaultParser().parse(Arguement, args);
-        Chromosome chr1 = new Chromosome("?"), chr2 = new Chromosome("?");
+        ChrRegion chr1 = new ChrRegion(new Chromosome("?"), 0, 0), chr2 = new ChrRegion(new Chromosome("?"), 0, 0);
         if (Comline.hasOption("chr")) {
             String[] s = Comline.getOptionValues("chr");
-            if (s[0].split(":").length > 1) {
-                chr1 = new Chromosome(s[0].split(":")[0], Integer.parseInt(s[0].split(":")[1]));
-            } else {
-                chr1 = new Chromosome(s[0].split(":")[0]);
-            }
+            chr1 = new ChrRegion(new Chromosome(s[0].split(":")[0]), Integer.parseInt(s[0].split(":")[1]), Integer.parseInt(s[0].split(":")[2]));
             if (s.length > 1) {
-                if (s[1].split(":").length > 1) {
-                    chr2 = new Chromosome(s[1].split(":")[0], Integer.parseInt(s[1].split(":")[1]));
-                } else {
-                    chr2 = new Chromosome(s[1].split(":")[0]);
-                }
+                chr2 = new ChrRegion(new Chromosome(s[1].split(":")[0]), Integer.parseInt(s[1].split(":")[1]), Integer.parseInt(s[1].split(":")[2]));
             } else {
                 chr2 = chr1;
             }
         }
         double pvalue = Comline.hasOption("v") ? Double.parseDouble(Comline.getOptionValue("v")) : 0.05;
         String MatrixFile = Comline.getOptionValue("matrix");
-        String ListFile = Comline.getOptionValue("list");
         int Resolution = Integer.parseInt(Comline.getOptionValue("r"));
-        String Prefix = Comline.hasOption("p") ? Comline.getOptionValue("p") : chr1.Name + "-" + chr2.Name;
-//        BufferedReader in = new BufferedReader(new FileReader(ListFile));
-        String line;
-        String[] str;
+        String BedpeFile = Comline.getOptionValue("f");
+        String Prefix = Comline.hasOption("p") ? Comline.getOptionValue("p") : chr1.Chr.Name + "-" + chr2.Chr.Name;
+
         ArrayList<InterAction> List = new ArrayList<>();
-//        while ((line = in.readLine()) != null) {
-//            str = line.split("\\s+");
-//            if (str[0].equals(chr1.Name) && str[3].equals(chr2.Name)) {
-//                InterAction inter = new InterAction(new ChrRegion(new String[]{str[0], str[1], str[2]}), new ChrRegion(new String[]{str[3], str[4], str[5]}));
-//                inter.Count = Integer.parseInt(str[6]);
-//                List.add(inter);
-//            } else if (str[3].equals(chr1.Name) && str[0].equals(chr2.Name)) {
-//                InterAction inter = new InterAction(new ChrRegion(new String[]{str[3], str[4], str[5]}), new ChrRegion(new String[]{str[0], str[1], str[2]}));
-//                inter.Count = Integer.parseInt(str[6]);
-//                List.add(inter);
-//            }
-//        }
-        TranslocationDetection Tld = new TranslocationDetection(chr1, chr2, new InterActMatrix(FileTool.ReadMatrixFile(MatrixFile)), List, Resolution, Prefix);
+
+        TranslocationDetection Tld = new TranslocationDetection(chr1, chr2, new InterActMatrix(FileTool.ReadMatrixFile(MatrixFile)), BedpeFile, Resolution, Prefix);
         Tld.setP_Value(pvalue);
         Tld.Run(MatrixFile);
-        InterActMatrix filteredmatrix = Tld.getFilteredMatrix();
+        /*nterActMatrix filteredmatrix = Tld.getFilteredMatrix();
         Tools.PrintMatrix(filteredmatrix.getMatrix(), Prefix + ".filter.2d.matrix", Prefix + ".filter.spare.matrix");
         //===============
         Heatmap map = new Heatmap(Prefix + ".filter.2d.matrix");
-        map.Draw();
-        ImageIO.write(map.getImage(), "png", new File(Prefix + ".filter.png"));
+//        map.Draw();
+        ImageIO.write(map.Draw().getImage(), "png", new File(Prefix + ".filter.png"));*/
     }
 
-    TranslocationDetection(Chromosome chr1, Chromosome chr2, InterActMatrix matrix, ArrayList<InterAction> list, String prefix) {
+    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, InterActMatrix matrix, String bedpefile, String prefix) {
         Chr1 = chr1;
         Chr2 = chr2;
         InterMatrix = matrix;
         FilteredMatrix = matrix;
-        InterList = list;
+        BedpeFile = bedpefile;
         OutPrefix = prefix;
         Resolution = InterMatrix.Resolution;
     }
 
-    TranslocationDetection(Chromosome chr1, Chromosome chr2, InterActMatrix matrix, ArrayList<InterAction> list, int Resolution, String prefix) {
-        this(chr1, chr2, matrix, list, prefix);
+    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, InterActMatrix matrix, String bedpefile, int Resolution, String prefix) {
+        this(chr1, chr2, matrix, bedpefile, prefix);
         this.setResolution(Resolution);
     }
 
+    /***
+     *
+     * 李老师的cluster算法
+     * @param BedpeClusterFile
+     * @param CountValue
+     * @param ExtendLength
+     * @throws IOException
+     */
+    public void Run(String BedpeClusterFile, int CountValue, int ExtendLength) throws IOException {
+        BufferedReader cluster_read = new BufferedReader(new FileReader(BedpeClusterFile));
+        String Line = cluster_read.readLine();
+        int count = Integer.parseInt(Line.split("\\s+")[6]);
+        while (count >= CountValue) {
+            String[] str = Line.split("\\s+");
+            ChrRegion chr1 = new ChrRegion(new Chromosome(str[0]), Integer.parseInt(str[1]) - ExtendLength, Integer.parseInt(str[2]) + ExtendLength);
+            ChrRegion chr2 = new ChrRegion(new Chromosome(str[3]), Integer.parseInt(str[4]) - ExtendLength, Integer.parseInt(str[5]) + ExtendLength);
+            String prefix = chr1.Chr.Name + "-" + new DecimalFormat(".00").format(Tools.UnitTrans((chr1.Begin + chr1.Terminal) / 2, "B", "M")) + "M-" + chr2.Chr.Name + "-" + new DecimalFormat(".00").format(Tools.UnitTrans((chr2.Begin + chr2.Terminal) / 2, "B", "M")) + "M";
+            new CreateMatrix(BedpeFile, null, Resolution, prefix, 4).Run(chr1, chr2);
+            BufferedImage heatmap = new Heatmap(prefix + ".2d.matrix").Draw().getImage();
+            ImageIO.write(heatmap, "png", new File(prefix + ".png"));
+            if ((Line = cluster_read.readLine()) == null) {
+                break;
+            }
+            count = Integer.parseInt(Line.split("\\s+")[6]);
+        }
+    }
+
+    /***
+     * 我的图像识别算法
+     * @param MatrixFile
+     * @throws IOException
+     */
     public void Run(String MatrixFile) throws IOException {
+        String ComLine = "python " + FileTool.GetJarFile().getParent() + "/script/LongCornerDetect.py -i " + MatrixFile + " -c " + Chr1.toString().replace("\t", ":") + " " + Chr2.toString().replace("\t", ":") + " -r " + Resolution + " -p " + OutPrefix;
+        new Execute(ComLine);
+        List<String> PointList = FileUtils.readLines(new File(OutPrefix + ".HisD.point"), Charsets.UTF_8);
+        for (String point : PointList) {
+            String[] str = point.split("\\s+");
+            double p_value = Double.parseDouble(str[6]) + Double.parseDouble(str[7]);
+            if (p_value < P_Value) {
+                int chr1index = Integer.parseInt(str[3]);
+                int chr2index = Integer.parseInt(str[5]);
+                ChrRegion region1 = new ChrRegion(new Chromosome(str[2]), chr1index - 2 * Resolution, chr1index + 3 * Resolution);
+                ChrRegion region2 = new ChrRegion(new Chromosome(str[4]), chr2index - 2 * Resolution, chr2index + 3 * Resolution);
+                String prefix = OutPrefix + "." + region1.Chr.Name + "-" + new DecimalFormat(".00").format(Tools.UnitTrans(chr1index, "B", "M")) + "M," + region2.Chr.Name + "-" + new DecimalFormat(".00").format(Tools.UnitTrans(chr2index, "B", "M")) + "M." + new DecimalFormat().format(Tools.UnitTrans(Resolution / 50, "B", "K")) + "k";
+                if (!new File(prefix + ".2d.matrix").exists()) {
+                    new CreateMatrix(BedpeFile, null, Resolution / 50, prefix, 4).Run(region1, region2);
+                }
+                ComLine = "python " + FileTool.GetJarFile().getParent() + "/script/ShortCornerDetect.py -i " + prefix + ".2d.matrix -r " + (Resolution / 50) + " -c " + region1.Chr.Name + ":" + region1.Begin + " " + region2.Chr.Name + ":" + region2.Begin + " -q " + str[8] + " -p " + prefix;
+                new Execute(ComLine);
+            }
+
+        }
+        /*ArrayList<InterAction> ValidList = new ArrayList<>();
         Area = InterMatrix.getSize()[0] * InterMatrix.getSize()[1];
         Count = InterMatrix.Count;
-        int Size = 1000000 / Resolution;
-        VacancyArea = GetMatrixArea(SearchArea(15, 0, 0));
-        CreatBackground(Size);
-        ChangePointDetect(MatrixFile, OutPrefix);
-        BufferedReader reader = new BufferedReader(new FileReader(OutPrefix + ".row.cpt"));
-        String line = reader.readLine();
-        int[] RowIndex = StringArrays.toInteger(line.split("\\s+"));
-        reader = new BufferedReader(new FileReader(OutPrefix + ".col.cpt"));
-        line = reader.readLine();
-        int[] ColIndex = StringArrays.toInteger(line.split("\\s+"));
-        Heatmap map = new Heatmap(InterMatrix.getMatrix());
-        map.Draw();
-        BufferedImage HeatMapImage = map.getImage();
-        for (int i = 0; i < RowIndex.length; i++) {
-            for (int j = 0; j < HeatMapImage.getWidth(); j++) {
-                HeatMapImage.setRGB(j, RowIndex[i] - 1, Color.GREEN.getRGB());
-            }
+        int Size = 1;
+        while (Count / Area * Size * Size <= 50) {
+            Size += 1;
         }
-        for (int i = 0; i < ColIndex.length; i++) {
-            for (int j = 0; j < HeatMapImage.getHeight(); j++) {
-                HeatMapImage.setRGB(ColIndex[i] - 1, j, Color.GREEN.getRGB());
-            }
-        }
-        ImageIO.write(HeatMapImage, "png", new File(OutPrefix + ".cpt.png"));
-        ArrayList<ChrRegion> RowRegion = new ArrayList<>();
-        ArrayList<ChrRegion> ColRegion = new ArrayList<>();
-        RowRegion.add(new ChrRegion(Chr1, 1, RowIndex[0] - 1));
+        ArrayList<int[]> Index = ChangePointDetect(MatrixFile, OutPrefix);//Edge detect
+        int[] RowIndex = Index.get(0);// get row edge
+        int[] ColIndex = Index.get(1);// get col edge
+        Heatmap map = new Heatmap(InterMatrix.getMatrix());// Create heatmap figure
+        BufferedImage HeatMapImage = map.Draw().getImage();
+        //draw change point line
+        ImageIO.write(HeatMapImage, "png", new File(OutPrefix + ".cpt.png"));//Print heatmap figure
+        //==============================================================================================================
+        ArrayList<ChrRegion> RowRegion = new ArrayList<>();//Row region about each apartment
+        ArrayList<ChrRegion> ColRegion = new ArrayList<>();//Col region about each apartment
+        RowRegion.add(new ChrRegion(Chr1.Chr, 1, RowIndex[0] - 1));
         for (int i = 0; i < RowIndex.length - 1; i++) {
-            RowRegion.add(new ChrRegion(Chr1, RowIndex[i], RowIndex[i + 1] - 1));
+            RowRegion.add(new ChrRegion(Chr1.Chr, RowIndex[i], RowIndex[i + 1] - 1));
         }
-        RowRegion.add(new ChrRegion(Chr1, RowIndex[RowIndex.length - 1], InterMatrix.getSize()[0]));
-        ColRegion.add(new ChrRegion(Chr2, 1, ColIndex[0] - 1));
+        RowRegion.add(new ChrRegion(Chr1.Chr, RowIndex[RowIndex.length - 1], InterMatrix.getSize()[0]));
+        ColRegion.add(new ChrRegion(Chr2.Chr, 1, ColIndex[0] - 1));
         for (int i = 0; i < ColIndex.length - 1; i++) {
-            ColRegion.add(new ChrRegion(Chr2, ColIndex[i], ColIndex[i + 1] - 1));
+            ColRegion.add(new ChrRegion(Chr2.Chr, ColIndex[i], ColIndex[i + 1] - 1));
         }
-        ColRegion.add(new ChrRegion(Chr2, ColIndex[ColIndex.length - 1], InterMatrix.getSize()[1]));
-        int max = Confidence(P_Value);
+        ColRegion.add(new ChrRegion(Chr2.Chr, ColIndex[ColIndex.length - 1], InterMatrix.getSize()[1]));
+        //==============================================================================================================
+        int max = Confidence(P_Value);//calculate the max density
         for (int i = 0; i < RowRegion.size(); i++) {
             for (int j = 0; j < ColRegion.size(); j++) {
                 double[][] tempmatrix = SubMatrix(InterMatrix.getMatrix(), new int[]{RowRegion.get(i).Begin - 1, RowRegion.get(i).Terminal - 1}, new int[]{ColRegion.get(j).Begin - 1, ColRegion.get(j).Terminal - 1});
+                double[] rowsum = GetRowSum(tempmatrix);
+                double[] colsum = GetColSum(tempmatrix);
                 double count = GetCount(tempmatrix);
                 double area = (RowRegion.get(i).Terminal - RowRegion.get(i).Begin + 1) * (ColRegion.get(j).Terminal - ColRegion.get(j).Begin + 1);
                 if (count / area * Size * Size <= max) {
@@ -153,29 +196,44 @@ public class TranslocationDetection {
                             FilteredMatrix.getMatrix()[k][l] = 0;
                         }
                     }
-//                    System.out.println(RowRegion.get(i).Chr.Name + "\t" + RowRegion.get(i).Begin + "\t" + RowRegion.get(i).Terminal + "\t" + ColRegion.get(j).Chr.Name + "\t" + ColRegion.get(j).Begin + "\t" + ColRegion.get(j).Terminal + "\t" + String.valueOf(count / area * 12 * 12));
+                } else {
+                    double[] rarray = new double[rowsum.length];
+                    double[] carray = new double[colsum.length];
+                    for (int k = 0; k < rowsum.length; k++) {
+                        rarray[k] = k;
+                    }
+                    for (int k = 0; k < colsum.length; k++) {
+                        carray[k] = k;
+                    }
+                    if (new SpearmansCorrelation().correlation(rarray, rowsum) < 0.2 && new SpearmansCorrelation().correlation(carray, colsum) < 0.2) {
+                        for (int k = RowRegion.get(i).Begin - 1; k <= RowRegion.get(i).Terminal - 1; k++) {
+                            for (int l = ColRegion.get(j).Begin - 1; l <= ColRegion.get(j).Terminal - 1; l++) {
+                                FilteredMatrix.getMatrix()[k][l] = 0;
+                            }
+                        }
+                    } else {
+                        ValidList.add(new InterAction(new ChrRegion(Chr1.Chr, Chr1.Begin + (RowRegion.get(i).Begin - 1) * Resolution, Chr1.Begin + (RowRegion.get(i).Terminal - 1) * Resolution), new ChrRegion(Chr2.Chr, Chr2.Begin + (ColRegion.get(j).Begin - 1) * Resolution, Chr2.Begin + (ColRegion.get(j).Terminal - 1) * Resolution)));
+                        System.out.println(Chr1.Chr.Name + "\t" + (Chr1.Begin + (RowRegion.get(i).Begin - 1) * Resolution) + "\t" + (Chr1.Begin + (RowRegion.get(i).Terminal - 1) * Resolution) + "\t" + Chr2.Chr.Name + "\t" + (Chr2.Begin + (ColRegion.get(j).Begin - 1) * Resolution) + "\t" + (Chr2.Begin + (ColRegion.get(j).Terminal - 1) * Resolution) + "\t" + String.valueOf(count / area * Size * Size));
+                    }
                 }
             }
         }
-        //        BufferedWriter out = new BufferedWriter(new FileWriter(OutPrefix + ".sig.cluster"));
-//        for (InterAction inter : InterList) {
-//            double probability = BackgroundDistribution.cumulativeProbability(inter.Count * Resolution * Resolution / (inter.getLeft().Length * inter.getRight().Length));
-//            if (probability > 1 - P_Value) {
-//                out.write(inter.getLeft().toString() + "\t" + inter.getRight().toString() + "\t" + inter.Count + "\t" + probability + "\n");
-//            }
-//        }
-//        out.close();
+        return ValidList;*/
     }
 
+    /**
+     * @param Size windows size
+     * @throws IOException
+     */
     private void CreatBackground(int Size) throws IOException {
         BackgroundDistribution = new PoissonDistribution(Count * Size * Size / (Area - VacancyArea));
         boolean[][] AbnormalMatrix;
         double A = 0;
         int AbnormalCount = 0;
         BackgroundDistribution = new PoissonDistribution((Count - AbnormalCount) * Size * Size / (Area - VacancyArea - A));
-        for (int k = 0; k < 1; k++) {
+        for (int k = 0; k < 0; k++) {
             int max = Confidence(P_Value);
-            AbnormalMatrix = SearchArea(Size, max, Double.MAX_VALUE);
+            AbnormalMatrix = SearchArea(InterMatrix, Size, max, Double.MAX_VALUE);
             A = GetMatrixArea(AbnormalMatrix);
             AbnormalCount = 0;
             for (int i = 0; i < AbnormalMatrix.length; i++) {
@@ -189,9 +247,15 @@ public class TranslocationDetection {
         }
     }
 
-    private void ChangePointDetect(String matrixfile, String outprefix) throws IOException {
+    private ArrayList<int[]> ChangePointDetect(String matrixfile, String outprefix) throws IOException {
         String ComLine = "Rscript " + FileTool.GetJarFile().getParent() + "/script/ChangePointDetect.R " + matrixfile + " " + outprefix;
         new Execute(ComLine);
+        ArrayList<int[]> ChangePointList = new ArrayList<>();
+        List<String> LineStr = FileUtils.readLines(new File(outprefix + ".cpt"), Charset.defaultCharset());
+        for (String line : LineStr) {
+            ChangePointList.add(StringArrays.toInteger(line.split("\\s+")));
+        }
+        return ChangePointList;
     }
 
     private int Confidence(double p_value) {
@@ -220,26 +284,26 @@ public class TranslocationDetection {
         return submatrix;
     }
 
-    private boolean[][] SearchArea(int Size, double min, double max) throws IOException {
-        boolean[][] VMatrix = new boolean[InterMatrix.getSize()[0]][InterMatrix.getSize()[1]];
-        double[][] Line = new double[InterMatrix.getSize()[0]][InterMatrix.getSize()[1] - Size + 1];
-        double[] Window = new double[InterMatrix.getSize()[1] - Size + 1];
-        for (int i = 0; i < InterMatrix.getSize()[0]; i++) {
-            for (int j = 0; j <= InterMatrix.getSize()[1] - Size; j++) {
+    private boolean[][] SearchArea(InterActMatrix Matrix, int Size, double min, double max) throws IOException {
+        boolean[][] VMatrix = new boolean[Matrix.getSize()[0]][Matrix.getSize()[1]];//position we want detect
+        double[][] Line = new double[Matrix.getSize()[0]][Matrix.getSize()[1] - Size + 1];//value of each col
+        double[] Window = new double[Matrix.getSize()[1] - Size + 1];//value of each windows
+        for (int i = 0; i < Matrix.getSize()[0]; i++) {
+            for (int j = 0; j <= Matrix.getSize()[1] - Size; j++) {
                 for (int k = 0; k < Size; k++) {
-                    Line[i][j] += InterMatrix.getMatrix()[i][j + k];
+                    Line[i][j] += Matrix.getMatrix()[i][j + k];
                 }
             }
         }
         for (int i = 0; i < Size - 1; i++) {
-            for (int j = 0; j <= InterMatrix.getSize()[1] - Size; j++) {
+            for (int j = 0; j <= Matrix.getSize()[1] - Size; j++) {
                 Window[j] += Line[i][j];
             }
         }
-        BufferedWriter out = new BufferedWriter(new FileWriter("TlD.distribution"));
+//        BufferedWriter out = new BufferedWriter(new FileWriter("TlD.distribution"));
         for (int i = Size - 1; i < InterMatrix.getSize()[0]; i++) {
             for (int j = 0; j <= InterMatrix.getSize()[1] - Size; j++) {
-                out.write((int) (Window[j] + Line[i][j]) + "\n");
+//                out.write((int) (Window[j] + Line[i][j]) + "\n");
                 if (Window[j] + Line[i][j] <= max && Window[j] + Line[i][j] >= min) {
                     for (int k = 0; k < Size; k++) {
                         for (int l = 0; l < Size; l++) {
@@ -250,7 +314,7 @@ public class TranslocationDetection {
                 Window[j] = Window[j] + Line[i][j] - Line[i + 1 - Size][j];
             }
         }
-        out.close();
+//        out.close();
 //        Tools.PrintMatrix(VMatrix, "Vacancy.2d.matrix", "Vacancy.spare.matrix");
         return VMatrix;
     }
@@ -267,9 +331,29 @@ public class TranslocationDetection {
         return Area;
     }
 
-    public void setInterList(ArrayList<InterAction> interList) {
-        InterList = interList;
+    private double[] GetRowSum(double[][] Matrix) {
+        double[] RowSum = new double[Matrix.length];
+        for (int i = 0; i < Matrix.length; i++) {
+            for (int j = 0; j < Matrix[i].length; j++) {
+                RowSum[i] += Matrix[i][j];
+            }
+        }
+        return RowSum;
     }
+
+    private double[] GetColSum(double[][] Matrix) {
+        double[] ColSum = new double[Matrix[0].length];
+        for (int i = 0; i < Matrix.length; i++) {
+            for (int j = 0; j < Matrix[i].length; j++) {
+                ColSum[j] += Matrix[i][j];
+            }
+        }
+        return ColSum;
+    }
+
+//    public void setInterList(ArrayList<InterAction> interList) {
+//        InterList = interList;
+//    }
 
     public void setInterMatrix(InterActMatrix interMatrix) {
         InterMatrix = interMatrix;

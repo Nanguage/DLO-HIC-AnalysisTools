@@ -3,6 +3,11 @@ package lib.unit;
 
 import org.jetbrains.annotations.NotNull;
 
+/**
+ * @author snowf
+ * @version 1.0
+ */
+
 public class Chromosome implements Comparable {
     public String Name;
     public int Size;
@@ -11,8 +16,25 @@ public class Chromosome implements Comparable {
         this(s, 0);
     }
 
+    public Chromosome(String[] s) {
+        String chr;
+        int size;
+        try {
+            chr = s[0];
+        } catch (IndexOutOfBoundsException e) {
+            chr = null;
+        }
+        try {
+            size = Integer.parseInt(s[1]);
+        } catch (NumberFormatException | IndexOutOfBoundsException e) {
+            size = 0;
+        }
+        Name = chr == null || chr.equals("") ? "?" : chr;
+        Size = size;
+    }
+
     public Chromosome(String name, int size) {
-        Name = name;
+        Name = name == null || name.equals("") ? "?" : name;
         Size = size;
     }
 
@@ -26,6 +48,11 @@ public class Chromosome implements Comparable {
     @Override
     public boolean equals(Object obj) {
         Chromosome b = (Chromosome) obj;
-        return this.Name.equals(b.Name);
+        return this.Name.equals(b.Name) && this.Size == b.Size;
+    }
+
+    @Override
+    public String toString() {
+        return Name + ":" + Size;
     }
 }
