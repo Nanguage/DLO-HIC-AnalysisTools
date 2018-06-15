@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.Hashtable;
 
 import lib.Command.Execute;
-import lib.File.*;
+import lib.unit.CustomFile;
 
 /**
  * @author snowf
@@ -23,8 +23,8 @@ public class SeProcess {
     private final String OptMisMatchNum = "MisMatchNum";//错配数，bwa中使用
     public final String OptAlignThreads = "AlignThreads";//比对线程数
     //========================================================================
-    private String FastqFile;//不同linker类型的Fastq文件
-    private String IndexFile;//比对索引文件
+    private File FastqFile;//不同linker类型的Fastq文件
+    private File IndexFile;//比对索引文件
     public int Thread;//线程数
     private int MinQuality;//最小比对质量
     private int MisMatchNum;//错配数，bwa中使用
@@ -33,19 +33,19 @@ public class SeProcess {
     private Hashtable<String, String> ArgumentList = new Hashtable<>();
     private String[] RequiredParameter = new String[]{OptFastqFile, OptIndexFile, OptMinQuality};
     private String[] OptionalParameter = new String[]{OptOutPath, OptPrefix, OptMisMatchNum, OptAlignThreads, OptThreads};
-    private String SamFile;//Sam文件
-    private String FilterSamFile;//过滤后的Sam文件
-    private String BamFile;//Bam文件
-    private String BedFile;//Bed文件
-    private String SortBedFile;//排序后的bed文件
+    private File SamFile;//Sam文件
+    private File FilterSamFile;//过滤后的Sam文件
+    private File BamFile;//Bam文件
+    private CustomFile BedFile;//Bed文件
+    private CustomFile SortBedFile;//排序后的bed文件
 
-    public SeProcess(String fastqfile, String index, int mismatch, int minquality, String outpath, String prefix) {
+    public SeProcess(File fastqfile, File index, int mismatch, int minquality, File outpath, String prefix) {
         ArgumentInit();
-        ArgumentList.put(OptFastqFile, fastqfile);
-        ArgumentList.put(OptIndexFile, index);
+        ArgumentList.put(OptFastqFile, fastqfile.getPath());
+        ArgumentList.put(OptIndexFile, index.getPath());
         ArgumentList.put(OptMisMatchNum, String.valueOf(mismatch));
         ArgumentList.put(OptMinQuality, String.valueOf(minquality));
-        ArgumentList.put(OptOutPath, outpath);
+        ArgumentList.put(OptOutPath, outpath.getPath());
         ArgumentList.put(OptPrefix, prefix);
 //        ArgumentList.put(OptSeType, type);
         Init();
@@ -77,13 +77,13 @@ public class SeProcess {
         //Sam文件转bam再转bed
         SamToBed();
         //对bed文件排序（由于在大量数据下bed文件会比较大，所以为了减少内存消耗，bed文件排序使用串行）
-        new SortFile(BedFile, new int[]{4}, "", "\\s+", SortBedFile, Thread);
+        BedFile.SortFile(new int[]{4}, "", "\\s+", SortBedFile);
 //        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end\t" + LinkersType[finalI]);
         //删掉过滤后的sam文件（有bam文件，所以不用留sam文件，节省空间）
-        System.out.println(new Date() + "\tDelete " + FilterSamFile);
-        new File(FilterSamFile).delete();
-        System.out.println(new Date() + "\tDelete " + BedFile);
-        new File(BedFile).delete();
+        System.out.println(new Date() + "\tDelete " + FilterSamFile.getName());
+        FilterSamFile.delete();
+        System.out.println(new Date() + "\tDelete " + BedFile.getName());
+        BedFile.delete();
     }
 
     public static void main(String[] args) throws IOException {
@@ -132,8 +132,8 @@ public class SeProcess {
         //=============================================================================================
         String OutPath = ArgumentList.get(OptOutPath);
         String Prefix = ArgumentList.get(OptPrefix);
-        FastqFile = ArgumentList.get(OptFastqFile);
-        IndexFile = ArgumentList.get(OptIndexFile);
+        FastqFile = new File(ArgumentList.get(OptFastqFile));
+        IndexFile = new File(ArgumentList.get(OptIndexFile));
 //        String seType = ArgumentList.get(OptSeType);
         Thread = Integer.parseInt(ArgumentList.get(OptThreads));
         MinQuality = Integer.parseInt(ArgumentList.get(OptMinQuality));
@@ -146,12 +146,12 @@ public class SeProcess {
                 System.exit(0);
             }
         }
-        SamFile = OutPath + "/" + Prefix + "." + MisMatchNum + ".sam";
+        SamFile = new File(OutPath + "/" + Prefix + "." + MisMatchNum + ".sam");
 //        SamFile = FastqFile.replace(".fastq", "." + MisMatchNum + ".sam");
-        FilterSamFile = SamFile.replace(".sam", ".uniq.sam");
-        BamFile = FilterSamFile.replace(".uniq.sam", ".bam");
-        BedFile = BamFile.replace(".bam", ".bed");
-        SortBedFile = BedFile.replace(".bed", ".sort.bed");
+        FilterSamFile = new File(SamFile.getPath().replace(".sam", ".uniq.sam"));
+        BamFile = new File(FilterSamFile.getPath().replace(".uniq.sam", ".bam"));
+        BedFile = new CustomFile(BamFile.getPath().replace(".bam", ".bed"));
+        SortBedFile = new CustomFile(BedFile.getPath().replace(".bed", ".sort.bed"));
 
     }
 
@@ -190,22 +190,22 @@ public class SeProcess {
 
     private void Align() throws IOException {
         //比对
-        System.out.println(new Date() + "\tBegin to align\t" + FastqFile);
-        String CommandStr = "bwa aln -t " + Thread + " -n " + MisMatchNum + " -f " + FastqFile + ".sai " + IndexFile + " " + FastqFile;
+        System.out.println(new Date() + "\tBegin to align\t" + FastqFile.getName());
+        String CommandStr = "bwa aln -t " + AlignThreads + " -n " + MisMatchNum + " -f " + FastqFile + ".sai " + IndexFile + " " + FastqFile;
         new Execute(CommandStr);//执行命令行
-        System.out.println(new Date() + "\tsai to sam\t" + FastqFile);
+        System.out.println(new Date() + "\tsai to sam\t" + FastqFile.getName());
         CommandStr = "bwa samse -f " + SamFile + " " + IndexFile + " " + FastqFile + ".sai " + FastqFile;
         new Execute(CommandStr);//执行命令行
-        System.out.println(new Date() + "\tDelete " + FastqFile + ".sai ");
+        System.out.println(new Date() + "\tDelete " + FastqFile.getName() + ".sai ");
         new File(FastqFile + ".sai").delete();//删除sai文件
-        System.out.println(new Date() + "\tEnd align\t" + FastqFile);
+        System.out.println(new Date() + "\tEnd align\t" + FastqFile.getName());
     }//OK
 
     private void SamFilter() throws IOException {
         //sam文件过滤
         BufferedReader sam_read = new BufferedReader(new FileReader(SamFile));
         BufferedWriter sam_write = new BufferedWriter(new FileWriter(FilterSamFile));
-        System.out.println(new Date() + "\tBegin to sam filter\t" + SamFile);
+        System.out.println(new Date() + "\tBegin to sam filter\t" + SamFile.getName());
         Thread[] process = new Thread[Thread];
         for (int i = 0; i < Thread; i++) {
             process[i] = new Thread(new Runnable() {
@@ -243,27 +243,27 @@ public class SeProcess {
     }//OK
 
     private void SamToBed() throws IOException {
-        System.out.println(new Date() + "\tBegin\t" + FilterSamFile + " to " + BedFile);
+        System.out.println(new Date() + "\tBegin\t" + FilterSamFile.getName() + " to " + BedFile.getName());
         String CommandStr = "samtools view -Sb -o " + BamFile + " " + FilterSamFile;
         new Execute(CommandStr, FilterSamFile + ".log");
         CommandStr = "bedtools bamtobed -i " + BamFile;
-        new Execute(CommandStr, BedFile, BedFile + ".log");
+        new Execute(CommandStr, BedFile.getPath(), BedFile + ".log");
         System.out.println(new Date() + "\tEnd\t" + FilterSamFile + " to " + BedFile);
     }//OK
 
-    public String getBedFile() {
+    public File getBedFile() {
         return BedFile;
     }
 
-    public String getBamFile() {
+    public File getBamFile() {
         return BamFile;
     }
 
-    public String getSamFile() {
+    public File getSamFile() {
         return SamFile;
     }
 
-    public String getSortBedFile() {
+    public CustomFile getSortBedFile() {
         return SortBedFile;
     }
 }

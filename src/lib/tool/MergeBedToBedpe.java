@@ -4,8 +4,8 @@ import java.io.*;
 import java.util.Date;
 
 public class MergeBedToBedpe {
-    public MergeBedToBedpe(String InFile1, String InFile2, String OutFile, int Row, String Regex) throws IOException {
-        System.out.println(new Date() + "\tMerge " + InFile1 + " and " + InFile2 + " to " + OutFile + " start");
+    public MergeBedToBedpe(File InFile1, File InFile2, File OutFile, int Row, String Regex) throws IOException {
+        System.out.println(new Date() + "\tMerge " + InFile1.getName() + " and " + InFile2.getName() + " to " + OutFile.getName() + " start");
         BufferedReader infile1 = new BufferedReader(new FileReader(InFile1));
         BufferedReader infile2 = new BufferedReader(new FileReader(InFile2));
         BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));

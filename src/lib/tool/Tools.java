@@ -85,37 +85,6 @@ public class Tools {
         twodfile.close();
     }
 
-    public static int BedpeDetect(String BedpeFile) throws IOException {
-        BufferedReader infile = new BufferedReader(new FileReader(BedpeFile));
-        String line;
-        String[] str;
-        line = infile.readLine();
-        if (line == null) {
-            infile.close();
-            return 0;
-        }
-        str = line.split("\\s+");
-        try {
-            Integer.parseInt(str[1]);
-            Integer.parseInt(str[2]);
-            Integer.parseInt(str[4]);
-            Integer.parseInt(str[5]);
-        } catch (IndexOutOfBoundsException | NumberFormatException i) {
-            try {
-                Integer.parseInt(str[1]);
-                Integer.parseInt(str[3]);
-            } catch (IndexOutOfBoundsException | NumberFormatException e) {
-                e.printStackTrace();
-                infile.close();
-                return 0;
-            }
-            infile.close();
-            return 1;
-        }
-        infile.close();
-        return 2;
-    }
-
     public static String DateFormat(long Date) {
         return Date / 3600 + "H" + (Date % 3600) / 60 + "M" + (Date % 3600) % 60 + "S";
     }

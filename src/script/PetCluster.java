@@ -7,6 +7,8 @@ import java.util.Hashtable;
 
 import lib.tool.Tools;
 import lib.unit.Chromosome;
+import lib.unit.CustomFile;
+import lib.unit.Opts;
 import org.apache.commons.cli.*;
 
 public class PetCluster {
@@ -34,13 +36,13 @@ public class PetCluster {
             System.exit(1);
         }
         CommandLine comline = new DefaultParser().parse(Arguement, args);
-        String infile = comline.getOptionValue("f");
-        String outprefix = comline.hasOption("p") ? comline.getOptionValue("p") : infile;
+        CustomFile infile =new CustomFile(comline.getOptionValue("f"));
+        String outprefix = comline.hasOption("p") ? comline.getOptionValue("p") : infile.getPath();
         int Length = comline.hasOption("l") ? Integer.parseInt(comline.getOptionValue("l")) : 0;
         String line;
         BufferedReader in = new BufferedReader(new FileReader(infile));
         Hashtable<String, ArrayList<int[]>> ChrMatrix = new Hashtable<>();
-        if (Tools.BedpeDetect(infile) == 1) {
+        if (infile.BedpeDetect() == Opts.BedpePointFormat) {
             if (Length == 0) {
                 System.err.println("Error! extend length is 0");
                 System.exit(1);
@@ -57,13 +59,12 @@ public class PetCluster {
                 if (str.length >= 5) {
                     try {
                         count = Integer.parseInt(str[4]);
-                    } catch (NumberFormatException e) {
-                        count = 1;
+                    } catch (NumberFormatException ignored) {
                     }
                 }
                 ChrMatrix.get(key).add(new int[]{Integer.parseInt(str[1]) - Length, Integer.parseInt(str[1]) + Length, Integer.parseInt(str[3]) - Length, Integer.parseInt(str[3]) + Length, count});
             }
-        } else if (Tools.BedpeDetect(infile) == 2) {
+        } else if (infile.BedpeDetect() == Opts.BedpeRegionFormat) {
             while ((line = in.readLine()) != null) {
                 String[] str = line.split("\\s+");
                 String chr1 = str[0];

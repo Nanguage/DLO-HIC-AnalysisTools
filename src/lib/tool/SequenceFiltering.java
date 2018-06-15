@@ -25,19 +25,18 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
 
-import lib.unit.LocalAlignment;
 
 /**
  * @author snowf
  */
 public class SequenceFiltering {
 
-    private String FastqFile;
-    private String LinkerFile;
-    private String AdapterFile;
+    private File FastqFile;
+    private File LinkerFile;
+    private File AdapterFile;
     private String OutputPrefix;
-    private String OutFile;
-    private String DistributionFile;
+    private File OutFile;
+    private File DistributionFile;
     private String[] linkers;
     private String[] Adapters;
     private String[] AdapterAlignment;
@@ -54,7 +53,7 @@ public class SequenceFiltering {
     private int MisMatchScore;
     private int IndelScore;
 
-    public SequenceFiltering(String fastqFile, String linkerFile, String outputPrefix, int flip_tail, int Threads) throws IOException {
+    public SequenceFiltering(File fastqFile, File linkerFile, String outputPrefix, int flip_tail, int Threads) throws IOException {
         FastqFile = fastqFile;
         LinkerFile = linkerFile;
         OutputPrefix = outputPrefix;
@@ -66,7 +65,7 @@ public class SequenceFiltering {
         Init();
     }
 
-    SequenceFiltering(String fastqFile, String linkerFile, String adapterFile, String outputPrefix, int flip_tail, int Threads) throws IOException {
+    SequenceFiltering(File fastqFile, File linkerFile, File adapterFile, String outputPrefix, int flip_tail, int Threads) throws IOException {
         FastqFile = fastqFile;
         LinkerFile = linkerFile;
         AdapterFile = adapterFile;
@@ -79,7 +78,7 @@ public class SequenceFiltering {
         Init();
     }
 
-    SequenceFiltering(String fastqFile, String linkerFile, String outputPrefix, int matchscore, int mismatchscore, int indelscore, int flip_tail, int Threads) throws IOException {
+    SequenceFiltering(File fastqFile, File linkerFile, String outputPrefix, int matchscore, int mismatchscore, int indelscore, int flip_tail, int Threads) throws IOException {
         FastqFile = fastqFile;
         LinkerFile = linkerFile;
         OutputPrefix = outputPrefix;
@@ -91,7 +90,7 @@ public class SequenceFiltering {
         Init();
     }
 
-    public SequenceFiltering(String fastqFile, String linkerFile, String adapterFile, String outputPrefix, int matchscore, int mismatchscore, int indelscore, int flip_tail, int Threads) throws IOException {
+    public SequenceFiltering(File fastqFile, File linkerFile, File adapterFile, String outputPrefix, int matchscore, int mismatchscore, int indelscore, int flip_tail, int Threads) throws IOException {
         FastqFile = fastqFile;
         LinkerFile = linkerFile;
         AdapterFile = adapterFile;
@@ -127,8 +126,8 @@ public class SequenceFiltering {
                 }
             }
         }
-        OutFile = OutputPrefix + ".output.txt";
-        DistributionFile = OutputPrefix + ".ScoreDistribution.txt";
+        OutFile = new File(OutputPrefix + ".output.txt");
+        DistributionFile = new File(OutputPrefix + ".ScoreDistribution.txt");
     }
 
     public void Run() throws IOException {
@@ -163,7 +162,7 @@ public class SequenceFiltering {
                         int MinIndex = 0;
                         if (AdapterAlignment != null) {
                             for (int j = 0; j < AdapterAlignment.length; j++) {
-                                local[finalI].CreatMatrix(line2, AdapterAlignment[j]);
+                                local[finalI].CreateMatrix(line2, AdapterAlignment[j]);
                                 local[finalI].FindMaxIndex();
                                 local[finalI].FindMinIndex();
                                 float score = (float) local[finalI].getMaxScore() / AdapterAlignment[j].length();
@@ -180,7 +179,7 @@ public class SequenceFiltering {
                             MaxScore = 0;
                         }
                         for (int j = 0; j < linkers.length; j++) {
-                            local[finalI].CreatMatrix(line2, linkers[j]);
+                            local[finalI].CreateMatrix(line2, linkers[j]);
                             local[finalI].FindMaxIndex();
                             int score = local[finalI].getMaxScore();
                             if (score > MaxScore) {
@@ -237,11 +236,11 @@ public class SequenceFiltering {
 
     public static void main(String[] args) throws IOException {
         if (args.length == 5) {
-            new SequenceFiltering(args[0], args[1], args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4])).Run();
+            new SequenceFiltering(new File(args[0]), new File(args[1]), args[2], Integer.parseInt(args[3]), Integer.parseInt(args[4])).Run();
         } else if (args.length == 6) {
-            new SequenceFiltering(args[0], args[1], args[2], args[3], Integer.parseInt(args[4]), Integer.parseInt(args[5])).Run();
+            new SequenceFiltering(new File(args[0]), new File(args[1]), new File(args[2]), args[3], Integer.parseInt(args[4]), Integer.parseInt(args[5])).Run();
         } else {
-            System.out.println("Usage: java lib.tool.SequenceFiltering <sequence file> <linker file> <output prefix> <flip_tail> <threads>");
+            System.out.println("Usage: java lib.tool.SequenceFiltering <sequence file> <linker file> [adapter file] <output prefix> <flip_tail> <threads>");
             System.out.println("flip_tail: 1: output the reverseComplement of the tail;");
             System.out.println("           0: output the original tail sequences");
             System.exit(0);
@@ -344,11 +343,11 @@ public class SequenceFiltering {
         return result.toString();
     }
 
-    public String getDistributionFile() {
+    public File getDistributionFile() {
         return DistributionFile;
     }
 
-    public String getOutFile() {
+    public File getOutFile() {
         return OutFile;
     }
 }

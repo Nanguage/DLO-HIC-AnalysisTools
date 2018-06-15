@@ -1,6 +1,7 @@
 import java.io.IOException;
 
 import lib.tool.Statistic;
+import lib.unit.CustomFile;
 
 public class CalculatorLineNumber {
     public static void main(String[] args) throws IOException {
@@ -14,7 +15,7 @@ public class CalculatorLineNumber {
                 @Override
                 public void run() {
                     try {
-                        long linenumber = Statistic.CalculatorLineNumber(args[finalI]);
+                        long linenumber = new CustomFile(args[finalI]).CalculatorLineNumber();
                         synchronized (Thread.class) {
                             System.out.println(args[finalI] + " line number is:\t" + linenumber);
                         }

@@ -32,10 +32,10 @@ public class LocalAlignment {
 //        MinSeqLength = minseqlength;
     }
 
-    LocalAlignment() {
-        MatchScore = 1;
-        MismatchScore = -2;
-        IndelScore = -2;
+    public LocalAlignment() {
+        MatchScore = Opts.Default.MatchScore;
+        MismatchScore = Opts.Default.MisMatchScore;
+        IndelScore = Opts.Default.IndelScore;
         Init();
     }
 
@@ -89,10 +89,10 @@ public class LocalAlignment {
         MinIndex = new int[]{MinI, MinJ};
     }
 
-    public void CreatMatrix(String seq1, String seq2) {
+    public void CreateMatrix(String seq1, String seq2) {
         if (MatrixSzie[0] < seq1.length() + 1 || MatrixSzie[1] < seq2.length() + 1) {
             ScoreMatrix = new int[seq1.length() + 1][seq2.length() + 1];
-            InitMatrix(0);
+//            InitMatrix(0);
         }
         MatrixSzie = new int[]{seq1.length() + 1, seq2.length() + 1};
         Seq1 = seq1.toCharArray();
@@ -225,14 +225,19 @@ public class LocalAlignment {
         }
         if (args.length == 2) {
             LocalAlignment localAligner = new LocalAlignment();
-            localAligner.CreatMatrix(args[0], args[1]);
+            localAligner.CreateMatrix(args[0], args[1]);
             localAligner.FindMaxIndex();
             localAligner.FindMinIndex();
-            localAligner.PrintMatrix();
+            System.out.println(String.join("\n", localAligner.PrintAlignment()));
+//            localAligner.PrintMatrix();
             //localAligner.CreateMatrix("AACCGGTT", "ACCGTATT");
         } else {
             LocalAlignment localAligner = new LocalAlignment(Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]));
-            localAligner.CreatMatrix(args[0], args[1]);
+            localAligner.CreateMatrix(args[0], args[1]);
+            localAligner.FindMaxIndex();
+            localAligner.FindMinIndex();
+            System.out.println(String.join("\n", localAligner.PrintAlignment()));
+//            localAligner.PrintMatrix();
         }
     }
 
@@ -246,5 +251,37 @@ public class LocalAlignment {
 
     public int[] getMinIndex() {
         return MinIndex;
+    }
+
+    public String[] PrintAlignment() {
+        String[] AlignStat = new String[]{"", "", ""};
+        int i = MaxIndex[0];
+        int j = MaxIndex[1];
+        while (ScoreMatrix[i][j] > 0) {
+            if (ScoreMatrix[i][j] == ScoreMatrix[i - 1][j - 1] + MatchScore && Seq1[i - 1] == Seq2[j - 1]) {
+                AlignStat[0] = Seq1[i - 1] + AlignStat[0];
+                AlignStat[1] = "|" + AlignStat[1];
+                AlignStat[2] = Seq2[j - 1] + AlignStat[2];
+                i--;
+                j--;
+            } else if (ScoreMatrix[i][j] == ScoreMatrix[i - 1][j - 1] + MismatchScore) {
+                AlignStat[0] = Seq1[i - 1] + AlignStat[0];
+                AlignStat[1] = "X" + AlignStat[1];
+                AlignStat[2] = Seq2[j - 1] + AlignStat[2];
+                i--;
+                j--;
+            } else if (ScoreMatrix[i][j] == ScoreMatrix[i - 1][j] + IndelScore) {
+                AlignStat[0] = Seq1[i - 1] + AlignStat[0];
+                AlignStat[1] = " " + AlignStat[1];
+                AlignStat[2] = "-" + AlignStat[2];
+                i--;
+            } else {
+                AlignStat[0] = "-" + AlignStat[0];
+                AlignStat[1] = " " + AlignStat[1];
+                AlignStat[2] = Seq2[j - 1] + AlignStat[2];
+                j--;
+            }
+        }
+        return AlignStat;
     }
 }

@@ -12,7 +12,7 @@ import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 
 public class CreateMatrix {
-    private String BedpeFile;
+    private CustomFile BedpeFile;
     private Chromosome[] Chromosome;
     //    private String[] Chromosome;
 //    private int[] ChrSize;
@@ -20,7 +20,7 @@ public class CreateMatrix {
     private String Prefix;
     private int Thread;
 
-    public CreateMatrix(String BedpeFile, Chromosome[] Chr, int Resolution, String Prefix, int Thread) throws IOException {
+    public CreateMatrix(CustomFile BedpeFile, Chromosome[] Chr, int Resolution, String Prefix, int Thread) throws IOException {
         this.BedpeFile = BedpeFile;
         Chromosome = Chr;
 //        this.Chromosome = Chromosome;
@@ -44,16 +44,16 @@ public class CreateMatrix {
             new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreateMatrix [option]", Argument);
             System.exit(1);
         }
-        CommandLine line = null;
+        CommandLine ComLine = null;
         try {
-            line = new DefaultParser().parse(Argument, args);
+            ComLine = new DefaultParser().parse(Argument, args);
         } catch (ParseException e) {
             e.printStackTrace();
             new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreateMatrix [option]", Argument);
             System.exit(1);
         }
-        String BedpeFile = line.getOptionValue("f");
-        String[] Chr = line.hasOption("chr") ? line.getOptionValues("chr") : null;
+        CustomFile BedpeFile = new CustomFile(ComLine.getOptionValue("f"));
+        String[] Chr = ComLine.hasOption("chr") ? ComLine.getOptionValues("chr") : null;
         Chromosome[] Chromosome = null;
         if (Chr != null) {
             Chromosome = new Chromosome[Chr.length];
@@ -61,12 +61,12 @@ public class CreateMatrix {
                 Chromosome[i] = new Chromosome(Chr[i].split(":"));
             }
         }
-        String SizeFile = line.hasOption("size") ? line.getOptionValue("size") : null;
-        int Resolution = line.hasOption("res") ? Integer.parseInt(line.getOptionValue("res")) : 1000000;
-        String Prefix = line.hasOption("p") ? line.getOptionValue("p") : BedpeFile;
-        int Thread = line.hasOption("t") ? Integer.parseInt(line.getOptionValue("t")) : 1;
-        ChrRegion Reg1 = line.hasOption("region") ? new ChrRegion(line.getOptionValue("region").split(":")) : null;
-        ChrRegion Reg2 = line.hasOption("region") && line.getOptionValues("region").length > 1 ? new ChrRegion(line.getOptionValues("region")[1].split(":")) : Reg1;
+        String SizeFile = ComLine.hasOption("size") ? ComLine.getOptionValue("size") : null;
+        int Resolution = ComLine.hasOption("res") ? Integer.parseInt(ComLine.getOptionValue("res")) : 1000000;
+        String Prefix = ComLine.hasOption("p") ? ComLine.getOptionValue("p") : BedpeFile.getPath();
+        int Thread = ComLine.hasOption("t") ? Integer.parseInt(ComLine.getOptionValue("t")) : 1;
+        ChrRegion Reg1 = ComLine.hasOption("region") ? new ChrRegion(ComLine.getOptionValue("region").split(":")) : null;
+        ChrRegion Reg2 = ComLine.hasOption("region") && ComLine.getOptionValues("region").length > 1 ? new ChrRegion(ComLine.getOptionValues("region")[1].split(":")) : Reg1;
         if (SizeFile != null) {
             List<String> ChrSizeList = FileUtils.readLines(new File(SizeFile), Charsets.UTF_8);
             if (Chromosome == null) {
@@ -110,7 +110,7 @@ public class CreateMatrix {
         for (int i = 0; i < ChrBinSize.length; i++) {
             SumBin = SumBin + ChrBinSize[i];
         }
-        if (SumBin > 50000) {
+        if (SumBin > Opts.MaxBinNum) {
             System.err.println("Error ! too many bins, there are " + SumBin + " bins.");
             System.exit(0);
         }
@@ -129,7 +129,7 @@ public class CreateMatrix {
                     try {
                         String line;
                         String[] str;
-                        if (Tools.BedpeDetect(BedpeFile) == 1) {
+                        if (BedpeFile.BedpeDetect() == Opts.BedpePointFormat) {
                             while ((line = infile.readLine()) != null) {
                                 str = line.split("\\s+");
                                 int hang = Integer.parseInt(str[1]) / Resolution;
@@ -159,7 +159,7 @@ public class CreateMatrix {
                                     }
                                 }
                             }
-                        } else if (Tools.BedpeDetect(BedpeFile) == 2) {
+                        } else if (BedpeFile.BedpeDetect() == Opts.BedpeRegionFormat) {
                             while ((line = infile.readLine()) != null) {
                                 str = line.split("\\s+");
                                 int hang = (Integer.parseInt(str[1]) + Integer.parseInt(str[2])) / 2 / Resolution;
@@ -191,7 +191,7 @@ public class CreateMatrix {
                             }
                         } else {
                             System.err.println("Error format!");
-                            System.exit(1);
+//                            System.exit(1);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -248,7 +248,7 @@ public class CreateMatrix {
                         String line;
                         String[] str;
 //                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start");
-                        if (Tools.BedpeDetect(BedpeFile) == 1) {
+                        if (BedpeFile.BedpeDetect() == Opts.BedpePointFormat) {
                             while ((line = infile.readLine()) != null) {
                                 str = line.split("\\s+");
                                 ChrRegion left = new ChrRegion(new String[]{str[0], str[1], str[1]});
@@ -267,7 +267,7 @@ public class CreateMatrix {
                                     }
                                 }
                             }
-                        } else if (Tools.BedpeDetect(BedpeFile) == 2) {
+                        } else if (BedpeFile.BedpeDetect() == Opts.BedpeRegionFormat) {
                             while ((line = infile.readLine()) != null) {
                                 str = line.split("\\s+");
                                 ChrRegion left = new ChrRegion(new String[]{str[0], str[1], str[2]});
@@ -288,7 +288,7 @@ public class CreateMatrix {
                             }
                         } else {
                             System.err.println("Error foramt!");
-                            System.exit(1);
+//                            System.exit(1);
                         }
 //                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
                     } catch (IOException e) {

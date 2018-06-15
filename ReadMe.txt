@@ -56,7 +56,7 @@ Resolution          Int         Bin size when creat interaction matrix  (default
 AlignMisMatch       Int         MisMatch number in alignment    (default    "0")
 MinReadsLength      Int         Min reads length when extract interaction reads (default    "16")
 MaxReadsLength      Int         Max reads length when extract interaction reads (default    "20")
-Thread              Int         Number of thread    (default    "4")
+Thread              Int         Number of threads    (default    "4")
 Step                String      assign  where start and end (default    "-")
 
 //Step include "LinkerFilter" "ClusterLinker" "bin.SeProcess" "Bed2BedPe" "BedPeProcess" "BedPe2Inter" "bin.MakeMatrix"

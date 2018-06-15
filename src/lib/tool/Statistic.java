@@ -5,94 +5,93 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import lib.unit.CustomFile;
+import lib.unit.Opts;
 import org.apache.commons.math3.distribution.*;
 
 public class Statistic {
-    public static long CalculatorLineNumber(String InFile) throws IOException {
-        if (!new File(InFile).isFile()) {
-            return 0;
+
+    public static Long[] CalculateLinkerCount(File InFile, String[] LinkerList, int MinScore, int Threads) throws IOException, InterruptedException {
+        Long[] Count = new Long[LinkerList.length];
+        for (int i = 0; i < Count.length; i++) {
+            Count[i] = 0L;
         }
-        BufferedReader file = new BufferedReader(new FileReader(InFile));
-        long LineNumber = 0;
-        while (file.readLine() != null) {
-            LineNumber++;
+        BufferedReader reader = new BufferedReader(new FileReader(InFile));
+        Thread[] Process = new Thread[Threads];
+        for (int i = 0; i < Process.length; i++) {
+            Process[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        String Line;
+                        String[] Str;
+                        while ((Line = reader.readLine()) != null) {
+                            Str = Line.split("\\t+");
+                            if (Integer.parseInt(Str[5]) >= MinScore) {
+                                for (int j = 0; j < LinkerList.length; j++) {
+                                    if (Integer.parseInt(Str[4]) == j) {
+                                        synchronized (LinkerList[j]) {
+                                            Count[j]++;
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            });
+            Process[i].start();
         }
-        file.close();
-        return LineNumber;
+        for (int i = 0; i < Process.length; i++) {
+            Process[i].join();
+        }
+        return Count;
     }
 
-    public static long RangeCount(String Bedpe, double Min, double Max, int Threads) throws IOException, InterruptedException {
-        if (!new File(Bedpe).isFile()) {
+    public static long RangeCount(CustomFile Bedpe, double Min, double Max, int Threads) throws IOException, InterruptedException {
+        if (!Bedpe.isFile()) {
             return 0;
         }
         BufferedReader bedpe = new BufferedReader(new FileReader(Bedpe));
         final long[] Count = {0};
-//        String line;
-//        String[] str;
-//        line = bedpe.readLine();
-//        str = line.split("\\s+");
-//        try {
-//            if (Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3])) <= Max && Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3])) >= Min) {
-//                Count[0]++;
-//            }
-        if (Tools.BedpeDetect(Bedpe) == 1) {
-            Thread[] Process = new Thread[Threads];
-            for (int i = 0; i < Threads; i++) {
-                Process[i] = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        String line;
-                        String[] str;
-                        try {
-                            while ((line = bedpe.readLine()) != null) {
-                                str = line.split("\\s+");
-                                if (Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3])) <= Max && Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3])) >= Min) {
-                                    synchronized (Thread.class) {
-                                        Count[0]++;
-                                    }
+        int[] Index = new int[4];
+        if (Bedpe.BedpeDetect() == Opts.BedpePointFormat) {
+            Index = new int[]{3, 3, 1, 1};
+        } else if (Bedpe.BedpeDetect() == Opts.BedpeRegionFormat) {
+            Index = new int[]{5, 4, 2, 1};
+        }
+        Thread[] Process = new Thread[Threads];
+        for (int i = 0; i < Threads; i++) {
+            int[] finalIndex = Index;
+            Process[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String line;
+                    String[] str;
+                    try {
+                        while ((line = bedpe.readLine()) != null) {
+                            str = line.split("\\s+");
+                            int dis = Math.abs(Integer.parseInt(str[finalIndex[0]]) + Integer.parseInt(str[finalIndex[1]]) - Integer.parseInt(str[finalIndex[2]]) - Integer.parseInt(str[finalIndex[3]])) / 2;
+                            if (dis <= Max && dis >= Min) {
+                                synchronized (Thread.class) {
+                                    Count[0]++;
                                 }
                             }
-                        } catch (IOException e) {
-                            e.printStackTrace();
                         }
-
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-                });
-                Process[i].start();
-            }
-            for (int i = 0; i < Threads; i++) {
-                Process[i].join();
-            }
-        } else if (Tools.BedpeDetect(Bedpe) == 2) {
-//            if (Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[4])) <= Max && Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[4])) >= Min) {
-//                Count[0]++;
-//            }
-            Thread[] Process = new Thread[Threads];
-            for (int i = 0; i < Threads; i++) {
-                Process[i] = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        String line;
-                        String[] str;
-                        try {
-                            while ((line = bedpe.readLine()) != null) {
-                                str = line.split("\\s+");
-                                if (Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[4])) <= Max && Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[4])) >= Min) {
-                                    synchronized (Thread.class) {
-                                        Count[0]++;
-                                    }
-                                }
-                            }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                Process[i].start();
-            }
-            for (int i = 0; i < Threads; i++) {
-                Process[i].join();
-            }
+                }
+            });
+            Process[i].start();
+        }
+        for (int i = 0; i < Threads; i++) {
+            Process[i].join();
         }
         bedpe.close();
         return Count[0];
@@ -205,67 +204,65 @@ public class Statistic {
         return ChrSize;
     }
 
-    public static ArrayList<int[]> PowerLaw(String BedpeFile, int StepLength) throws IOException {
+    public static ArrayList<int[]> PowerLaw(CustomFile BedpeFile, int StepLength) throws IOException {
         ArrayList<int[]> List = new ArrayList<>();
         List.add(new int[]{0, StepLength, 0});
         BufferedReader infile = new BufferedReader(new FileReader(BedpeFile));
         String line;
         String[] str;
         int distant;
-        if (Tools.BedpeDetect(BedpeFile) == 1) {
-            while ((line = infile.readLine()) != null) {
-                str = line.split("\\s+");
-                distant = Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3]));
-                int i = 0;
-                while (i < List.size()) {
-                    if (distant > List.get(i)[1]) {
-                        i++;
-                    } else {
-                        List.get(i)[2]++;
-                        break;
-                    }
-                }
-                if (i == List.size()) {
-                    List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
-                    while (List.get(i)[1] < distant) {
-                        i++;
-                        List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
-                    }
-                    List.get(i)[2]++;
-                }
-            }
-        } else if (Tools.BedpeDetect(BedpeFile) == 2) {
-            while ((line = infile.readLine()) != null) {
-                str = line.split("\\s+");
-                distant = Math.abs(Integer.parseInt(str[5]) + Integer.parseInt(str[4]) - Integer.parseInt(str[2]) - Integer.parseInt(str[1])) / 2;
-                int i = 0;
-                while (i < List.size()) {
-                    if (distant > List.get(i)[1]) {
-                        i++;
-                    } else {
-                        List.get(i)[2]++;
-                        break;
-                    }
-                }
-                if (i == List.size()) {
-                    List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
-                    while (List.get(i)[1] < distant) {
-                        i++;
-                        List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
-                    }
-                    List.get(i)[2]++;
-                }
-            }
+        byte[] index = null;
+        if (BedpeFile.BedpeDetect() == Opts.BedpePointFormat) {
+            index = new byte[]{1, 1, 3, 3};
+        } else if (BedpeFile.BedpeDetect() == Opts.BedpeRegionFormat) {
+            index = new byte[]{5, 4, 2, 1};
         } else {
             System.err.println("Error format!");
-            System.exit(1);
+            return List;
+        }
+        while ((line = infile.readLine()) != null) {
+            str = line.split("\\s+");
+            distant = Math.abs(Integer.parseInt(str[index[0]]) + Integer.parseInt(str[index[1]]) - Integer.parseInt(str[index[2]]) - Integer.parseInt(str[index[3]])) / 2;
+            int i = 0;
+            while (i < List.size()) {
+                if (distant > List.get(i)[1]) {
+                    i++;
+                } else {
+                    List.get(i)[2]++;
+                    break;
+                }
+            }
+            if (i == List.size()) {
+                List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
+                while (List.get(i)[1] < distant) {
+                    i++;
+                    List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
+                }
+                List.get(i)[2]++;
+            }
         }
         return List;
     }
 
-
+    /**
+     * 阶乘
+     *
+     * @param k
+     * @return
+     */
     public static long Factorial(int k) {
         return k == 0 ? 1 : k * Factorial(k - 1);
+    }
+
+    public static double Average(Object[] arrays) {
+        double sum = 0;
+        for (int i = 0; i < arrays.length; i++) {
+            sum += Double.parseDouble(arrays[i].toString());
+        }
+//        for (double a : (Double[]) arrays) {
+//            sum += a;
+//        }
+        return sum / arrays.length;
     }
 
     public static void main(String[] args) {

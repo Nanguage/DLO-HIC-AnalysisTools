@@ -31,7 +31,7 @@ public class TranslocationDetection {
     private ChrRegion Chr2;
     private InterActMatrix InterMatrix;
     private InterActMatrix FilteredMatrix;
-    private String BedpeFile;
+    private CustomFile BedpeFile;
     private int Resolution;
     private double Area;
     private double VacancyArea;
@@ -70,7 +70,7 @@ public class TranslocationDetection {
         double pvalue = Comline.hasOption("v") ? Double.parseDouble(Comline.getOptionValue("v")) : 0.05;
         String MatrixFile = Comline.getOptionValue("matrix");
         int Resolution = Integer.parseInt(Comline.getOptionValue("r"));
-        String BedpeFile = Comline.getOptionValue("f");
+        CustomFile BedpeFile = new CustomFile(Comline.getOptionValue("f"));
         String Prefix = Comline.hasOption("p") ? Comline.getOptionValue("p") : chr1.Chr.Name + "-" + chr2.Chr.Name;
 
         ArrayList<InterAction> List = new ArrayList<>();
@@ -86,7 +86,7 @@ public class TranslocationDetection {
         ImageIO.write(map.Draw().getImage(), "png", new File(Prefix + ".filter.png"));*/
     }
 
-    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, InterActMatrix matrix, String bedpefile, String prefix) {
+    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, InterActMatrix matrix, CustomFile bedpefile, String prefix) {
         Chr1 = chr1;
         Chr2 = chr2;
         InterMatrix = matrix;
@@ -96,7 +96,7 @@ public class TranslocationDetection {
         Resolution = InterMatrix.Resolution;
     }
 
-    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, InterActMatrix matrix, String bedpefile, int Resolution, String prefix) {
+    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, InterActMatrix matrix, CustomFile bedpefile, int Resolution, String prefix) {
         this(chr1, chr2, matrix, bedpefile, prefix);
         this.setResolution(Resolution);
     }

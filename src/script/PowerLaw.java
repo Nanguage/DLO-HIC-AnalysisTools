@@ -1,5 +1,7 @@
 package script;
 
+import lib.unit.CustomFile;
+import lib.unit.Opts;
 import org.apache.commons.cli.*;
 
 import java.io.BufferedReader;
@@ -11,12 +13,12 @@ import lib.tool.Tools;
 import lib.unit.IntegerArrays;
 
 public class PowerLaw {
-    private String BedpeFile;
+    private CustomFile BedpeFile;
     private int StepLength;
     private String OutFile;
 
 
-    PowerLaw(String bedpe, int length) {
+    PowerLaw(CustomFile bedpe, int length) {
         BedpeFile = bedpe;
         StepLength = length;
     }
@@ -31,25 +33,25 @@ public class PowerLaw {
             System.exit(1);
         }
         CommandLine line = new DefaultParser().parse(Argument, args);
-        String BedpeFile = line.getOptionValue("f");
+        CustomFile BedpeFile = new CustomFile(line.getOptionValue("f"));
         int StepLength = Integer.parseInt(line.getOptionValue("l"));
         String OutFile = line.getOptionValue("o");
         if (OutFile == null) {
-            new PowerLaw(BedpeFile, StepLength).Creat();
+            new PowerLaw(BedpeFile, StepLength).Create();
         } else {
-            new PowerLaw(BedpeFile, StepLength).Creat(OutFile);
+            new PowerLaw(BedpeFile, StepLength).Create(OutFile);
         }
 
     }
 
-    public ArrayList<int[]> Creat() throws IOException {
+    public ArrayList<int[]> Create() throws IOException {
         ArrayList<int[]> List = new ArrayList<>();
         List.add(new int[]{0, StepLength, 0});
         BufferedReader infile = new BufferedReader(new FileReader(BedpeFile));
         String line;
         String[] str;
         int distant;
-        if (Tools.BedpeDetect(BedpeFile) == 1) {
+        if (BedpeFile.BedpeDetect() == Opts.BedpePointFormat) {
             while ((line = infile.readLine()) != null) {
                 str = line.split("\\s+");
                 distant = Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3]));
@@ -71,7 +73,7 @@ public class PowerLaw {
                     List.get(i)[2]++;
                 }
             }
-        } else if (Tools.BedpeDetect(BedpeFile) == 2) {
+        } else if (BedpeFile.BedpeDetect() == Opts.BedpeRegionFormat) {
             while ((line = infile.readLine()) != null) {
                 str = line.split("\\s+");
                 distant = Math.abs(Integer.parseInt(str[5]) + Integer.parseInt(str[4]) - Integer.parseInt(str[2]) - Integer.parseInt(str[1])) / 2;
@@ -100,14 +102,14 @@ public class PowerLaw {
         return List;
     }
 
-    public void Creat(String outfile) throws IOException {
+    public void Create(String outfile) throws IOException {
         ArrayList<int[]> List = new ArrayList<>();
         List.add(new int[]{0, StepLength, 0});
         BufferedReader infile = new BufferedReader(new FileReader(BedpeFile));
         String line;
         String[] str;
         int distant;
-        if (Tools.BedpeDetect(BedpeFile) == 1) {
+        if (BedpeFile.BedpeDetect() == Opts.BedpePointFormat) {
             while ((line = infile.readLine()) != null) {
                 str = line.split("\\s+");
                 distant = Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3]));
@@ -129,7 +131,7 @@ public class PowerLaw {
                     List.get(i)[2]++;
                 }
             }
-        } else if (Tools.BedpeDetect(BedpeFile) == 2) {
+        } else if (BedpeFile.BedpeDetect() == Opts.BedpeRegionFormat) {
             while ((line = infile.readLine()) != null) {
                 str = line.split("\\s+");
                 distant = Math.abs(Integer.parseInt(str[5]) + Integer.parseInt(str[4]) - Integer.parseInt(str[2]) - Integer.parseInt(str[1])) / 2;
