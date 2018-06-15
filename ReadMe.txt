@@ -1,9 +1,8 @@
 ==================DLO-HiC Analysis Tools====================
 
 Usage: java -jar DLO-HIC-AnalysisTools.jar <ConfigFile>
-Usage: java -cp DLO-HIC-AnalysisTools.jar <SubClass> <ConfigFile>
 
-==============================================ConfigFile: Such as follow================================================
+=====================ConfigFile: Such as follow====================
 
 //------------------------------required parameters----------------------------
 FastqFile = DLO-test.fastq
@@ -18,13 +17,12 @@ GenomeFile = Hg19.clean.fna
 Prefix = DLO-HiC
 OutPath = /home/hjiang/HiC-test/
 AdapterFile = adapter.txt
-Phred = 33
 UseLinker = AA
 MatchScore = 1
-MisMatchScore = -2
-IndelScore = -2
+MisMatchScore = -1
+IndelScore = -1
 MaxMisMatchLength = 3
-AlignThread = 10
+AlignThread = 2
 Resolution = 1000000
 AlignMisMatch = 0
 MinReadsLength = 16
@@ -45,32 +43,20 @@ GenomeFile          String      Reference genome file
 Prefix              String      prefix of output    (default    "out")
 OutPath             String      Path of output  (default    "./")
 AdapterFile         String      File include adapter sequence    (default    "")
-Phred               Int         Quality format in fastq file    (default    "33")
 UseLinker           String      linker's type used  (default    =LinkersType)
 MatchScore          Int         Match score in linker filter    (default    "1")
-MisMatchScore       Int         MisMatch Score in linker filter (default    "-2")
-IndelScore          Int         Indel Score in linker filter    (default    "-2")
+MisMatchScore       Int         MisMatch Score in linker filter (default    "-1")
+IndelScore          Int         Indel Score in linker filter    (default    "-1")
 MaxMisMatchLength   Int         Max misMatch length in linker filter    (default    "3")
-AlignThread         Int         Thread in alignment (default    "8")
-Resolution          Int         Bin size when creat interaction matrix  (default    "1000000"byte)
+AlignThread         Int         Thread in alignment (default    "2")
+Resolution          Int         Bin size when creat interaction matrix  (default    "1000000" byte)
 AlignMisMatch       Int         MisMatch number in alignment    (default    "0")
 MinReadsLength      Int         Min reads length when extract interaction reads (default    "16")
 MaxReadsLength      Int         Max reads length when extract interaction reads (default    "20")
 Thread              Int         Number of threads    (default    "4")
 Step                String      assign  where start and end (default    "-")
 
-//Step include "LinkerFilter" "ClusterLinker" "bin.SeProcess" "Bed2BedPe" "BedPeProcess" "BedPe2Inter" "bin.MakeMatrix"
-//If we want to run from "Bed2BedPe" to "bin.MakeMatrix", we can set "Bed2BedPe - bin.MakeMatrix"
-//If we only want to run from "bin.SeProcess" to end, we can set "bin.SeProcess -"
+//Step include "LinkerFilter" "DivideLinker" "SeProcess" "Bed2BedPe" "BedPeProcess" "BedPe2Inter" "MakeMatrix"
+//If we want to run from "Bed2BedPe" to "MakeMatrix", we can set "Bed2BedPe - MakeMatrix"
+//If we only want to run from "SeProcess" to end, we can set "SeProcess -"
 //If we want to run all, we can set "-"
-
-=====================================Sub Class=============================================
-
-bin.PreProcess:     usage:      java -cp DLO-HIC-AnalysisTools.jar bin.PreProcess <Config.txt>
-                include:    linker filter
-bin.SeProcess:      usage:      java -cp DLO-HIC-AnalysisTools.jar bin.SeProcess <Config.txt>
-                include:    alignment, sam filter, sam to bed, sort bed file
-BedPeProcess:   usage:      java -cp DLO-HIC-AnalysisTools.jar bin.BedpeProcess <Config.txt>
-                include:    extract interaction in same and diff chromosome, separate chromosome, find enzyme fragment, separate ligation type, sort file
-bin.MakeMatrix:     usage:      java -cp DLO-HIC-AnalysisTools.jar bin.MakeMatrix <Config.txt>
-                include:    creat interaction matrix, creat interaction matrix for every chromosome, matrix normalize
