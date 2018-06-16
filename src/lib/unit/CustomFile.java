@@ -165,9 +165,9 @@ public class CustomFile extends File {
                 tempfile[i].delete();
             }
         }
-        System.out.print(new Date() + "\tEnd sort file " + getName() + " by number sort row is");
-        for (int row : Col) {
-            System.out.print(" " + row);
+        System.out.print(new Date() + "\tEnd sort file " + getName() + " by number sort col is");
+        for (int col : Col) {
+            System.out.print(" " + col);
         }
         System.out.println();
     }

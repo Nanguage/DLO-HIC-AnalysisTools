@@ -2,6 +2,12 @@
 
 Usage: java -jar DLO-HIC-AnalysisTools.jar <ConfigFile>
 
+==========================require==================================
+bwa         need add in "PATH"
+samtools    need add in "PATH"
+bedtools    need add in "PATH"
+python      2.XX recommend 2.7
+
 =====================ConfigFile: Such as follow====================
 
 //------------------------------required parameters----------------------------

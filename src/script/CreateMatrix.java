@@ -247,7 +247,7 @@ public class CreateMatrix {
                     try {
                         String line;
                         String[] str;
-//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start");
+//                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " start");
                         if (BedpeFile.BedpeDetect() == Opts.BedpePointFormat) {
                             while ((line = infile.readLine()) != null) {
                                 str = line.split("\\s+");
@@ -290,7 +290,7 @@ public class CreateMatrix {
                             System.err.println("Error foramt!");
 //                            System.exit(1);
                         }
-//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
+//                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " end");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

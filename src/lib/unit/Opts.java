@@ -18,6 +18,7 @@ public class Opts {
     public static final String BedpeDir = "BedpeProcess";
     public static final String MatrixDir = "MakeMatrix";
     public static final String EnzyFragDir = "EnzymeFragment";
+    public static final String IndexDir = "Index";
 //    public static final int[] Step ;
 
     public class Default {

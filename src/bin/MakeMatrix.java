@@ -16,7 +16,7 @@ public class MakeMatrix {
     private String OptPrefix = "Prefix";
     private String OptBedpeFile = "BedpeFile";
     private String OptChromosome = "Chromosome";
-    public String OptThread = "Thread";
+    public String OptThread = "Threads";
     private String OptResolution = "Resolution";
     private String OptChrSzieFile = "ChrSzieFile";
     private String OptChromosomeSize = "ChrSize";

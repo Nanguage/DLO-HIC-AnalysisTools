@@ -5,11 +5,11 @@ import java.util.Date;
 import java.util.Hashtable;
 
 import bin.*;
+import lib.Command.Execute;
 import lib.File.*;
 import lib.tool.*;
 import lib.unit.CustomFile;
 import lib.unit.Opts;
-import org.apache.commons.io.monitor.FileAlterationMonitor;
 
 public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
@@ -40,6 +40,7 @@ public class Main {
     //===================================================================
     private CustomFile[] FastqFile;
     private CustomFile GenomeFile;
+    private File OutPath;
     private String Prefix;
     private ArrayList<String> Chromosome = new ArrayList<>();
     private String Restriction;
@@ -47,7 +48,7 @@ public class Main {
     private File AdapterFile;
     private ArrayList<String> LinkersType = new ArrayList<>();
     private ArrayList<String> UseLinker = new ArrayList<>();
-    private File IndexFile;
+    private File IndexPrefix;
     private int FileType = Opts.Single;
     private int MatchScore;
     private int MisMatchScore;
@@ -64,8 +65,8 @@ public class Main {
     private ArrayList<Thread> SThread = new ArrayList<>();
 
     //===================================================================
-    private String[] RequiredParameter = new String[]{OptFastqFile, OptGenomeFile, OptLinkerFile, OptChromosome, OptRestriction, OptLinkersType, OptIndexFile, OptAlignMinQuality};
-    private String[] OptionalParameter = new String[]{OptOutPath, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptThreads};
+    private String[] RequiredParameter = new String[]{OptFastqFile, OptGenomeFile, OptLinkerFile, OptChromosome, OptRestriction, OptLinkersType, OptAlignMinQuality};
+    private String[] OptionalParameter = new String[]{OptOutPath,  OptIndexFile, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptThreads};
     private Hashtable<String, String> ArgumentList = new Hashtable<>();
     private Hashtable<String, Integer> ChrSize = new Hashtable<>();//染色体大小
     private int MinLinkerFilterQuality;
@@ -116,7 +117,7 @@ public class Main {
         Stat.LinkerFile = LinkerFile;
         Stat.AdapterFile = AdapterFile;
         Stat.GenomeFile = GenomeFile;
-        Stat.GenomeIndex = IndexFile;
+        Stat.GenomeIndex = IndexPrefix;
         Stat.OutPrefix = Prefix;
         Stat.MinAlignQuality = AlignMinQuality;
         Stat.MinReadsLength = MinReadsLength;
@@ -133,6 +134,12 @@ public class Main {
         CustomFile FinalBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".bedpe");
         CustomFile InterBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".inter.bedpe");
         Thread ST;
+        //==========================================Create Index========================================================
+        Thread createindex = new Thread();
+        if (IndexPrefix == null || IndexPrefix.equals("")) {
+            createindex = CreateIndex(GenomeFile);
+            createindex.start();
+        }
         //=========================================linker filter==linker 过滤===========================================
         PreTime = new Date();
         PreProcess preprocess;
@@ -208,9 +215,10 @@ public class Main {
         }
         Stat.FastqR1File.addAll(Arrays.asList(LinkerFastqFileR1));
         Stat.FastqR2File.addAll(Arrays.asList(LinkerFastqFileR2));
-
+        createindex.join();
         //=======================================Se Process===单端处理==================================================
         SeTime = new Date();
+        System.out.println(new Date() + "\tStart SeProcess");
         Thread[] sepR1 = new Thread[UseLinker.size()];
         Thread[] sepR2 = new Thread[UseLinker.size()];
         for (int i = 0; i < UseLinker.size(); i++) {
@@ -234,8 +242,8 @@ public class Main {
         CustomFile[] R2SortBedFile = new CustomFile[UseLinker.size()];
         CustomFile[] SeBedpeFile = new CustomFile[UseLinker.size()];
         for (int i = 0; i < UseLinker.size(); i++) {
-            R1SortBedFile[i] = new CustomFile(new SeProcess(UseLinkerFasqFileR1[i], IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR1[i].getName().replace(".fastq", "")).getSortBedFile());
-            R2SortBedFile[i] = new CustomFile(new SeProcess(UseLinkerFasqFileR2[i], IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR2[i].getName().replace(".fastq", "")).getSortBedFile());
+            R1SortBedFile[i] = new CustomFile(new SeProcess(UseLinkerFasqFileR1[i], IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR1[i].getName().replace(".fastq", "")).getSortBedFile());
+            R2SortBedFile[i] = new CustomFile(new SeProcess(UseLinkerFasqFileR2[i], IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR2[i].getName().replace(".fastq", "")).getSortBedFile());
             SeBedpeFile[i] = new CustomFile(SeProcessDir + "/" + Prefix + "." + UseLinker.get(i) + ".bedpe");
             if (StepCheck("Bed2BedPe")) {
                 new MergeBedToBedpe(R1SortBedFile[i], R2SortBedFile[i], SeBedpeFile[i], 4, "");//合并左右端bed文件，输出bedpe文件
@@ -376,6 +384,27 @@ public class Main {
 //        Stat.ReportHtml(ArgumentList.get(OptOutPath) + "/result.html");
     }
 
+    private Thread CreateIndex(File fastfile) {
+        File IndexDir = new File(OutPath + "/" + Opts.IndexDir);
+        if (!IndexDir.isDirectory() && !IndexDir.mkdirs()) {
+            System.out.println("Create " + IndexDir + " false");
+            System.exit(1);
+        }
+        IndexPrefix = new File(IndexDir + "/" + fastfile.getName());
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String ComLine = "bwa index -p " + IndexPrefix + " " + fastfile;
+                try {
+                    new Execute(ComLine);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        return t;
+    }
+
     /**
      * <p>创建酶切片段文件，获取染色体大小</p>
      *
@@ -416,9 +445,9 @@ public class Main {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                File SamFile = new SeProcess(FastqFile, IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getSamFile();
-                File BamFile = new SeProcess(FastqFile, IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getBamFile();
-                CustomFile SortBedFile = new SeProcess(FastqFile, IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getSortBedFile();
+                File SamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getSamFile();
+                File BamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getBamFile();
+                CustomFile SortBedFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getSortBedFile();
                 Thread[] t2 = new Thread[SplitFile.size()];
                 File[] SplitSamFile = new File[SplitFile.size()];
                 File[] SplitBamFile = new File[SplitFile.size()];
@@ -430,7 +459,7 @@ public class Main {
                         @Override
                         public void run() {
                             try {
-                                SeProcess ssp = new SeProcess(finalSplitFile, IndexFile, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + "." + finalI);//单端处理类
+                                SeProcess ssp = new SeProcess(finalSplitFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + "." + finalI);//单端处理类
                                 ssp.Thread = Threads;//设置线程数
                                 ssp.AlignThreads = AlignThread;
                                 ssp.Run();
@@ -502,7 +531,7 @@ public class Main {
             public void run() {
                 try {
                     BedpeProcess bedpe = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker, Chromosome.toArray(new String[Chromosome.size()]), EnzyFilePrefix, SeBedpeFile);//bedpe文件处理类
-                    bedpe.Thread = Threads;//设置线程数
+                    bedpe.Threads = Threads;//设置线程数
                     bedpe.Run();//运行
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
@@ -511,10 +540,10 @@ public class Main {
         });
     }
 
-    private void GetOption(File Infile) throws IOException {
+    private void GetOption(File ConfFile) throws IOException {
         String line;
         String[] str;
-        BufferedReader infile = new BufferedReader(new FileReader(Infile));
+        BufferedReader infile = new BufferedReader(new FileReader(ConfFile));
         while ((line = infile.readLine()) != null) {
             line = line.trim();
             if (line.equals("") || line.matches("^/.*|^#.*")) {
@@ -568,7 +597,7 @@ public class Main {
         GenomeFile = new CustomFile(ArgumentList.get(OptGenomeFile));
 //        String Phred = ArgumentList.get(OptPhred);
         Prefix = ArgumentList.get(OptPrefix);
-        File OutPath = new File(ArgumentList.get(OptOutPath));
+        OutPath = new File(ArgumentList.get(OptOutPath));
         Chromosome.addAll(Arrays.asList(ArgumentList.get(OptChromosome).split("\\s+")));
         Restriction = ArgumentList.get(OptRestriction);
         LinkerFile = new CustomFile(ArgumentList.get(OptLinkerFile));
@@ -579,7 +608,7 @@ public class Main {
         MisMatchScore = Integer.parseInt(ArgumentList.get(OptMisMatchScore));
         IndelScore = Integer.parseInt(ArgumentList.get(OptIndelScore));
         int MaxMisMatchLength = Integer.parseInt(ArgumentList.get(OptMaxMisMatchLength));
-        IndexFile = new CustomFile(ArgumentList.get(OptIndexFile));
+        IndexPrefix = new File(ArgumentList.get(OptIndexFile));
         AlignMisMatch = Integer.parseInt(ArgumentList.get(OptAlignMisMatch));
         AlignThread = Integer.parseInt(ArgumentList.get(OptAlignThread));
         AlignMinQuality = Integer.parseInt(ArgumentList.get(OptAlignMinQuality));
@@ -617,11 +646,6 @@ public class Main {
         BufferedReader infile = new BufferedReader(new FileReader(LinkerFile));
         int linkerLength = infile.readLine().length();
         infile.close();
-//        if (FileTool.FastqPhred(FastqFile[0]) == 33) {
-//            AddQuality = "I";
-//        } else {
-//            AddQuality = "h";
-//        }
         MinLinkerFilterQuality = (linkerLength - MaxMisMatchLength) * MatchScore + MaxMisMatchLength * MisMatchScore;//设置linkerfilter最小分数
         PreProcessDir = new File(OutPath + "/" + Opts.PreDir);
         SeProcessDir = new File(OutPath + "/" + Opts.SeDir);
@@ -629,19 +653,24 @@ public class Main {
         MakeMatrixDir = new File(OutPath + "/" + Opts.MatrixDir);
         EnzyPath = new File(OutPath + "/" + Opts.EnzyFragDir);
         if (!PreProcessDir.isDirectory() && !PreProcessDir.mkdirs()) {
-            System.err.println("Can't creat " + PreProcessDir);
+            System.err.println("Can't create " + PreProcessDir);
+            System.exit(1);
         }
         if (!SeProcessDir.isDirectory() && !SeProcessDir.mkdirs()) {
-            System.err.println("Can't creat " + SeProcessDir);
+            System.err.println("Can't create " + SeProcessDir);
+            System.exit(1);
         }
         if (!BedpeProcessDir.isDirectory() && !BedpeProcessDir.mkdirs()) {
-            System.err.println("Can't creat " + BedpeProcessDir);
+            System.err.println("Can't create " + BedpeProcessDir);
+            System.exit(1);
         }
         if (!MakeMatrixDir.isDirectory() && !MakeMatrixDir.mkdirs()) {
-            System.err.println("Can't creat " + MakeMatrixDir);
+            System.err.println("Can't create " + MakeMatrixDir);
+            System.exit(1);
         }
         if (!EnzyPath.isDirectory() && !EnzyPath.mkdirs()) {
-            System.err.println("Can't creat " + EnzyPath);
+            System.err.println("Can't create " + EnzyPath);
+            System.exit(1);
         }
         EnzyFilePrefix = EnzyPath + "/" + Prefix + "." + Restriction.replace("^", "");
 //        step.Threads = Threads;

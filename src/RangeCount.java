@@ -8,7 +8,7 @@ import org.apache.commons.cli.*;
 public class RangeCount {
     public static void main(String[] args) throws IOException, ParseException {
         Options Argument = new Options();
-        Argument.addOption("t", true, "Thread number");
+        Argument.addOption("t", true, "Threads number");
         Argument.addOption(Option.builder("r").required().argName("min:max").hasArg().desc("The range of you want to calculator (the value of minimum and maximum could't set)").build());
         Argument.addOption(Option.builder("f").required().argName("bedpe file").hasArg().desc("Bedpe file you want to calculator").build());
         if (args.length == 0) {

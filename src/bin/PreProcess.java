@@ -16,7 +16,7 @@ public class PreProcess {
 //    private final String OptMatchScore = "MatchScore";//匹配分数
 //    private final String OptMisMatchScore = "MisMatchScore";//错配分数
 //    private final String OptIndelScore = "IndelScore";//插入缺失分数
-//    private final String OptThreads = "Thread";//线程数，默认1
+//    private final String OptThreads = "Threads";//线程数，默认1
     private File OutPath;//输出目录
     private String Prefix;
     private File[] FastqFile;//Fastq文件

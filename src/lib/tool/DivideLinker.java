@@ -293,13 +293,13 @@ public class DivideLinker {
                     AddQuality = AddQuality + add;
                 }
                 if (Type.equals("R1")) {
-                    Thread[] process = new Thread[threads];
+                    Threads[] process = new Threads[threads];
                     System.out.println(new Date() + "\tBegin to cluster linker\t" + Type);
                     //多线程读取
                     for (int i = 0; i < threads; i++) {
                         String finalAddSeq = AddSeq;
                         String finalAddQuality = AddQuality;
-                        process[i] = new Thread(new Runnable() {
+                        process[i] = new Threads(new Runnable() {
                             @Override
                             public void run() {
                                 String line;
@@ -353,13 +353,13 @@ public class DivideLinker {
                     }
                     System.out.println(new Date() + "\tEnd to cluster linker\t" + Type);
                 } else if (Type.equals("R2")) {
-                    Thread[] process = new Thread[threads];
+                    Threads[] process = new Threads[threads];
                     System.out.println(new Date() + "\tBegin to cluster linker\t" + Type);
                     //多线程读取
                     for (int i = 0; i < threads; i++) {
                         String finalAddSeq = AddSeq;
                         String finalAddQuality = AddQuality;
-                        process[i] = new Thread(new Runnable() {
+                        process[i] = new Threads(new Runnable() {
                             @Override
                             public void run() {
                                 String line;

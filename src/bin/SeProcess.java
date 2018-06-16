@@ -18,7 +18,7 @@ public class SeProcess {
     private final String OptOutPath = "OutPath";//输出目录
     //    private final String OptSeType = "Type";//单端类型(R1 or R2)
     private final String OptPrefix = "Prefix";//输出前缀
-    public final String OptThreads = "Thread";//线程数
+    public final String OptThreads = "Threads";//线程数
     private final String OptMinQuality = "MinQuality";//最小比对质量
     private final String OptMisMatchNum = "MisMatchNum";//错配数，bwa中使用
     public final String OptAlignThreads = "AlignThreads";//比对线程数
@@ -69,7 +69,7 @@ public class SeProcess {
     public void Run() throws IOException {
         //========================================================================================
         //处理可用的linker类型（每个线程处理一种linker类型）
-//        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " start\t" + LinkersType[finalI]);
+//        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " start\t" + LinkersType[finalI]);
         //比对
         Align();
         //Sam文件过滤
@@ -78,7 +78,7 @@ public class SeProcess {
         SamToBed();
         //对bed文件排序（由于在大量数据下bed文件会比较大，所以为了减少内存消耗，bed文件排序使用串行）
         BedFile.SortFile(new int[]{4}, "", "\\s+", SortBedFile);
-//        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end\t" + LinkersType[finalI]);
+//        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " end\t" + LinkersType[finalI]);
         //删掉过滤后的sam文件（有bam文件，所以不用留sam文件，节省空间）
         System.out.println(new Date() + "\tDelete " + FilterSamFile.getName());
         FilterSamFile.delete();
@@ -215,7 +215,7 @@ public class SeProcess {
                     try {
                         String line;
                         String[] str;
-//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " begin");
+//                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " begin");
                         while ((line = sam_read.readLine()) != null) {
                             str = line.split("\\s+");
                             if (str[0].matches("^@.+") || (Integer.parseInt(str[4]) >= MinQuality)) {
@@ -224,7 +224,7 @@ public class SeProcess {
                                 }
                             }
                         }
-//                        System.out.println(new Date() + "\t" + Thread.currentThread().getName() + " end");
+//                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " end");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

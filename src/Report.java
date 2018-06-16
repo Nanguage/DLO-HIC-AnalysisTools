@@ -84,7 +84,7 @@ public class Report {
         System.out.println("\n-----------------------------------------\nBedpe file\tReads number\tPercent");
         for (int i = 0; i < LigationFile.size(); i++) {
             sum = sum + BedpeNum.get(i);
-            System.out.println("UniqMap\t" + BedpeNum.get(i));
+            System.out.println("UniqMap\t" + new DecimalFormat("#,###").format(BedpeNum.get(i)));
             for (int j = 0; j < LigationFile.get(i).length; j++) {
                 System.out.println(LigationFile.get(i)[j].replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(LigationNum.get(i)[j]) + "\t" + (double) LigationNum.get(i)[j] / BedpeNum.get(i) * 100 + "%");
             }
