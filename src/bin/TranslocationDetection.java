@@ -53,7 +53,7 @@ public class TranslocationDetection {
         Arguement.addOption(Option.builder("p").hasArg().argName("string").desc("out prefix").build());
         Arguement.addOption("v", true, "p value");
         if (args.length == 0) {
-            new HelpFormatter().printHelp("java -cp " + FileTool.GetJarFile().getName() + " " + TranslocationDetection.class.getName() + " [option]", Arguement);
+            new HelpFormatter().printHelp("java -cp " + Opts.JarFile.getAbsolutePath() + " " + TranslocationDetection.class.getName() + " [option]", Arguement);
             System.exit(1);
         }
         CommandLine Comline = new DefaultParser().parse(Arguement, args);
@@ -134,7 +134,7 @@ public class TranslocationDetection {
      * @throws IOException
      */
     public void Run(String MatrixFile) throws IOException {
-        String ComLine = "python " + FileTool.GetJarFile().getParent() + "/script/LongCornerDetect.py -i " + MatrixFile + " -c " + Chr1.toString().replace("\t", ":") + " " + Chr2.toString().replace("\t", ":") + " -r " + Resolution + " -p " + OutPrefix;
+        String ComLine = "python " + Opts.JarFile.getParent() + "/script/LongCornerDetect.py -i " + MatrixFile + " -c " + Chr1.toString().replace("\t", ":") + " " + Chr2.toString().replace("\t", ":") + " -r " + Resolution + " -p " + OutPrefix;
         new Execute(ComLine);
         List<String> PointList = FileUtils.readLines(new File(OutPrefix + ".HisD.point"), Charsets.UTF_8);
         for (String point : PointList) {
@@ -149,7 +149,7 @@ public class TranslocationDetection {
                 if (!new File(prefix + ".2d.matrix").exists()) {
                     new CreateMatrix(BedpeFile, null, Resolution / 50, prefix, 4).Run(region1, region2);
                 }
-                ComLine = "python " + FileTool.GetJarFile().getParent() + "/script/ShortCornerDetect.py -i " + prefix + ".2d.matrix -r " + (Resolution / 50) + " -c " + region1.Chr.Name + ":" + region1.Begin + " " + region2.Chr.Name + ":" + region2.Begin + " -q " + str[8] + " -p " + prefix;
+                ComLine = "python " + Opts.JarFile.getParent() + "/script/ShortCornerDetect.py -i " + prefix + ".2d.matrix -r " + (Resolution / 50) + " -c " + region1.Chr.Name + ":" + region1.Begin + " " + region2.Chr.Name + ":" + region2.Begin + " -q " + str[8] + " -p " + prefix;
                 new Execute(ComLine);
             }
 
@@ -248,7 +248,7 @@ public class TranslocationDetection {
     }
 
     private ArrayList<int[]> ChangePointDetect(String matrixfile, String outprefix) throws IOException {
-        String ComLine = "Rscript " + FileTool.GetJarFile().getParent() + "/script/ChangePointDetect.R " + matrixfile + " " + outprefix;
+        String ComLine = "Rscript " + Opts.JarFile.getParent() + "/script/ChangePointDetect.R " + matrixfile + " " + outprefix;
         new Execute(ComLine);
         ArrayList<int[]> ChangePointList = new ArrayList<>();
         List<String> LineStr = FileUtils.readLines(new File(outprefix + ".cpt"), Charset.defaultCharset());

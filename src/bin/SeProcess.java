@@ -24,8 +24,8 @@ public class SeProcess {
     public final String OptAlignThreads = "AlignThreads";//比对线程数
     //========================================================================
     private File FastqFile;//不同linker类型的Fastq文件
-    private File IndexFile;//比对索引文件
-    public int Thread;//线程数
+    private File IndexPrefix;//比对索引文件
+    public int Threads;//线程数
     private int MinQuality;//最小比对质量
     private int MisMatchNum;//错配数，bwa中使用
     public int AlignThreads;//比对线程数
@@ -133,9 +133,9 @@ public class SeProcess {
         String OutPath = ArgumentList.get(OptOutPath);
         String Prefix = ArgumentList.get(OptPrefix);
         FastqFile = new File(ArgumentList.get(OptFastqFile));
-        IndexFile = new File(ArgumentList.get(OptIndexFile));
+        IndexPrefix = new File(ArgumentList.get(OptIndexFile));
 //        String seType = ArgumentList.get(OptSeType);
-        Thread = Integer.parseInt(ArgumentList.get(OptThreads));
+        Threads = Integer.parseInt(ArgumentList.get(OptThreads));
         MinQuality = Integer.parseInt(ArgumentList.get(OptMinQuality));
         MisMatchNum = Integer.parseInt(ArgumentList.get(OptMisMatchNum));
         AlignThreads = Integer.parseInt(ArgumentList.get(OptAlignThreads));
@@ -191,10 +191,10 @@ public class SeProcess {
     private void Align() throws IOException {
         //比对
         System.out.println(new Date() + "\tBegin to align\t" + FastqFile.getName());
-        String CommandStr = "bwa aln -t " + AlignThreads + " -n " + MisMatchNum + " -f " + FastqFile + ".sai " + IndexFile + " " + FastqFile;
+        String CommandStr = "bwa aln -t " + AlignThreads + " -n " + MisMatchNum + " -f " + FastqFile + ".sai " + IndexPrefix + " " + FastqFile;
         new Execute(CommandStr);//执行命令行
         System.out.println(new Date() + "\tsai to sam\t" + FastqFile.getName());
-        CommandStr = "bwa samse -f " + SamFile + " " + IndexFile + " " + FastqFile + ".sai " + FastqFile;
+        CommandStr = "bwa samse -f " + SamFile + " " + IndexPrefix + " " + FastqFile + ".sai " + FastqFile;
         new Execute(CommandStr);//执行命令行
         System.out.println(new Date() + "\tDelete " + FastqFile.getName() + ".sai ");
         new File(FastqFile + ".sai").delete();//删除sai文件
@@ -206,8 +206,8 @@ public class SeProcess {
         BufferedReader sam_read = new BufferedReader(new FileReader(SamFile));
         BufferedWriter sam_write = new BufferedWriter(new FileWriter(FilterSamFile));
         System.out.println(new Date() + "\tBegin to sam filter\t" + SamFile.getName());
-        Thread[] process = new Thread[Thread];
-        for (int i = 0; i < Thread; i++) {
+        Thread[] process = new Thread[Threads];
+        for (int i = 0; i < Threads; i++) {
             process[i] = new Thread(new Runnable() {
 
                 @Override

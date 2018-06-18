@@ -1,15 +1,11 @@
 package lib.File;
 
-import lib.tool.Tools;
 import lib.unit.*;
 
 import java.io.*;
 import java.util.ArrayList;
 
 public class FileTool {
-    public static File GetJarFile() {
-        return new File(FileTool.class.getProtectionDomain().getCodeSource().getLocation().getFile());
-    }
 
     public static InputStreamReader GetFileStream(String s) {
         return new InputStreamReader(FileTool.class.getResourceAsStream(s));

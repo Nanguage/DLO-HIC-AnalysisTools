@@ -15,7 +15,6 @@ public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
     //    private final String OptFileType = "FileType";
     private final String OptGenomeFile = "GenomeFile";//基因组文件
-    //    private final String OptPhred = "Phred";//fastq格式
     private final String OptPrefix = "Prefix";//输出前缀
     private final String OptOutPath = "OutPath";//输出路径
     private final String OptChromosome = "Chromosome";//染色体名
@@ -66,7 +65,7 @@ public class Main {
 
     //===================================================================
     private String[] RequiredParameter = new String[]{OptFastqFile, OptGenomeFile, OptLinkerFile, OptChromosome, OptRestriction, OptLinkersType, OptAlignMinQuality};
-    private String[] OptionalParameter = new String[]{OptOutPath,  OptIndexFile, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptThreads};
+    private String[] OptionalParameter = new String[]{OptOutPath, OptIndexFile, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptThreads};
     private Hashtable<String, String> ArgumentList = new Hashtable<>();
     private Hashtable<String, Integer> ChrSize = new Hashtable<>();//染色体大小
     private int MinLinkerFilterQuality;
@@ -460,7 +459,7 @@ public class Main {
                         public void run() {
                             try {
                                 SeProcess ssp = new SeProcess(finalSplitFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + "." + finalI);//单端处理类
-                                ssp.Thread = Threads;//设置线程数
+                                ssp.Threads = Threads;//设置线程数
                                 ssp.AlignThreads = AlignThread;
                                 ssp.Run();
                                 SplitSamFile[finalI] = ssp.getSamFile();
@@ -595,7 +594,6 @@ public class Main {
             FileType = Opts.PairEnd;
         }
         GenomeFile = new CustomFile(ArgumentList.get(OptGenomeFile));
-//        String Phred = ArgumentList.get(OptPhred);
         Prefix = ArgumentList.get(OptPrefix);
         OutPath = new File(ArgumentList.get(OptOutPath));
         Chromosome.addAll(Arrays.asList(ArgumentList.get(OptChromosome).split("\\s+")));

@@ -1,9 +1,13 @@
 package bin;
 
+import kotlin.text.Charsets;
 import lib.tool.SequenceFiltering;
+import lib.unit.CustomFile;
 import lib.unit.Opts;
+import org.apache.commons.io.FileUtils;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Hashtable;
 
@@ -19,7 +23,7 @@ public class PreProcess {
 //    private final String OptThreads = "Threads";//线程数，默认1
     private File OutPath;//输出目录
     private String Prefix;
-    private File[] FastqFile;//Fastq文件
+    private CustomFile[] FastqFile;//Fastq文件
     private File LinkerFile;//linker文件
     private File AdapterFile;//Adapter文件
     private int Type = Opts.Single;
@@ -42,7 +46,7 @@ public class PreProcess {
     public PreProcess() {
     }
 
-    public PreProcess(File outpath, String outprefix, File[] fastqfile, File linkerfile, File adapterfile, int matchscore, int mismatchscore, int indelscore, int type, int threads) throws IOException {
+    public PreProcess(File outpath, String outprefix, CustomFile[] fastqfile, File linkerfile, File adapterfile, int matchscore, int mismatchscore, int indelscore, int type, int threads) throws IOException {
         OptionListInit();
         OutPath = outpath;
         Prefix = outprefix;
@@ -67,6 +71,12 @@ public class PreProcess {
     }
 
     public void Run() throws IOException, InterruptedException {
+        if (AdapterFile == null || !AdapterFile.isFile()) {
+            String AdapterSeq = FastqFile[0].AdapterDetect(new File(OutPath + "/" + Prefix), 70);
+            FileUtils.write(new File(OutPath + "/adapter.txt"), AdapterSeq, Charsets.UTF_8);
+            System.out.println(new Date() + "\tDetected adapter seq:\t" + AdapterSeq);
+            AdapterFile = new File(OutPath + "/adapter.txt");
+        }
         System.out.println(new Date() + "\tStart to linkerfilter");
         if (Type == Opts.Single) {
             SequenceFiltering lk;//声明一个linkerFiltering类
@@ -212,6 +222,7 @@ public class PreProcess {
     public Hashtable<String, String> getOptionList() {
         return OptionList;
     }
+
 
 //    public String[] getRequiredParameter() {
 //        return RequiredParameter;

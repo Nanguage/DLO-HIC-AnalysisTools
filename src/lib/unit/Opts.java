@@ -1,6 +1,6 @@
 package lib.unit;
 
-import java.util.ArrayList;
+import java.io.File;
 
 public class Opts {
     public static final int Single = 1;
@@ -19,7 +19,8 @@ public class Opts {
     public static final String MatrixDir = "MakeMatrix";
     public static final String EnzyFragDir = "EnzymeFragment";
     public static final String IndexDir = "Index";
-//    public static final int[] Step ;
+    public static final String[] Step = new String[]{"LinkerFilter", "DivideLinker", "SeProcess", "Bed2BedPe", "BedPe2Inter", "MakeMatrix", "TranslocationDetect"};
+    public static final File JarFile = new File(Opts.class.getProtectionDomain().getCodeSource().getLocation().getFile());
 
     public class Default {
         public static final int Resolution = 1000000;

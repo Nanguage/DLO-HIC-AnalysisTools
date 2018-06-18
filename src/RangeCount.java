@@ -1,8 +1,8 @@
 import java.io.IOException;
 
-import lib.File.FileTool;
 import lib.tool.Statistic;
 import lib.unit.CustomFile;
+import lib.unit.Opts;
 import org.apache.commons.cli.*;
 
 public class RangeCount {
@@ -12,7 +12,7 @@ public class RangeCount {
         Argument.addOption(Option.builder("r").required().argName("min:max").hasArg().desc("The range of you want to calculator (the value of minimum and maximum could't set)").build());
         Argument.addOption(Option.builder("f").required().argName("bedpe file").hasArg().desc("Bedpe file you want to calculator").build());
         if (args.length == 0) {
-            new HelpFormatter().printHelp("java -cp " + FileTool.GetJarFile().getName() + " " + RangeCount.class.getName() + " [option]", Argument);
+            new HelpFormatter().printHelp("java -cp " + Opts.JarFile.getAbsolutePath() + " " + RangeCount.class.getName() + " [option]", Argument);
             System.exit(0);
         }
         CommandLine ComLine = new DefaultParser().parse(Argument, args);

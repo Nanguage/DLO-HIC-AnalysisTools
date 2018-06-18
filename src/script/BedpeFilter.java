@@ -19,7 +19,7 @@ public class BedpeFilter {
         Argument.addOption("f", true, "filter list");
         Argument.addOption("o", true, "out file");
         if (args.length == 0) {
-            new HelpFormatter().printHelp("java -cp " + FileTool.GetJarFile() + " " + BedpeFilter.class.getName() + " [option]", Argument);
+            new HelpFormatter().printHelp("java -cp " + Opts.JarFile.getAbsolutePath() + " " + BedpeFilter.class.getName() + " [option]", Argument);
             System.exit(1);
         }
         CommandLine Comline = new DefaultParser().parse(Argument, args);

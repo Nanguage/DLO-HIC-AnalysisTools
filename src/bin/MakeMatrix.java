@@ -10,6 +10,7 @@ import lib.File.FileTool;
 import lib.tool.*;
 import lib.Command.*;
 import lib.unit.CustomFile;
+import lib.unit.Opts;
 
 public class MakeMatrix {
     private String OptOutPath = "OutPath";
@@ -71,7 +72,7 @@ public class MakeMatrix {
 
     public void Run() throws IOException {
         String ImageDir = "image";
-        String PlotScriptFile = FileTool.GetJarFile().getParent() + "/script/PlotHeatmap.py";
+        String PlotScriptFile = Opts.JarFile.getParent() + "/script/PlotHeatmap.py";
         if (!new File(OutPath + "/" + ImageDir).isDirectory()) {
             new File(OutPath + "/" + ImageDir).mkdir();
         }
