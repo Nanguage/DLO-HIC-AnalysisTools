@@ -19,8 +19,10 @@ public class Opts {
     public static final String MatrixDir = "MakeMatrix";
     public static final String EnzyFragDir = "EnzymeFragment";
     public static final String IndexDir = "Index";
+    public static final String TransDir = "TransDetect";
     public static final String[] Step = new String[]{"LinkerFilter", "DivideLinker", "SeProcess", "Bed2BedPe", "BedPe2Inter", "MakeMatrix", "TranslocationDetect"};
     public static final File JarFile = new File(Opts.class.getProtectionDomain().getCodeSource().getLocation().getFile());
+    public static final File PlotScriptFile = new File(Opts.JarFile.getParent() + "/script/PlotHeatmap.py");
 
     public class Default {
         public static final int Resolution = 1000000;

@@ -1,15 +1,16 @@
 package bin;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Hashtable;
 
-import lib.File.FileTool;
 import lib.tool.*;
 import lib.Command.*;
 import lib.unit.CustomFile;
+import lib.unit.Matrix;
 import lib.unit.Opts;
 
 public class MakeMatrix {
@@ -19,7 +20,7 @@ public class MakeMatrix {
     private String OptChromosome = "Chromosome";
     public String OptThread = "Threads";
     private String OptResolution = "Resolution";
-    private String OptChrSzieFile = "ChrSzieFile";
+    private String OptChrSzieFile = "ChrSizeFile";
     private String OptChromosomeSize = "ChrSize";
     //===============================================================
     private File OutPath;//输出路径
@@ -31,7 +32,7 @@ public class MakeMatrix {
     public int Thread;
     private String InterMatrixPrefix;
     private String NormalizeMatrixPrefix;
-    private File ChrSzieFile;
+    private File ChrSizeFile;
     private CustomFile[] ChrInterBedpeFile;
     //==============================================================
     private Hashtable<String, String> ParameterList = new Hashtable<>();
@@ -72,23 +73,23 @@ public class MakeMatrix {
 
     public void Run() throws IOException {
         String ImageDir = "image";
-        String PlotScriptFile = Opts.JarFile.getParent() + "/script/PlotHeatmap.py";
+//        String PlotScriptFile = Opts.JarFile.getParent() + "/script/PlotHeatmap.py";
         if (!new File(OutPath + "/" + ImageDir).isDirectory()) {
             new File(OutPath + "/" + ImageDir).mkdir();
         }
-        int[][] Matrix = CreatInterActionMatrix(BedpeFile, Chromosome, ChromosomeSize, Resolution, InterMatrixPrefix);
-        String PlotCom = "python " + PlotScriptFile + " -m A -i " + InterMatrixPrefix + ".2d.matrix -o " + OutPath + "/" + ImageDir + "/" + Prefix + ".png -r " + Resolution + " -c " + InterMatrixPrefix + ".matrix.BinSize" + " -q 98";
+        Integer[][] Matrix = CreateInterActionMatrix(BedpeFile, Chromosome, ChromosomeSize, Resolution, InterMatrixPrefix);
+        String PlotCom = "python " + Opts.PlotScriptFile + " -m A -i " + InterMatrixPrefix + ".2d.matrix -o " + OutPath + "/" + ImageDir + "/" + Prefix + ".png -r " + Resolution + " -c " + InterMatrixPrefix + ".matrix.BinSize" + " -q 98";
         new Execute(PlotCom, OutPath + "/" + ImageDir + "/" + Prefix + ".plot.out", OutPath + "/" + ImageDir + "/" + Prefix + ".plot.err");
-        double[][] NormalizeMatrix = MatrixNormalize(Matrix);
+        Double[][] NormalizeMatrix = MatrixNormalize(Matrix);
         Tools.PrintMatrix(NormalizeMatrix, NormalizeMatrixPrefix + ".2d.matrix", NormalizeMatrixPrefix + ".spare.matrix");
         ChrInterBedpeFile = SeparateInterBedpe(BedpeFile, Chromosome, OutPath + "/" + Prefix, "");
         for (int i = 0; i < Chromosome.length; i++) {
             String ChrInterMatrixPrefix = OutPath + "/" + Prefix + "." + Chromosome[i] + ".inter";
             String ChrNormalizeMatrixPrefix = OutPath + "/" + Prefix + "." + Chromosome[i] + ".normalize";
-            Matrix = CreatInterActionMatrix(ChrInterBedpeFile[i], new String[]{Chromosome[i]}, new int[]{ChromosomeSize[i]}, Resolution / 10, ChrInterMatrixPrefix);
+            Matrix = CreateInterActionMatrix(ChrInterBedpeFile[i], new String[]{Chromosome[i]}, new int[]{ChromosomeSize[i]}, Resolution / 10, ChrInterMatrixPrefix);
             NormalizeMatrix = MatrixNormalize(Matrix);
             Tools.PrintMatrix(NormalizeMatrix, ChrNormalizeMatrixPrefix + ".2d.matrix", ChrNormalizeMatrixPrefix + ".spare.matrix");
-            PlotCom = "python " + PlotScriptFile + " -t localGenome -m A -i " + ChrInterMatrixPrefix + ".2d.matrix -o " + OutPath + "/" + ImageDir + "/" + Prefix + "." + Chromosome[i] + ".png -r " + Resolution / 10 + " -p " + Chromosome[i] + ":0" + ":" + Chromosome[i] + ":0" + "  -q 95";
+            PlotCom = "python " + Opts.PlotScriptFile + " -t localGenome -m A -i " + ChrInterMatrixPrefix + ".2d.matrix -o " + OutPath + "/" + ImageDir + "/" + Prefix + "." + Chromosome[i] + ".png -r " + Resolution / 10 + " -p " + Chromosome[i] + ":0" + ":" + Chromosome[i] + ":0" + "  -q 95";
             new Execute(PlotCom);
         }
     }
@@ -162,7 +163,7 @@ public class MakeMatrix {
         OutPath = new File(ParameterList.get(OptOutPath));
         Prefix = ParameterList.get(OptPrefix);
         BedpeFile = new CustomFile(ParameterList.get(OptBedpeFile));
-        ChrSzieFile = new File(ParameterList.get(OptChrSzieFile));
+        ChrSizeFile = new File(ParameterList.get(OptChrSzieFile));
         Chromosome = ParameterList.get(OptChromosome).split("\\s+");
         ChromosomeSize = new int[ParameterList.get(OptChromosomeSize).split("\\s+").length];
         for (int i = 0; i < ParameterList.get(OptChromosomeSize).split("\\s+").length; i++) {
@@ -177,23 +178,24 @@ public class MakeMatrix {
                 System.exit(0);
             }
         }
-        if (ChrSzieFile.equals("") && (Chromosome.length == 0 || ChromosomeSize.length == 0)) {
-            System.err.println("Error ! No Chromosome or ChromosomeSize");
-            System.exit(0);
-        } else if (Chromosome.length == 0 || ChromosomeSize.length == 0) {
-            if (!ChrSzieFile.isFile()) {
-                System.err.println("Wrong ChrSzieFile " + ChrSzieFile + "is not a file");
-                System.exit(0);
+//        if (ChrSizeFile.equals("") && (Chromosome.length == 0 || ChromosomeSize.length == 0)) {
+//            System.err.println("Error ! No Chromosome or ChromosomeSize");
+//            System.exit(0);
+        if (Chromosome.length == 0 || ChromosomeSize.length == 0) {
+            if (ChrSizeFile.isFile()) {
+                ExtractChrSize();
+            } else {
+                System.err.println("Wrong ChrSizeFile " + ChrSizeFile + "is not a file");
+                System.exit(1);
             }
-            ExtractChrSize();
         }
         InterMatrixPrefix = OutPath + "/" + Prefix + ".inter";
         NormalizeMatrixPrefix = OutPath + "/" + Prefix + ".normalize";
     }
 
 
-    public void ExtractChrSize() throws IOException {
-        BufferedReader chrsize = new BufferedReader(new FileReader(ChrSzieFile));
+    private void ExtractChrSize() throws IOException {
+        BufferedReader chrsize = new BufferedReader(new FileReader(ChrSizeFile));
         ArrayList<String[]> list = new ArrayList<>();
         String line;
         String[] str;
@@ -211,14 +213,14 @@ public class MakeMatrix {
 
     public CustomFile[] getChrInterBedpeFile() throws IOException {
         if (ChrInterBedpeFile == null) {
-//            Routine P = new Routine();
             ChrInterBedpeFile = SeparateInterBedpe(BedpeFile, Chromosome, OutPath + "/" + Prefix, "");
         }
         return ChrInterBedpeFile;
     }
 
-    public CustomFile[] SeparateInterBedpe(File InterBedpeFile, String[] Chromosome, String Prefix, String Regex) throws IOException {
-        System.out.println(new Date() + "\tSeperate InterBedpe " + InterBedpeFile.getName());
+    public CustomFile[] SeparateInterBedpe(File InterBedpeFile, String[] Chromosome, String Prefix, String Regex) throws
+            IOException {
+        System.out.println(new Date() + "\tSeparate InterBedpe " + InterBedpeFile.getName());
         BufferedReader interfile = new BufferedReader(new FileReader(InterBedpeFile));
         CustomFile[] SameChrFile = new CustomFile[Chromosome.length];
         BufferedWriter[] chrwrite = new BufferedWriter[Chromosome.length];
@@ -274,12 +276,13 @@ public class MakeMatrix {
             chrwrite[i].close();
         }
         diffwrite.close();
-        System.out.println(new Date() + "\tEnd seperate InterBedpe " + InterBedpeFile.getName());
+        System.out.println(new Date() + "\tEnd separate InterBedpe " + InterBedpeFile.getName());
         return SameChrFile;
     }
 
-    public int[][] CreatInterActionMatrix(CustomFile bedpeFile, String[] chromosome, int[] chrSize, int resolution, String prefix) throws IOException {
-        System.out.println(new Date() + "\tBegin to creat interaction matrix " + bedpeFile);
+    private Integer[][] CreateInterActionMatrix(CustomFile bedpeFile, String[] chromosome, int[] chrSize,
+                                                int resolution, String prefix) throws IOException {
+        System.out.println(new Date() + "\tBegin to create interaction matrix " + bedpeFile);
         int SumBin = 0;
         int[] ChrBinSize = Statistic.CalculatorBinSize(chrSize, resolution);
         //计算bin的总数
@@ -290,7 +293,7 @@ public class MakeMatrix {
             System.err.println("Error ! too many bins, there are " + SumBin + " bins.");
             System.exit(0);
         }
-        int[][] InterMatrix = new int[SumBin][SumBin];
+        Integer[][] InterMatrix = new Integer[SumBin][SumBin];
         for (int i = 0; i < InterMatrix.length; i++) {
             Arrays.fill(InterMatrix[i], 0);//数组初始化为0
         }
@@ -402,9 +405,12 @@ public class MakeMatrix {
         return InterMatrix;
     }//OK
 
-    public double[][] MatrixNormalize(int[][] Matrix) {
+    private Double[][] MatrixNormalize(Integer[][] Matrix) {
         System.out.println(new Date() + "\tNormalize Matrix");
-        double[][] NormalizeMatrix = new double[Matrix.length][Matrix.length];//定义标准化矩阵
+        Double[][] NormalizeMatrix = new Double[Matrix.length][Matrix.length];//定义标准化矩阵
+        for (Double[] aNormalizeMatrix : NormalizeMatrix) {
+            Arrays.fill(aNormalizeMatrix, 0D);
+        }
         double[][] Distance = new double[3][Matrix.length];//定义距离数组
         for (int i = 0; i < Matrix.length; i++) {
             for (int j = i; j < Matrix.length; j++) {
@@ -418,7 +424,7 @@ public class MakeMatrix {
         for (int i = 0; i < Matrix.length; i++) {
             for (int j = 0; j < Matrix.length; j++) {
                 if (Distance[2][Math.abs(i - j)] == 0) {
-                    NormalizeMatrix[i][j] = 0;//如果某个距离平均交互数为0，则直接将标准化矩阵对应点设成0
+                    NormalizeMatrix[i][j] = 0D;//如果某个距离平均交互数为0，则直接将标准化矩阵对应点设成0
                 } else {
                     NormalizeMatrix[i][j] = Matrix[i][j] / Distance[2][Math.abs(i - j)];//用对应距离的交互值除以对应的平均交互值
                 }

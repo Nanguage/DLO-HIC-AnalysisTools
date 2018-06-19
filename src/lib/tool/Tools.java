@@ -4,18 +4,22 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * @author snowf
+ * @version 1.0
+ */
 
 public class Tools {
 
-    public static void PrintList(ArrayList<String> List, String OutFile) throws IOException {
+    public static void PrintList(ArrayList<?> List, String OutFile) throws IOException {
         BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
-        for (String s : List) {
+        for (Object s : List) {
             outfile.write(s + "\n");
         }
         outfile.close();
     }
 
-    public static void PrintMatrix(int[][] Matrix, String TwoDMatrixFile, String SpareMatrix) throws IOException {
+    public static void PrintMatrix(Number[][] Matrix, String TwoDMatrixFile, String SpareMatrix) throws IOException {
         BufferedWriter twodfile = new BufferedWriter(new FileWriter(TwoDMatrixFile));
         BufferedWriter sparefile = new BufferedWriter(new FileWriter(SpareMatrix));
         //打印二维矩阵
@@ -28,30 +32,8 @@ public class Tools {
         //打印稀疏矩阵
         for (int i = 0; i < Matrix.length; i++) {
             for (int j = 0; j < Matrix[i].length; j++) {
-                if (Matrix[i][j] != 0) {
-                    sparefile.write(String.valueOf(i + 1) + "\t" + String.valueOf(j + 1) + "\t" + Matrix[i][j] + "\n");
-                }
-            }
-        }
-        sparefile.close();
-        twodfile.close();
-    }
-
-    public static void PrintMatrix(double[][] Matrix, String TwoDMatrixFile, String SpareMatrix) throws IOException {
-        BufferedWriter twodfile = new BufferedWriter(new FileWriter(TwoDMatrixFile));
-        BufferedWriter sparefile = new BufferedWriter(new FileWriter(SpareMatrix));
-        //打印二维矩阵
-        for (int i = 0; i < Matrix.length; i++) {
-            for (int j = 0; j < Matrix[i].length; j++) {
-                twodfile.write(Matrix[i][j] + "\t");
-            }
-            twodfile.write("\n");
-        }
-        //打印稀疏矩阵
-        for (int i = 0; i < Matrix.length; i++) {
-            for (int j = 0; j < Matrix[i].length; j++) {
-                if (Matrix[i][j] != 0) {
-                    sparefile.write(String.valueOf(i + 1) + "\t" + String.valueOf(j + 1) + "\t" + Matrix[i][j] + "\n");
+                if (Matrix[i][j].doubleValue() != 0) {
+                    sparefile.write((i + 1) + "\t" + (j + 1) + "\t" + Matrix[i][j] + "\n");
                 }
             }
         }

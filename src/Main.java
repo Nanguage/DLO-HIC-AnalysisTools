@@ -10,6 +10,7 @@ import lib.File.*;
 import lib.tool.*;
 import lib.unit.CustomFile;
 import lib.unit.Opts;
+import org.apache.commons.math3.linear.MatrixUtils;
 
 public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
@@ -217,13 +218,13 @@ public class Main {
         createindex.join();
         //=======================================Se Process===单端处理==================================================
         SeTime = new Date();
-        System.out.println(new Date() + "\tStart SeProcess");
         Thread[] sepR1 = new Thread[UseLinker.size()];
         Thread[] sepR2 = new Thread[UseLinker.size()];
         for (int i = 0; i < UseLinker.size(); i++) {
             sepR1[i] = SeProcess(UseLinkerFasqFileR1[i], UseLinkerFasqFileR1[i].getPath().replaceAll(".*/", "").replace(".fastq", ""));
             sepR2[i] = SeProcess(UseLinkerFasqFileR2[i], UseLinkerFasqFileR2[i].getPath().replaceAll(".*/", "").replace(".fastq", ""));
             if (StepCheck("SeProcess")) {
+                System.out.println(new Date() + "\tStart SeProcess");
                 sepR1[i].start();
                 sepR2[i].start();
             }
@@ -336,10 +337,10 @@ public class Main {
             }
         }
         MakeMatrix matrix = new MakeMatrix(MakeMatrixDir, Prefix, InterBedpeFile.getPath(), Chromosome.toArray(new String[Chromosome.size()]), chrSize, Resolution);//生成交互矩阵类
-        CustomFile[] IntraActionFile = matrix.getChrInterBedpeFile();
         if (StepCheck("MakeMatrix")) {
             matrix.Run();//运行
         }
+        CustomFile[] IntraActionFile = matrix.getChrInterBedpeFile();
         //==============================================================================================================
         ST = new Thread(new Runnable() {
             @Override
@@ -383,6 +384,11 @@ public class Main {
 //        Stat.ReportHtml(ArgumentList.get(OptOutPath) + "/result.html");
     }
 
+    /**
+     * Create reference genome index
+     * @param fastfile genome file
+     * @return process thread
+     */
     private Thread CreateIndex(File fastfile) {
         File IndexDir = new File(OutPath + "/" + Opts.IndexDir);
         if (!IndexDir.isDirectory() && !IndexDir.mkdirs()) {
@@ -434,6 +440,12 @@ public class Main {
         });
     }
 
+    /**
+     * Single end process
+     * @param FastqFile
+     * @param Prefix
+     * @return
+     */
     private Thread SeProcess(CustomFile FastqFile, String Prefix) {
         Thread t1 = new Thread(new Runnable() {
             @Override

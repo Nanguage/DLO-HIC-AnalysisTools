@@ -3,10 +3,13 @@
 Usage: java -jar DLO-HIC-AnalysisTools.jar <ConfigFile>
 
 ==========================require==================================
-bwa         need add in "PATH"
-samtools    need add in "PATH"
-bedtools    need add in "PATH"
-python      2.XX recommend 2.7
+mafft               need add in "PATH"
+bwa                 need add in "PATH"
+python              2.XX recommend 2.7
+opencv(module)      install by "pip install opencv-python"
+scipy(module)       install by "pip install scipy"
+
+recommend install "AnaConda" and then you can install all of above tools by "conda install XXXX" (exclude python)
 
 =====================ConfigFile: Such as follow====================
 

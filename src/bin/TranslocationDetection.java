@@ -4,7 +4,7 @@ package bin;
 import kotlin.text.Charsets;
 import lib.Command.Execute;
 import lib.File.FileTool;
-import lib.Image.Heatmap;
+import lib.Image.HeatMap;
 import lib.tool.Tools;
 import lib.unit.*;
 import org.apache.commons.cli.*;
@@ -29,8 +29,8 @@ import java.util.List;
 public class TranslocationDetection {
     private ChrRegion Chr1;
     private ChrRegion Chr2;
-    private InterActMatrix InterMatrix;
-    private InterActMatrix FilteredMatrix;
+    private Matrix<Integer> InterMatrix;
+    private Matrix FilteredMatrix;
     private CustomFile BedpeFile;
     private int Resolution;
     private double Area;
@@ -68,25 +68,25 @@ public class TranslocationDetection {
             }
         }
         double pvalue = Comline.hasOption("v") ? Double.parseDouble(Comline.getOptionValue("v")) : 0.05;
-        String MatrixFile = Comline.getOptionValue("matrix");
+        File MatrixFile = new File(Comline.getOptionValue("matrix"));
         int Resolution = Integer.parseInt(Comline.getOptionValue("r"));
         CustomFile BedpeFile = new CustomFile(Comline.getOptionValue("f"));
         String Prefix = Comline.hasOption("p") ? Comline.getOptionValue("p") : chr1.Chr.Name + "-" + chr2.Chr.Name;
 
         ArrayList<InterAction> List = new ArrayList<>();
 
-        TranslocationDetection Tld = new TranslocationDetection(chr1, chr2, new InterActMatrix(FileTool.ReadMatrixFile(MatrixFile)), BedpeFile, Resolution, Prefix);
+        TranslocationDetection Tld = new TranslocationDetection(chr1, chr2, new Matrix<>(FileTool.ReadMatrixFile(MatrixFile)), BedpeFile, Resolution, Prefix);
         Tld.setP_Value(pvalue);
         Tld.Run(MatrixFile);
         /*nterActMatrix filteredmatrix = Tld.getFilteredMatrix();
         Tools.PrintMatrix(filteredmatrix.getMatrix(), Prefix + ".filter.2d.matrix", Prefix + ".filter.spare.matrix");
         //===============
-        Heatmap map = new Heatmap(Prefix + ".filter.2d.matrix");
+        HeatMap map = new HeatMap(Prefix + ".filter.2d.matrix");
 //        map.Draw();
         ImageIO.write(map.Draw().getImage(), "png", new File(Prefix + ".filter.png"));*/
     }
 
-    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, InterActMatrix matrix, CustomFile bedpefile, String prefix) {
+    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix matrix, CustomFile bedpefile, String prefix) {
         Chr1 = chr1;
         Chr2 = chr2;
         InterMatrix = matrix;
@@ -96,7 +96,7 @@ public class TranslocationDetection {
         Resolution = InterMatrix.Resolution;
     }
 
-    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, InterActMatrix matrix, CustomFile bedpefile, int Resolution, String prefix) {
+    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix matrix, CustomFile bedpefile, int Resolution, String prefix) {
         this(chr1, chr2, matrix, bedpefile, prefix);
         this.setResolution(Resolution);
     }
@@ -119,7 +119,7 @@ public class TranslocationDetection {
             ChrRegion chr2 = new ChrRegion(new Chromosome(str[3]), Integer.parseInt(str[4]) - ExtendLength, Integer.parseInt(str[5]) + ExtendLength);
             String prefix = chr1.Chr.Name + "-" + new DecimalFormat(".00").format(Tools.UnitTrans((chr1.Begin + chr1.Terminal) / 2, "B", "M")) + "M-" + chr2.Chr.Name + "-" + new DecimalFormat(".00").format(Tools.UnitTrans((chr2.Begin + chr2.Terminal) / 2, "B", "M")) + "M";
             new CreateMatrix(BedpeFile, null, Resolution, prefix, 4).Run(chr1, chr2);
-            BufferedImage heatmap = new Heatmap(prefix + ".2d.matrix").Draw().getImage();
+            BufferedImage heatmap = new HeatMap(new File(prefix + ".2d.matrix")).Draw().getImage();
             ImageIO.write(heatmap, "png", new File(prefix + ".png"));
             if ((Line = cluster_read.readLine()) == null) {
                 break;
@@ -133,7 +133,7 @@ public class TranslocationDetection {
      * @param MatrixFile
      * @throws IOException
      */
-    public void Run(String MatrixFile) throws IOException {
+    public void Run(File MatrixFile) throws IOException {
         String ComLine = "python " + Opts.JarFile.getParent() + "/script/LongCornerDetect.py -i " + MatrixFile + " -c " + Chr1.toString().replace("\t", ":") + " " + Chr2.toString().replace("\t", ":") + " -r " + Resolution + " -p " + OutPrefix;
         new Execute(ComLine);
         List<String> PointList = FileUtils.readLines(new File(OutPrefix + ".HisD.point"), Charsets.UTF_8);
@@ -164,7 +164,7 @@ public class TranslocationDetection {
         ArrayList<int[]> Index = ChangePointDetect(MatrixFile, OutPrefix);//Edge detect
         int[] RowIndex = Index.get(0);// get row edge
         int[] ColIndex = Index.get(1);// get col edge
-        Heatmap map = new Heatmap(InterMatrix.getMatrix());// Create heatmap figure
+        HeatMap map = new HeatMap(InterMatrix.getMatrix());// Create heatmap figure
         BufferedImage HeatMapImage = map.Draw().getImage();
         //draw change point line
         ImageIO.write(HeatMapImage, "png", new File(OutPrefix + ".cpt.png"));//Print heatmap figure
@@ -284,14 +284,14 @@ public class TranslocationDetection {
         return submatrix;
     }
 
-    private boolean[][] SearchArea(InterActMatrix Matrix, int Size, double min, double max) throws IOException {
+    private boolean[][] SearchArea(Matrix Matrix, int Size, double min, double max) throws IOException {
         boolean[][] VMatrix = new boolean[Matrix.getSize()[0]][Matrix.getSize()[1]];//position we want detect
         double[][] Line = new double[Matrix.getSize()[0]][Matrix.getSize()[1] - Size + 1];//value of each col
         double[] Window = new double[Matrix.getSize()[1] - Size + 1];//value of each windows
         for (int i = 0; i < Matrix.getSize()[0]; i++) {
             for (int j = 0; j <= Matrix.getSize()[1] - Size; j++) {
                 for (int k = 0; k < Size; k++) {
-                    Line[i][j] += Matrix.getMatrix()[i][j + k];
+                    Line[i][j] += (double) Matrix.getMatrix()[i][j + k];
                 }
             }
         }
@@ -355,11 +355,11 @@ public class TranslocationDetection {
 //        InterList = interList;
 //    }
 
-    public void setInterMatrix(InterActMatrix interMatrix) {
+    public void setInterMatrix(Matrix interMatrix) {
         InterMatrix = interMatrix;
     }
 
-    public InterActMatrix getFilteredMatrix() {
+    public Matrix getFilteredMatrix() {
         return FilteredMatrix;
     }
 

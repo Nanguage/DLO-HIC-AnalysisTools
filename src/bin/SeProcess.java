@@ -244,12 +244,54 @@ public class SeProcess {
 
     private void SamToBed() throws IOException {
         System.out.println(new Date() + "\tBegin\t" + FilterSamFile.getName() + " to " + BedFile.getName());
+        BufferedReader reader = new BufferedReader(new FileReader(FilterSamFile));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(BedFile));
+        String Line;
+        String[] Str;
+        String Orientation;
+        while ((Line = reader.readLine()) != null) {
+            if (Line.matches("^@.*")) {
+                continue;
+            }
+            Str = Line.split("\\s+");
+            Orientation = (Integer.parseInt(Str[1]) & 16) == 16 ? "-" : "+";
+            writer.write(Str[2] + "\t" + Str[3] + "\t" + (Integer.parseInt(Str[3]) + CalculateFragLength(Str[5]) - 1) + "\t" + Str[0] + "\t" + Str[4] + "\t" + Orientation + "\n");
+        }
+        writer.close();
+        reader.close();
+    }//OK
+
+    private int CalculateFragLength(String s) {
+        int Length = 0;
+        StringBuilder Str = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            switch (s.charAt(i)) {
+                case 'M':
+                    Length += Integer.parseInt(Str.toString());
+                    Str.setLength(0);
+                    break;
+                case 'D':
+                    Length += Integer.parseInt(Str.toString());
+                    Str.setLength(0);
+                    break;
+                case 'I':
+                    Str.setLength(0);
+                    break;
+                default:
+                    Str.append(s.charAt(i));
+            }
+        }
+        return Length;
+    }
+
+    /*private void SamToBed() throws IOException {
+        System.out.println(new Date() + "\tBegin\t" + FilterSamFile.getName() + " to " + BedFile.getName());
         String CommandStr = "samtools view -Sb -o " + BamFile + " " + FilterSamFile;
         new Execute(CommandStr, FilterSamFile + ".log");
         CommandStr = "bedtools bamtobed -i " + BamFile;
         new Execute(CommandStr, BedFile.getPath(), BedFile + ".log");
         System.out.println(new Date() + "\tEnd\t" + FilterSamFile + " to " + BedFile);
-    }//OK
+    }//OK*/
 
     public File getBedFile() {
         return BedFile;

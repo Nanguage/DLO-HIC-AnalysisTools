@@ -32,7 +32,7 @@ public class FileTool {
         out.close();
     }
 
-    public static double[][] ReadMatrixFile(String file) throws IOException {
+    public static Double[][] ReadMatrixFile(File file) throws IOException {
         BufferedReader in = new BufferedReader(new FileReader(file));
         String line;
         ArrayList<double[]> List = new ArrayList<>();
@@ -40,10 +40,12 @@ public class FileTool {
             List.add(StringArrays.toDouble(line.split("\\s+")));
         }
         in.close();
-        double[][] matrix = new double[List.size()][];
+        Double[][] matrix = new Double[List.size()][];
         for (int i = 0; i < List.size(); i++) {
-            matrix[i] = new double[List.get(i).length];
-            System.arraycopy(List.get(i), 0, matrix[i], 0, List.get(i).length);
+            matrix[i] = new Double[List.get(i).length];
+            for (int j = 0; j < List.get(i).length; j++) {
+                matrix[i][j] = List.get(i)[j];
+            }
         }
         return matrix;
     }

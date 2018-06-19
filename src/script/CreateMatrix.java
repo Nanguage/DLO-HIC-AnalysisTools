@@ -114,7 +114,7 @@ public class CreateMatrix {
             System.err.println("Error ! too many bins, there are " + SumBin + " bins.");
             System.exit(0);
         }
-        int[][] InterMatrix = new int[SumBin][SumBin];
+        Integer[][] InterMatrix = new Integer[SumBin][SumBin];
         for (int i = 0; i < InterMatrix.length; i++) {
             Arrays.fill(InterMatrix[i], 0);//数组初始化为0
         }
@@ -233,7 +233,7 @@ public class CreateMatrix {
             System.err.println("Error ! too many bins, there are " + Math.max(ChrBinSize[0], ChrBinSize[1]) + " bins.");
             System.exit(0);
         }
-        int[][] InterMatrix = new int[ChrBinSize[0]][ChrBinSize[1]];
+        Integer[][] InterMatrix = new Integer[ChrBinSize[0]][ChrBinSize[1]];
         for (int i = 0; i < InterMatrix.length; i++) {
             Arrays.fill(InterMatrix[i], 0);//数组初始化为0
         }
