@@ -9,6 +9,8 @@ public class Opts {
     public static final int Phred64 = 64;
     public static final int R1 = 1;
     public static final int R2 = 2;
+    public static final int ShortReads = 1;
+    public static final int LongReads = 2;
     public static final int ErrorFormat = -1;
     public static final int BedpePointFormat = 1;
     public static final int BedpeRegionFormat = 2;
@@ -23,15 +25,16 @@ public class Opts {
     public static final String[] Step = new String[]{"LinkerFilter", "DivideLinker", "SeProcess", "Bed2BedPe", "BedPe2Inter", "MakeMatrix", "TranslocationDetect"};
     public static final File JarFile = new File(Opts.class.getProtectionDomain().getCodeSource().getLocation().getFile());
     public static final File PlotScriptFile = new File(Opts.JarFile.getParent() + "/script/PlotHeatmap.py");
+    public static final CustomFile CommandOutFile = new CustomFile("./command.log");
 
     public class Default {
+        public static final String OutPath = "./";
+        public static final String Prefix = "out";
         public static final int Resolution = 1000000;
         public static final int Thread = 1;
         public static final int MatchScore = 1;
         public static final int MisMatchScore = -1;
         public static final int IndelScore = -1;
-        public static final String OutPath = "./";
-        public static final String Prefix = "out";
         public static final int MaxReadsLen = 20;
         public static final int MinReadsLen = 16;
     }

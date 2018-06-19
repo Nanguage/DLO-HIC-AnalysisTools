@@ -135,6 +135,7 @@ public class TranslocationDetection {
      */
     public void Run(File MatrixFile) throws IOException {
         String ComLine = "python " + Opts.JarFile.getParent() + "/script/LongCornerDetect.py -i " + MatrixFile + " -c " + Chr1.toString().replace("\t", ":") + " " + Chr2.toString().replace("\t", ":") + " -r " + Resolution + " -p " + OutPrefix;
+        Opts.CommandOutFile.Append(ComLine + "\n");
         new Execute(ComLine);
         List<String> PointList = FileUtils.readLines(new File(OutPrefix + ".HisD.point"), Charsets.UTF_8);
         for (String point : PointList) {
@@ -150,6 +151,7 @@ public class TranslocationDetection {
                     new CreateMatrix(BedpeFile, null, Resolution / 50, prefix, 4).Run(region1, region2);
                 }
                 ComLine = "python " + Opts.JarFile.getParent() + "/script/ShortCornerDetect.py -i " + prefix + ".2d.matrix -r " + (Resolution / 50) + " -c " + region1.Chr.Name + ":" + region1.Begin + " " + region2.Chr.Name + ":" + region2.Begin + " -q " + str[8] + " -p " + prefix;
+                Opts.CommandOutFile.Append(ComLine + "\n");
                 new Execute(ComLine);
             }
 

@@ -30,6 +30,7 @@ UseLinker = AA
 MatchScore = 1
 MisMatchScore = -1
 IndelScore = -1
+ReadsType = Short
 MaxMisMatchLength = 3
 AlignThread = 2
 Resolution = 1000000
@@ -49,6 +50,7 @@ LinkerFile          String      A file include linker sequence
 Index               String      Index prefix of reference genome
 AlignMinQuality     Int         Min quality allowed in alignment
 GenomeFile          String      Reference genome file
+//=================================================================================
 Prefix              String      prefix of output    (default    "out")
 OutPath             String      Path of output  (default    "./")
 AdapterFile         String      File include adapter sequence    (default    "")
@@ -56,6 +58,7 @@ UseLinker           String      linker's type used  (default    =LinkersType)
 MatchScore          Int         Match score in linker filter    (default    "1")
 MisMatchScore       Int         MisMatch Score in linker filter (default    "-1")
 IndelScore          Int         Indel Score in linker filter    (default    "-1")
+ReadsType           String      Reads type include ["Short","Long"] (default    "Short")
 MaxMisMatchLength   Int         Max misMatch length in linker filter    (default    "3")
 AlignThread         Int         Thread in alignment (default    "2")
 Resolution          Int         Bin size when creat interaction matrix  (default    "1000000" byte)
@@ -64,6 +67,8 @@ MinReadsLength      Int         Min reads length when extract interaction reads 
 MaxReadsLength      Int         Max reads length when extract interaction reads (default    "20")
 Thread              Int         Number of threads    (default    "4")
 Step                String      assign  where start and end (default    "-")
+
+//if we set ReadsType "Short", we will align with "bwa aln",and if set "Long",we will align with "bwa mem"
 
 //Step include "LinkerFilter" "DivideLinker" "SeProcess" "Bed2BedPe" "BedPeProcess" "BedPe2Inter" "MakeMatrix"
 //If we want to run from "Bed2BedPe" to "MakeMatrix", we can set "Bed2BedPe - MakeMatrix"

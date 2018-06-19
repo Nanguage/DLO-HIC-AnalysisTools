@@ -42,6 +42,12 @@ public class CustomFile extends File {
         System.out.println(new Date() + "\tEnd append " + file.getName() + " to " + getName());
     }
 
+    public void Append(String s) throws IOException {
+        BufferedWriter writer = new BufferedWriter(new FileWriter(getPath(), true));
+        writer.write(s);
+        writer.close();
+    }
+
     public int FastqPhred() throws IOException {
         BufferedReader infile = new BufferedReader(new FileReader(getPath()));
         int[] FormatEdge = new int[]{(int) '9', (int) 'K'};

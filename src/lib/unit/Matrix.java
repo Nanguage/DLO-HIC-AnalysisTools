@@ -13,7 +13,7 @@ public class Matrix<T extends Number> {
         Size[1] = Matrix[0].length;
         for (int i = 0; i < Size[0]; i++) {
             for (int j = 0; j < Size[1]; j++) {
-                Count += (Double) Matrix[i][j];
+                Count += Matrix[i][j].doubleValue();
             }
         }
         Area = Size[0] * Size[1];
@@ -38,5 +38,9 @@ public class Matrix<T extends Number> {
                 Matrix[i][j] = Value;
             }
         }
+    }
+
+    public void setResolution(int resolution) {
+        Resolution = resolution;
     }
 }

@@ -10,7 +10,6 @@ import lib.File.*;
 import lib.tool.*;
 import lib.unit.CustomFile;
 import lib.unit.Opts;
-import org.apache.commons.math3.linear.MatrixUtils;
 
 public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
@@ -29,6 +28,7 @@ public class Main {
     private final String OptIndelScore = "IndelScore";//linker过滤插入缺失分数
     private final String OptMaxMisMatchLength = "MaxMisMatchLength";//linker过滤最大错配数
     private final String OptIndexFile = "Index";//比对索引
+    private final String OptReadsType = "ReadsType";// Long or Short
     private final String OptAlignMisMatch = "AlignMisMatch";//bwa等比对最小错配数
     private final String OptAlignThread = "AlignThread";//bwa等比对线程数
     private final String OptAlignMinQuality = "AlignMinQuality";//bwa等比对最小质量
@@ -53,6 +53,7 @@ public class Main {
     private int MatchScore;
     private int MisMatchScore;
     private int IndelScore;
+    private int ReadsType;
     private int AlignMisMatch;
     private int AlignThread;
     private int AlignMinQuality;
@@ -66,7 +67,7 @@ public class Main {
 
     //===================================================================
     private String[] RequiredParameter = new String[]{OptFastqFile, OptGenomeFile, OptLinkerFile, OptChromosome, OptRestriction, OptLinkersType, OptAlignMinQuality};
-    private String[] OptionalParameter = new String[]{OptOutPath, OptIndexFile, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptThreads};
+    private String[] OptionalParameter = new String[]{OptOutPath, OptIndexFile, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptReadsType, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptThreads};
     private Hashtable<String, String> ArgumentList = new Hashtable<>();
     private Hashtable<String, Integer> ChrSize = new Hashtable<>();//染色体大小
     private int MinLinkerFilterQuality;
@@ -130,13 +131,13 @@ public class Main {
         Stat.RawDataFile = FastqFile;
         Stat.RawDataReadsNum = new Long[FastqFile.length];
         //==============================================================================================================
-
+        Opts.CommandOutFile.delete();
         CustomFile FinalBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".bedpe");
         CustomFile InterBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".inter.bedpe");
         Thread ST;
         //==========================================Create Index========================================================
         Thread createindex = new Thread();
-        if (IndexPrefix == null || IndexPrefix.equals("")) {
+        if (IndexPrefix == null || IndexPrefix.getName().equals("")) {
             createindex = CreateIndex(GenomeFile);
             createindex.start();
         }
@@ -242,8 +243,8 @@ public class Main {
         CustomFile[] R2SortBedFile = new CustomFile[UseLinker.size()];
         CustomFile[] SeBedpeFile = new CustomFile[UseLinker.size()];
         for (int i = 0; i < UseLinker.size(); i++) {
-            R1SortBedFile[i] = new CustomFile(new SeProcess(UseLinkerFasqFileR1[i], IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR1[i].getName().replace(".fastq", "")).getSortBedFile());
-            R2SortBedFile[i] = new CustomFile(new SeProcess(UseLinkerFasqFileR2[i], IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR2[i].getName().replace(".fastq", "")).getSortBedFile());
+            R1SortBedFile[i] = new CustomFile(new SeProcess(UseLinkerFasqFileR1[i], IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR1[i].getName().replace(".fastq", ""), ReadsType).getSortBedFile());
+            R2SortBedFile[i] = new CustomFile(new SeProcess(UseLinkerFasqFileR2[i], IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, UseLinkerFasqFileR2[i].getName().replace(".fastq", ""), ReadsType).getSortBedFile());
             SeBedpeFile[i] = new CustomFile(SeProcessDir + "/" + Prefix + "." + UseLinker.get(i) + ".bedpe");
             if (StepCheck("Bed2BedPe")) {
                 new MergeBedToBedpe(R1SortBedFile[i], R2SortBedFile[i], SeBedpeFile[i], 4, "");//合并左右端bed文件，输出bedpe文件
@@ -386,6 +387,7 @@ public class Main {
 
     /**
      * Create reference genome index
+     *
      * @param fastfile genome file
      * @return process thread
      */
@@ -399,8 +401,9 @@ public class Main {
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
-                String ComLine = "bwa index -p " + IndexPrefix + " " + fastfile;
                 try {
+                    String ComLine = "bwa index -p " + IndexPrefix + " " + fastfile;
+                    Opts.CommandOutFile.Append(ComLine + "\n");
                     new Execute(ComLine);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -442,6 +445,7 @@ public class Main {
 
     /**
      * Single end process
+     *
      * @param FastqFile
      * @param Prefix
      * @return
@@ -456,12 +460,13 @@ public class Main {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                File SamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getSamFile();
-                File BamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getBamFile();
-                CustomFile SortBedFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getSortBedFile();
+                File SamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSamFile();
+                File FilterSamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getFilterSamFile();
+//                File BamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getBamFile();
+                CustomFile SortBedFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSortBedFile();
                 Thread[] t2 = new Thread[SplitFile.size()];
                 File[] SplitSamFile = new File[SplitFile.size()];
-                File[] SplitBamFile = new File[SplitFile.size()];
+                File[] SplitFilterSamFile = new File[SplitFile.size()];
                 File[] SplitSortBedFile = new File[SplitFile.size()];
                 for (int i = 0; i < SplitFile.size(); i++) {
                     int finalI = i;
@@ -470,14 +475,14 @@ public class Main {
                         @Override
                         public void run() {
                             try {
-                                SeProcess ssp = new SeProcess(finalSplitFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + "." + finalI);//单端处理类
+                                SeProcess ssp = new SeProcess(finalSplitFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + "." + finalI, ReadsType);//单端处理类
                                 ssp.Threads = Threads;//设置线程数
                                 ssp.AlignThreads = AlignThread;
                                 ssp.Run();
                                 SplitSamFile[finalI] = ssp.getSamFile();
-                                SplitBamFile[finalI] = ssp.getBamFile();
+                                SplitFilterSamFile[finalI] = ssp.getFilterSamFile();
                                 SplitSortBedFile[finalI] = ssp.getSortBedFile();
-                            } catch (IOException e) {
+                            } catch (IOException | InterruptedException e) {
                                 e.printStackTrace();
                             }
                         }
@@ -499,6 +504,7 @@ public class Main {
                     public void run() {
                         try {
                             FileTool.MergeSamFile(SplitSamFile, SamFile);
+                            FileTool.MergeSamFile(SplitFilterSamFile, FilterSamFile);
 //                            FileTool.Merge(SplitBamFile, BamFile);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -506,9 +512,12 @@ public class Main {
                         for (File s : SplitSamFile) {
                             s.delete();
                         }
-                        for (File s : SplitBamFile) {
+                        for (File s : SplitFilterSamFile) {
                             s.delete();
                         }
+//                        for (File s : SplitBamFile) {
+//                            s.delete();
+//                        }
                     }
                 }).start();
                 Thread t3 = new Thread(new Runnable() {
@@ -583,6 +592,7 @@ public class Main {
         ArgumentList.put(OptMatchScore, "1");
         ArgumentList.put(OptMisMatchScore, "-2");
         ArgumentList.put(OptIndelScore, "-2");
+        ArgumentList.put(OptReadsType, String.valueOf(Opts.ShortReads));
         ArgumentList.put(OptAlignMisMatch, "0");
         ArgumentList.put(OptAlignThread, "8");
         ArgumentList.put(OptResolution, String.valueOf(Opts.Default.Resolution));
@@ -619,6 +629,7 @@ public class Main {
         IndelScore = Integer.parseInt(ArgumentList.get(OptIndelScore));
         int MaxMisMatchLength = Integer.parseInt(ArgumentList.get(OptMaxMisMatchLength));
         IndexPrefix = new File(ArgumentList.get(OptIndexFile));
+        ReadsType = Integer.parseInt(ArgumentList.get(OptReadsType));
         AlignMisMatch = Integer.parseInt(ArgumentList.get(OptAlignMisMatch));
         AlignThread = Integer.parseInt(ArgumentList.get(OptAlignThread));
         AlignMinQuality = Integer.parseInt(ArgumentList.get(OptAlignMinQuality));
