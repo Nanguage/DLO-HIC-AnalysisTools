@@ -8,9 +8,7 @@ import java.util.Date;
 import java.util.Hashtable;
 
 import lib.tool.*;
-import lib.Command.*;
 import lib.unit.CustomFile;
-import lib.unit.Matrix;
 import lib.unit.Opts;
 
 public class MakeMatrix {
@@ -71,7 +69,7 @@ public class MakeMatrix {
         Init();
     }
 
-    public void Run() throws IOException {
+    public void Run() throws IOException, InterruptedException {
         String ImageDir = "image";
 //        String PlotScriptFile = Opts.JarFile.getParent() + "/script/PlotHeatmap.py";
         if (!new File(OutPath + "/" + ImageDir).isDirectory()) {
@@ -79,7 +77,8 @@ public class MakeMatrix {
         }
         Integer[][] Matrix = CreateInterActionMatrix(BedpeFile, Chromosome, ChromosomeSize, Resolution, InterMatrixPrefix);
         String PlotCom = "python " + Opts.PlotScriptFile + " -m A -i " + InterMatrixPrefix + ".2d.matrix -o " + OutPath + "/" + ImageDir + "/" + Prefix + ".png -r " + Resolution + " -c " + InterMatrixPrefix + ".matrix.BinSize" + " -q 98";
-        new Execute(PlotCom, OutPath + "/" + ImageDir + "/" + Prefix + ".plot.out", OutPath + "/" + ImageDir + "/" + Prefix + ".plot.err");
+        Opts.CommandOutFile.Append(PlotCom + "\n");
+        Tools.ExecuteCommandStr(PlotCom, OutPath + "/" + ImageDir + "/" + Prefix + ".plot.out", OutPath + "/" + ImageDir + "/" + Prefix + ".plot.err");
         Double[][] NormalizeMatrix = MatrixNormalize(Matrix);
         Tools.PrintMatrix(NormalizeMatrix, NormalizeMatrixPrefix + ".2d.matrix", NormalizeMatrixPrefix + ".spare.matrix");
         ChrInterBedpeFile = SeparateInterBedpe(BedpeFile, Chromosome, OutPath + "/" + Prefix, "");
@@ -90,11 +89,12 @@ public class MakeMatrix {
             NormalizeMatrix = MatrixNormalize(Matrix);
             Tools.PrintMatrix(NormalizeMatrix, ChrNormalizeMatrixPrefix + ".2d.matrix", ChrNormalizeMatrixPrefix + ".spare.matrix");
             PlotCom = "python " + Opts.PlotScriptFile + " -t localGenome -m A -i " + ChrInterMatrixPrefix + ".2d.matrix -o " + OutPath + "/" + ImageDir + "/" + Prefix + "." + Chromosome[i] + ".png -r " + Resolution / 10 + " -p " + Chromosome[i] + ":0" + ":" + Chromosome[i] + ":0" + "  -q 95";
-            new Execute(PlotCom);
+            Opts.CommandOutFile.Append(PlotCom + "\n");
+            Tools.ExecuteCommandStr(PlotCom);
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         if (args.length < 1) {
             System.out.println("Usage: java -cp DLO-HIC-AnalysisTools.jar bin.MakeMatrix <Config.txt>");
             System.exit(0);
@@ -280,8 +280,7 @@ public class MakeMatrix {
         return SameChrFile;
     }
 
-    private Integer[][] CreateInterActionMatrix(CustomFile bedpeFile, String[] chromosome, int[] chrSize,
-                                                int resolution, String prefix) throws IOException {
+    private Integer[][] CreateInterActionMatrix(CustomFile bedpeFile, String[] chromosome, int[] chrSize, int resolution, String prefix) throws IOException {
         System.out.println(new Date() + "\tBegin to create interaction matrix " + bedpeFile);
         int SumBin = 0;
         int[] ChrBinSize = Statistic.CalculatorBinSize(chrSize, resolution);
@@ -368,9 +367,10 @@ public class MakeMatrix {
                                     }
                                 }
                             }
+                        } else if (bedpeFile.BedpeDetect() == 0) {
+                            System.err.println("Empty file!\t" + bedpeFile.getName());
                         } else {
-                            System.err.println("Error format!");
-                            System.exit(1);
+                            System.err.println("Error format!\t" + bedpeFile.getName());
                         }
                     } catch (IOException e) {
                         e.printStackTrace();

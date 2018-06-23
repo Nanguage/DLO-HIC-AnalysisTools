@@ -20,7 +20,7 @@ public class CreateMatrix {
     private String Prefix;
     private int Thread;
 
-    public CreateMatrix(CustomFile BedpeFile, Chromosome[] Chr, int Resolution, String Prefix, int Thread) throws IOException {
+    public CreateMatrix(CustomFile BedpeFile, Chromosome[] Chr, int Resolution, String Prefix, int Thread){
         this.BedpeFile = BedpeFile;
         Chromosome = Chr;
 //        this.Chromosome = Chromosome;

@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.util.Date;
 
 import lib.tool.Statistic;
 import lib.unit.CustomFile;
@@ -17,7 +18,7 @@ public class CalculatorLineNumber {
                     try {
                         long linenumber = new CustomFile(args[finalI]).CalculatorLineNumber();
                         synchronized (Thread.class) {
-                            System.out.println(args[finalI] + " line number is:\t" + linenumber);
+                            System.out.println(new Date() + "\t" + args[finalI] + " line number is:\t" + linenumber);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();

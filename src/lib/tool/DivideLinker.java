@@ -196,41 +196,63 @@ public class DivideLinker {
 
     private String ParseFirst(String[] S) throws NumberFormatException, IndexOutOfBoundsException {
         StringBuilder FastqString = new StringBuilder();
-        FastqString.append(S[6] + "\n");
-        if (AppendBase(S[0], MatchSeq[0], First)) {
-            FastqString.append(S[0] + AppendSeq[0] + "\n");
-            FastqString.append(S[8] + "\n");
-            FastqString.append(S[9].substring(Integer.parseInt(S[1]) - S[0].length(), Integer.parseInt(S[1])) + AppendQuality[0] + "\n");
+        String ReadsTitle = S[6];
+        String ReadsSeq = S[0].replace("N", "");
+        String Orientation = S[8];
+        String Quality = S[9].substring(Integer.parseInt(S[1]) - ReadsSeq.length(), Integer.parseInt(S[1]));
+        //---------------------------------------------------
+        FastqString.append(ReadsTitle + "\n");//reads title
+        if (AppendBase(ReadsSeq, MatchSeq[0], First)) {
+            if (ReadsSeq.length() <= MaxReadsLength + 10) {
+                FastqString.append(ReadsSeq + AppendSeq[0] + "\n");
+                FastqString.append(Orientation + "\n");
+                FastqString.append(Quality + AppendQuality[0] + "\n");
+            } else {
+                FastqString.append(ReadsSeq.substring(ReadsSeq.length() - MaxReadsLength, ReadsSeq.length()) + AppendSeq[0] + "\n");
+                FastqString.append(Orientation + "\n");
+                FastqString.append(Quality.substring(Quality.length() - MaxReadsLength, Quality.length()) + AppendQuality[0] + "\n");
+            }
         } else {
-            FastqString.append(S[0] + "\n");
-            FastqString.append(S[8] + "\n");
-            FastqString.append(S[9].substring(Integer.parseInt(S[1]) - S[0].length(), Integer.parseInt(S[1])) + "\n");
+            if (ReadsSeq.length() <= MaxReadsLength + 10) {
+                FastqString.append(ReadsSeq + "\n");
+                FastqString.append(Orientation + "\n");
+                FastqString.append(Quality + "\n");
+            } else {
+                FastqString.append(ReadsSeq.substring(ReadsSeq.length() - MaxReadsLength, ReadsSeq.length()) + "\n");
+                FastqString.append(Orientation + "\n");
+                FastqString.append(Quality.substring(Quality.length() - MaxReadsLength, Quality.length()) + "\n");
+            }
         }
         return FastqString.toString();
     }
 
     private String ParseSecond(String[] S) throws NumberFormatException, IndexOutOfBoundsException {
         StringBuilder FastqString = new StringBuilder();
-        FastqString.append(S[6] + "\n");
-        if (AppendBase(S[3], MatchSeq[1], Second)) {
-            if (S[3].length() <= 30) {
-                FastqString.append(AppendSeq[1] + S[3] + "\n");
-                FastqString.append(S[8] + "\n");
-                FastqString.append(AppendQuality[1] + S[9].substring(Integer.parseInt(S[2]) + 1, Integer.parseInt(S[2]) + 1 + S[3].length()) + "\n");
+        String ReadsTitle = S[6];
+        String ReadsSeq = S[3].replace("N", "");
+        String Orientation = S[8];
+        String Quality = S[9].substring(Integer.parseInt(S[2]) + 1, Integer.parseInt(S[2]) + 1 + ReadsSeq.length());
+        //------------------------------------------------------
+        FastqString.append(ReadsTitle + "\n");
+        if (AppendBase(ReadsSeq, MatchSeq[1], Second)) {
+            if (ReadsSeq.length() <= MaxReadsLength + 10) {
+                FastqString.append(AppendSeq[1] + ReadsSeq + "\n");
+                FastqString.append(Orientation + "\n");
+                FastqString.append(AppendQuality[1] + Quality + "\n");
             } else {
-                FastqString.append(AppendSeq[1] + S[3].substring(0, MaxReadsLength) + "\n");
-                FastqString.append(S[8] + "\n");
-                FastqString.append(AppendQuality[1] + S[9].substring(Integer.parseInt(S[2]) + 1, Integer.parseInt(S[2]) + 1 + MaxReadsLength) + "\n");
+                FastqString.append(AppendSeq[1] + ReadsSeq.substring(0, MaxReadsLength) + "\n");
+                FastqString.append(Orientation + "\n");
+                FastqString.append(AppendQuality[1] + Quality.substring(0, MaxReadsLength) + "\n");
             }
         } else {
-            if (S[3].length() <= 30) {
-                FastqString.append(S[3] + "\n");
-                FastqString.append(S[8] + "\n");
-                FastqString.append(S[9].substring(Integer.parseInt(S[2]) + 1, Integer.parseInt(S[2]) + 1 + S[3].length()) + "\n");
+            if (ReadsSeq.length() <= MaxReadsLength + 10) {
+                FastqString.append(ReadsSeq + "\n");
+                FastqString.append(Orientation + "\n");
+                FastqString.append(Quality + "\n");
             } else {
-                FastqString.append(S[3].substring(0, MaxReadsLength) + "\n");
-                FastqString.append(S[8] + "\n");
-                FastqString.append(S[9].substring(Integer.parseInt(S[2]) + 1, Integer.parseInt(S[2]) + 1 + MaxReadsLength) + "\n");
+                FastqString.append(ReadsSeq.substring(0, MaxReadsLength) + "\n");
+                FastqString.append(Orientation + "\n");
+                FastqString.append(Quality.substring(0, MaxReadsLength) + "\n");
             }
         }
         return FastqString.toString();
@@ -252,173 +274,6 @@ public class DivideLinker {
         return R2FastqFile;
     }
 
-    /*public DivideLinker(String PastFastq, String[] LinkerFastq, int MinReadsLength, int MaxReadsLength, int MinLinkerFilterQuality, String Restriction, String AddQuality, String Type, int threads) throws IOException {
-                BufferedReader fastq_read = new BufferedReader(new FileReader(PastFastq));
-                BufferedWriter[] fastq_write = new BufferedWriter[LinkerFastq.length];
-                for (int i = 0; i < LinkerFastq.length; i++) {
-                    fastq_write[i] = new BufferedWriter(new FileWriter(LinkerFastq[i]));
-                }
-                String add = AddQuality;
-                String MatchRestriction;
-                String AddSeq;
-                String TempSeq = Restriction.replace("^", "");
-                int restrictionSite = Restriction.indexOf("^");
-                if (Type.equals("R1")) {
-                    if (restrictionSite < TempSeq.length() - restrictionSite) {
-                        restrictionSite = TempSeq.length() - restrictionSite;
-                    }
-                    MatchRestriction = TempSeq.substring(0, restrictionSite);
-                    try {
-                        AddSeq = TempSeq.substring(restrictionSite);
-                    } catch (IndexOutOfBoundsException e) {
-                        AddSeq = "";
-                    }
-                } else if (Type.equals("R2")) {
-                    if (restrictionSite > TempSeq.length() - restrictionSite) {
-                        restrictionSite = TempSeq.length() - restrictionSite;
-                    }
-                    MatchRestriction = TempSeq.substring(restrictionSite);
-                    try {
-                        AddSeq = TempSeq.substring(0, restrictionSite);
-                    } catch (IndexOutOfBoundsException e) {
-                        AddSeq = "";
-                    }
-                } else {
-                    MatchRestriction = "";
-                    AddSeq = "";
-                    System.err.println("Wrong Type " + Type);
-                    System.exit(0);
-                }
-                for (int i = 1; i < AddSeq.length(); i++) {
-                    AddQuality = AddQuality + add;
-                }
-                if (Type.equals("R1")) {
-                    Threads[] process = new Threads[threads];
-                    System.out.println(new Date() + "\tBegin to cluster linker\t" + Type);
-                    //多线程读取
-                    for (int i = 0; i < threads; i++) {
-                        String finalAddSeq = AddSeq;
-                        String finalAddQuality = AddQuality;
-                        process[i] = new Threads(new Runnable() {
-                            @Override
-                            public void run() {
-                                String line;
-                                String[] str;
-                                int len;
-                                try {
-        //                            System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " begin");
-                                    while ((line = fastq_read.readLine()) != null) {
-                                        str = line.split("\\t+");
-                                        str[0] = str[0].replace("N", "");
-                                        for (int j = 0; j < LinkerFastq.length; j++) {
-                                            if (str[0].length() >= MinReadsLength && Integer.parseInt(str[5]) >= MinLinkerFilterQuality && Integer.parseInt(str[4]) == j) {
-                                                len = Math.max(MaxReadsLength, str[0].length());
-                                                if (AppendBase(str[0], MatchRestriction, Type)) {
-                                                    synchronized (fastq_write[j]) {
-                                                        fastq_write[j].write(str[6] + "\n");
-                                                        fastq_write[j].write(str[0].substring(len - MaxReadsLength, str[0].length()) + finalAddSeq + "\n");
-                                                        fastq_write[j].write(str[8] + "\n");
-                                                        fastq_write[j].write(str[9].substring(len - MaxReadsLength, str[0].length()) + finalAddQuality + "\n");
-                                                    }
-                                                } else {
-                                                    synchronized (fastq_write[j]) {
-                                                        fastq_write[j].write(str[6] + "\n");
-                                                        fastq_write[j].write(str[0].substring(len - MaxReadsLength, str[0].length()) + "\n");
-                                                        fastq_write[j].write(str[8] + "\n");
-                                                        fastq_write[j].write(str[9].substring(len - MaxReadsLength, str[0].length()) + "\n");
-                                                    }
-                                                }
-                                                break;
-                                            }
-                                        }
-                                    }
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-        //                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " end");
-                            }
-                        });
-                        process[i].start();
-                    }
-                    for (int i = 0; i < threads; i++) {
-                        try {
-                            process[i].join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    fastq_read.close();
-                    for (int i = 0; i < LinkerFastq.length; i++) {
-                        fastq_write[i].close();
-                    }
-                    System.out.println(new Date() + "\tEnd to cluster linker\t" + Type);
-                } else if (Type.equals("R2")) {
-                    Threads[] process = new Threads[threads];
-                    System.out.println(new Date() + "\tBegin to cluster linker\t" + Type);
-                    //多线程读取
-                    for (int i = 0; i < threads; i++) {
-                        String finalAddSeq = AddSeq;
-                        String finalAddQuality = AddQuality;
-                        process[i] = new Threads(new Runnable() {
-                            @Override
-                            public void run() {
-                                String line;
-                                String[] str;
-                                int len;
-                                try {
-        //                            System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " begin");
-                                    while ((line = fastq_read.readLine()) != null) {
-                                        str = line.split("\\t+");
-                                        str[3] = str[3].replace("N", "");
-                                        for (int j = 0; j < LinkerFastq.length; j++) {
-                                            if (str[3].length() >= MinReadsLength && Integer.parseInt(str[5]) >= MinLinkerFilterQuality && Integer.parseInt(str[4]) == j) {
-                                                len = Math.min(str[3].length(), MaxReadsLength);
-                                                if (AppendBase(str[3], MatchRestriction, Type)) {
-                                                    synchronized (fastq_write[j]) {
-                                                        fastq_write[j].write(str[6] + "\n");
-                                                        fastq_write[j].write(finalAddSeq + str[3].substring(0, len) + "\n");
-                                                        fastq_write[j].write(str[8] + "\n");
-                                                        fastq_write[j].write(finalAddQuality + str[9].substring(Integer.parseInt(str[2]) + 1, Integer.parseInt(str[2]) + 1 + len) + "\n");
-                                                    }
-                                                } else {
-                                                    synchronized (fastq_write[j]) {
-                                                        fastq_write[j].write(str[6] + "\n");
-                                                        fastq_write[j].write(str[3].substring(0, len) + "\n");
-                                                        fastq_write[j].write(str[8] + "\n");
-                                                        fastq_write[j].write(str[9].substring(Integer.parseInt(str[2]) + 1, Integer.parseInt(str[2]) + 1 + len) + "\n");
-                                                    }
-                                                }
-                                                break;
-                                            }
-                                        }
-                                    }
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-        //                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " end");
-                            }
-                        });
-                        process[i].start();
-                    }
-                    for (int i = 0; i < threads; i++) {
-                        try {
-                            process[i].join();
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                    fastq_read.close();
-                    for (int i = 0; i < LinkerFastq.length; i++) {
-                        fastq_write[i].close();
-                    }
-                    System.out.println(new Date() + "\tEnd to cluster linker\t" + Type);
-                } else {
-                    System.err.println(new Date() + "\tError parameter in cluster linker\t" + Type);
-                    System.exit(0);
-                }
-
-            }//OK
-        */
     private Boolean AppendBase(String Sequence, String Restriction, int Type) {
         switch (Type) {
             case First:

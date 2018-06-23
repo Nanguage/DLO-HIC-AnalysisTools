@@ -2,6 +2,7 @@ package lib.tool;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 
 /**
@@ -10,6 +11,9 @@ import java.util.HashMap;
  */
 
 public class Tools {
+    private Tools() {
+
+    }
 
     public static void PrintList(ArrayList<?> List, String OutFile) throws IOException {
         BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
@@ -81,4 +85,136 @@ public class Tools {
         return Num * UnitMap.get(PrimaryUint) / UnitMap.get(TransedUint);
     }
 
+    public static int ExecuteCommandStr(String CommandStr, String... args) throws IOException, InterruptedException {
+        Process P;
+        int ExitValue;
+        System.out.println(new Date() + "\t" + CommandStr);
+        P = Runtime.getRuntime().exec(CommandStr);
+        Thread OutThread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    String line;
+                    BufferedReader bufferedReaderIn = new BufferedReader(new InputStreamReader(P.getInputStream()));
+                    if (args.length >= 1) {
+                        String OutFile = args[0];
+                        BufferedWriter bufferedwriter_out = new BufferedWriter(new FileWriter(OutFile));
+                        while ((line = bufferedReaderIn.readLine()) != null) {
+                            bufferedwriter_out.write(line + "\n");
+                        }
+                        bufferedReaderIn.close();
+                        bufferedwriter_out.close();
+                    } else {
+                        while (bufferedReaderIn.readLine() != null) ;
+                        bufferedReaderIn.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        Thread ErrThread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    String line;
+                    BufferedReader bufferedReaderIn = new BufferedReader(new InputStreamReader(P.getErrorStream()));
+                    if (args.length >= 2) {
+                        String LogFile = args[1];
+                        BufferedWriter bufferedwriter_err = new BufferedWriter(new FileWriter(LogFile));
+                        while ((line = bufferedReaderIn.readLine()) != null) {
+                            bufferedwriter_err.write(line + "\n");
+                        }
+                        bufferedReaderIn.close();
+                        bufferedwriter_err.close();
+                    } else {
+                        while (bufferedReaderIn.readLine() != null) ;
+                        bufferedReaderIn.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        OutThread.start();
+        ErrThread.start();
+        OutThread.join();
+        ErrThread.join();
+        ExitValue = P.waitFor();
+        return ExitValue;
+    }
+
+    public static int RemoveEmptyFile(File Dir) {
+        int Count = 0;
+        File[] FileList = Dir.listFiles();
+        if (FileList == null) {
+            return Count;
+        }
+        for (File file : FileList) {
+            if (file.isFile() && file.length() == 0) {
+                file.delete();
+                Count++;
+            } else {
+                Count += RemoveEmptyFile(file);
+            }
+        }
+        return Count;
+    }
+
+    public static void SamToBed(File SamFile, File BedFile) throws IOException {
+        System.out.println(new Date() + "\tBegin\t" + SamFile.getName() + " to " + BedFile.getName());
+        BufferedReader reader = new BufferedReader(new FileReader(SamFile));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(BedFile));
+        String Line;
+        String[] Str;
+        String Orientation;
+        while ((Line = reader.readLine()) != null) {
+            if (Line.matches("^@.*")) {
+                continue;
+            }
+            Str = Line.split("\\s+");
+            Orientation = (Integer.parseInt(Str[1]) & 16) == 16 ? "-" : "+";
+            writer.write(Str[2] + "\t" + Str[3] + "\t" + (Integer.parseInt(Str[3]) + CalculateFragLength(Str[5]) - 1) + "\t" + Str[0] + "\t" + Str[4] + "\t" + Orientation + "\n");
+        }
+        writer.close();
+        reader.close();
+    }
+
+    private static int CalculateFragLength(String s) {
+        int Length = 0;
+        StringBuilder Str = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            switch (s.charAt(i)) {
+                case 'M':
+                case 'D':
+                case 'N':
+                    Length += Integer.parseInt(Str.toString());
+                    Str.setLength(0);
+                    break;
+                case 'I':
+                case 'S':
+                case 'P':
+                case 'H':
+                    Str.setLength(0);
+                    break;
+                default:
+                    Str.append(s.charAt(i));
+            }
+        }
+        return Length;
+    }
+
+    public static String[] GetKmer(String str, int l) {
+        if (l > str.length()) {
+            return new String[0];
+        }
+        String[] Kmer = new String[l + 1];
+        int length = str.length() - l;
+        for (int i = 0; i < l + 1; i++) {
+            Kmer[i] = str.substring(i, i + length);
+        }
+        return Kmer;
+    }
 }

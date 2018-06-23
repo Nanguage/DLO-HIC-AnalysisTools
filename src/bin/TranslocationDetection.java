@@ -29,7 +29,7 @@ import java.util.List;
 public class TranslocationDetection {
     private ChrRegion Chr1;
     private ChrRegion Chr2;
-    private Matrix<Integer> InterMatrix;
+    private Matrix<?> InterMatrix;
     private Matrix FilteredMatrix;
     private CustomFile BedpeFile;
     private int Resolution;
@@ -44,7 +44,7 @@ public class TranslocationDetection {
 //        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 //    }
 
-    public static void main(String[] args) throws ParseException, IOException {
+    public static void main(String[] args) throws ParseException, IOException, InterruptedException {
         Options Arguement = new Options();
         Arguement.addOption(Option.builder("chr").hasArgs().argName("name:size").desc("Chromosome name and region (such as chr1:100:500)").build());
         Arguement.addOption(Option.builder("r").required().longOpt("res").hasArg().argName("int").desc("Resolution").build());
@@ -78,25 +78,19 @@ public class TranslocationDetection {
         TranslocationDetection Tld = new TranslocationDetection(chr1, chr2, new Matrix<>(FileTool.ReadMatrixFile(MatrixFile)), BedpeFile, Resolution, Prefix);
         Tld.setP_Value(pvalue);
         Tld.Run(MatrixFile);
-        /*nterActMatrix filteredmatrix = Tld.getFilteredMatrix();
-        Tools.PrintMatrix(filteredmatrix.getMatrix(), Prefix + ".filter.2d.matrix", Prefix + ".filter.spare.matrix");
-        //===============
-        HeatMap map = new HeatMap(Prefix + ".filter.2d.matrix");
-//        map.Draw();
-        ImageIO.write(map.Draw().getImage(), "png", new File(Prefix + ".filter.png"));*/
     }
 
-    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix matrix, CustomFile bedpefile, String prefix) {
+    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix<?> matrix, CustomFile bedpefile, String prefix) {
         Chr1 = chr1;
         Chr2 = chr2;
         InterMatrix = matrix;
         FilteredMatrix = matrix;
         BedpeFile = bedpefile;
         OutPrefix = prefix;
-        Resolution = InterMatrix.Resolution;
+        Resolution = InterMatrix.getResolution();
     }
 
-    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix matrix, CustomFile bedpefile, int Resolution, String prefix) {
+    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix<?> matrix, CustomFile bedpefile, int Resolution, String prefix) {
         this(chr1, chr2, matrix, bedpefile, prefix);
         this.setResolution(Resolution);
     }
@@ -133,10 +127,10 @@ public class TranslocationDetection {
      * @param MatrixFile
      * @throws IOException
      */
-    public void Run(File MatrixFile) throws IOException {
+    public void Run(File MatrixFile) throws IOException, InterruptedException {
         String ComLine = "python " + Opts.JarFile.getParent() + "/script/LongCornerDetect.py -i " + MatrixFile + " -c " + Chr1.toString().replace("\t", ":") + " " + Chr2.toString().replace("\t", ":") + " -r " + Resolution + " -p " + OutPrefix;
         Opts.CommandOutFile.Append(ComLine + "\n");
-        new Execute(ComLine);
+        Tools.ExecuteCommandStr(ComLine);
         List<String> PointList = FileUtils.readLines(new File(OutPrefix + ".HisD.point"), Charsets.UTF_8);
         for (String point : PointList) {
             String[] str = point.split("\\s+");
@@ -152,7 +146,7 @@ public class TranslocationDetection {
                 }
                 ComLine = "python " + Opts.JarFile.getParent() + "/script/ShortCornerDetect.py -i " + prefix + ".2d.matrix -r " + (Resolution / 50) + " -c " + region1.Chr.Name + ":" + region1.Begin + " " + region2.Chr.Name + ":" + region2.Begin + " -q " + str[8] + " -p " + prefix;
                 Opts.CommandOutFile.Append(ComLine + "\n");
-                new Execute(ComLine);
+                Tools.ExecuteCommandStr(ComLine);
             }
 
         }
@@ -241,7 +235,7 @@ public class TranslocationDetection {
             for (int i = 0; i < AbnormalMatrix.length; i++) {
                 for (int j = 0; j < AbnormalMatrix[i].length; j++) {
                     if (AbnormalMatrix[i][j]) {
-                        AbnormalCount += InterMatrix.getMatrix()[i][j];
+                        AbnormalCount += InterMatrix.get(i, j).intValue();
                     }
                 }
             }
@@ -249,11 +243,12 @@ public class TranslocationDetection {
         }
     }
 
-    private ArrayList<int[]> ChangePointDetect(String matrixfile, String outprefix) throws IOException {
+    private ArrayList<int[]> ChangePointDetect(String matrixfile, String outprefix) throws IOException, InterruptedException {
         String ComLine = "Rscript " + Opts.JarFile.getParent() + "/script/ChangePointDetect.R " + matrixfile + " " + outprefix;
-        new Execute(ComLine);
+        Opts.CommandOutFile.Append(ComLine + "\n");
+        Tools.ExecuteCommandStr(ComLine);
         ArrayList<int[]> ChangePointList = new ArrayList<>();
-        List<String> LineStr = FileUtils.readLines(new File(outprefix + ".cpt"), Charset.defaultCharset());
+        List<String> LineStr = FileUtils.readLines(new File(outprefix + ".cpt"), Charsets.UTF_8);
         for (String line : LineStr) {
             ChangePointList.add(StringArrays.toInteger(line.split("\\s+")));
         }
@@ -278,13 +273,6 @@ public class TranslocationDetection {
         return Count;
     }
 
-    private double[][] SubMatrix(double[][] Matrix, int[] IRegion, int[] JRegion) {
-        double[][] submatrix = new double[IRegion[1] - IRegion[0] + 1][JRegion[1] - JRegion[0] + 1];
-        for (int i = 0; i < submatrix.length; i++) {
-            System.arraycopy(Matrix[IRegion[0] + i], JRegion[0], submatrix[i], 0, submatrix[i].length);
-        }
-        return submatrix;
-    }
 
     private boolean[][] SearchArea(Matrix Matrix, int Size, double min, double max) throws IOException {
         boolean[][] VMatrix = new boolean[Matrix.getSize()[0]][Matrix.getSize()[1]];//position we want detect
@@ -293,7 +281,7 @@ public class TranslocationDetection {
         for (int i = 0; i < Matrix.getSize()[0]; i++) {
             for (int j = 0; j <= Matrix.getSize()[1] - Size; j++) {
                 for (int k = 0; k < Size; k++) {
-                    Line[i][j] += (double) Matrix.getMatrix()[i][j + k];
+                    Line[i][j] += (double) Matrix.get(i, j + k);
                 }
             }
         }

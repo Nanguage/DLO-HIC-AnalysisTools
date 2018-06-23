@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.Hashtable;
 
 import bin.*;
-import lib.Command.Execute;
 import lib.File.*;
 import lib.tool.*;
 import lib.unit.CustomFile;
@@ -100,12 +99,17 @@ public class Main {
             System.out.println("Usage:    java -jar DLO-HIC-AnalysisTools.jar <config.txt>");
             System.exit(0);
         }
+        System.out.println("===============Welcome to use " + Opts.JarFile.getName() + "===================");
+        System.out.println("Version:\t" + Opts.Version);
+        System.out.println("Author:\t" + Opts.Author);
+        System.out.println("===============================================================================");
         Main main = new Main(new File(args[0]));
         main.ShowParameter();
         main.Run();
     }
 
     public void Run() throws IOException, InterruptedException {
+        //============================================print system information==========================================
 
         //===========================================初始化输出文件======================================================
         File[] FinalLinkerBedpe = new File[UseLinker.size()];
@@ -288,7 +292,7 @@ public class Main {
             if (StepCheck("BedPeProcess")) {
                 LinkerProcess[i].start();
             }
-            BedpeProcess Temp = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker.get(i), Chromosome.toArray(new String[Chromosome.size()]), EnzyFilePrefix, SeBedpeFile[i]);
+            BedpeProcess Temp = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker.get(i), Chromosome.toArray(new String[0]), EnzyFilePrefix, SeBedpeFile[i]);
             FinalLinkerBedpe[i] = Temp.getFinalBedpeFile();
         }
         for (int i = 0; i < UseLinker.size(); i++) {
@@ -296,7 +300,7 @@ public class Main {
         }
         //==============================================================================================================
         for (int i = 0; i < UseLinker.size(); i++) {
-            BedpeProcess Temp = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker.get(i), Chromosome.toArray(new String[Chromosome.size()]), EnzyFilePrefix, SeBedpeFile[i]);
+            BedpeProcess Temp = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker.get(i), Chromosome.toArray(new String[0]), EnzyFilePrefix, SeBedpeFile[i]);
             Stat.LigationFile.add(new String[]{Temp.getSelfLigationFile().getPath(), Temp.getReLigationFile().getPath(), Temp.getValidBedpeFile().getPath()});
             Stat.NoRmdupName.add(Temp.getFinalBedpeFile().getPath());
             ST = new Thread(new Runnable() {
@@ -404,8 +408,8 @@ public class Main {
                 try {
                     String ComLine = "bwa index -p " + IndexPrefix + " " + fastfile;
                     Opts.CommandOutFile.Append(ComLine + "\n");
-                    new Execute(ComLine);
-                } catch (IOException e) {
+                    Tools.ExecuteCommandStr(ComLine);
+                } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
             }
@@ -461,7 +465,7 @@ public class Main {
                     e.printStackTrace();
                 }
                 File SamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSamFile();
-                File FilterSamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getFilterSamFile();
+                File FilterSamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getUniqSamFile();
 //                File BamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getBamFile();
                 CustomFile SortBedFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSortBedFile();
                 Thread[] t2 = new Thread[SplitFile.size()];
@@ -480,7 +484,7 @@ public class Main {
                                 ssp.AlignThreads = AlignThread;
                                 ssp.Run();
                                 SplitSamFile[finalI] = ssp.getSamFile();
-                                SplitFilterSamFile[finalI] = ssp.getFilterSamFile();
+                                SplitFilterSamFile[finalI] = ssp.getUniqSamFile();
                                 SplitSortBedFile[finalI] = ssp.getSortBedFile();
                             } catch (IOException | InterruptedException e) {
                                 e.printStackTrace();
@@ -588,11 +592,10 @@ public class Main {
         ArgumentList.put(OptMaxMisMatchLength, "3");
         ArgumentList.put(OptMinReadsLength, "16");
         ArgumentList.put(OptMaxReadsLength, "20");
-//        ArgumentList.put(OptFileType, "Single");
         ArgumentList.put(OptMatchScore, "1");
         ArgumentList.put(OptMisMatchScore, "-2");
         ArgumentList.put(OptIndelScore, "-2");
-        ArgumentList.put(OptReadsType, String.valueOf(Opts.ShortReads));
+        ArgumentList.put(OptReadsType, "Short");
         ArgumentList.put(OptAlignMisMatch, "0");
         ArgumentList.put(OptAlignThread, "8");
         ArgumentList.put(OptResolution, String.valueOf(Opts.Default.Resolution));
@@ -629,7 +632,7 @@ public class Main {
         IndelScore = Integer.parseInt(ArgumentList.get(OptIndelScore));
         int MaxMisMatchLength = Integer.parseInt(ArgumentList.get(OptMaxMisMatchLength));
         IndexPrefix = new File(ArgumentList.get(OptIndexFile));
-        ReadsType = Integer.parseInt(ArgumentList.get(OptReadsType));
+        ReadsType = ArgumentList.get(OptReadsType).equals("Short") ? Opts.ShortReads : ArgumentList.get(OptReadsType).equals("Long") ? Opts.LongReads : Opts.ErrorFormat;
         AlignMisMatch = Integer.parseInt(ArgumentList.get(OptAlignMisMatch));
         AlignThread = Integer.parseInt(ArgumentList.get(OptAlignThread));
         AlignMinQuality = Integer.parseInt(ArgumentList.get(OptAlignMinQuality));

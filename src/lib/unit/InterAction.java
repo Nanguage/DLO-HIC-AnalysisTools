@@ -34,6 +34,7 @@ public class InterAction {
         return Right;
     }
 
+    @Override
     public String toString() {
         return Left.toString() + "\t" + Right.toString() + "\t" + Count + "\t" + LeftFragment + "\t" + RightFragment;
     }

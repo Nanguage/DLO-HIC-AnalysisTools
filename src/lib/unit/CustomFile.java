@@ -1,6 +1,8 @@
 package lib.unit;
 
-import lib.Command.Execute;
+import bin.SeProcess;
+import lib.tool.Tools;
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -20,8 +22,8 @@ public class CustomFile extends File {
         if (!isFile()) {
             return 0;
         }
-        BufferedReader file = new BufferedReader(new FileReader(getPath()));
         long LineNumber = 0;
+        BufferedReader file = new BufferedReader(new FileReader(getPath()));
         while (file.readLine() != null) {
             LineNumber++;
         }
@@ -78,7 +80,7 @@ public class CustomFile extends File {
         if (Regex.isEmpty()) {
             Regex = "\\s+";
         }
-        final long LineBin = 2000000;//200万行一个bin
+        final long LineBin = 5000000;//500万行一个bin
         String line = null;
         long linecount = 0;
         int bin = 0;
@@ -336,7 +338,7 @@ public class CustomFile extends File {
         line = infile.readLine();
         if (line == null) {
             infile.close();
-            return Opts.ErrorFormat;
+            return Opts.EmptyFile;
         }
         str = line.split("\\s+");
         try {
@@ -360,7 +362,7 @@ public class CustomFile extends File {
         return Opts.BedpeRegionFormat;
     }
 
-    public String AdapterDetect(File Prefix, int SubIndex) throws IOException {
+    public String AdapterDetect(File Prefix, int SubIndex) throws IOException, InterruptedException {
         StringBuilder Adapter = new StringBuilder();
         ArrayList<char[]> MsaStat = new ArrayList<>();
         int SeqNum = 31;
@@ -381,7 +383,8 @@ public class CustomFile extends File {
         reader.close();
         writer.close();
         String ComLine = "mafft " + HeadFile.getPath();
-        new Execute(ComLine, MsaFile.getPath());
+        Opts.CommandOutFile.Append(ComLine + "\n");
+        Tools.ExecuteCommandStr(ComLine, MsaFile.getPath());
         HeadFile.delete();
         reader = new BufferedReader(new FileReader(MsaFile));
         reader.readLine();
@@ -429,5 +432,6 @@ public class CustomFile extends File {
         }
         return Adapter.toString();
     }
+
 
 }

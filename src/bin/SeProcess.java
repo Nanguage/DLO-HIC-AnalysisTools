@@ -4,10 +4,11 @@ import java.io.*;
 import java.util.Date;
 import java.util.Hashtable;
 
-import lib.Command.Execute;
+import lib.tool.Tools;
 import lib.unit.CustomFile;
 import lib.unit.Opts;
-import org.apache.commons.io.FileUtils;
+
+import javax.sound.midi.SoundbankResource;
 
 /**
  * @author snowf
@@ -26,9 +27,10 @@ public class SeProcess {
     public final String OptAlignThreads = "AlignThreads";//比对线程数
     //========================================================================
     private File OutPath;//输出路径
+    private File IterationDir;
     private String Prefix = Opts.Default.Prefix;
     private File FastqFile;//Fastq文件
-    private File IndexPrefix;//比对索引文件
+    private File IndexPrefix;//比对索引前缀
     private int ReadsType = Opts.ShortReads;//reads类型Long or Short
     public int Threads = Opts.Default.Thread;//线程数
     private int MinQuality;//最小比对质量
@@ -39,9 +41,10 @@ public class SeProcess {
     private String[] RequiredParameter = new String[]{OptFastqFile, OptIndexFile, OptMinQuality};
     private String[] OptionalParameter = new String[]{OptOutPath, OptPrefix, OptMisMatchNum, OptAlignThreads, OptThreads};
     private File SamFile;//Sam文件
-    private File SaiFile;
-    private File FilterSamFile;//过滤后的Sam文件
-    //    private File BamFile;//Bam文件
+    //    private File SaiFile;
+    private CustomFile UniqSamFile;//唯一比对的Sam文件
+    private File UnMapSamFile;//未比对上的Sam文件
+    private CustomFile MultiSamFile;//多比对文件
     private CustomFile BedFile;//Bed文件
     private CustomFile SortBedFile;//排序后的bed文件
 
@@ -75,15 +78,27 @@ public class SeProcess {
     public void Run() throws IOException, InterruptedException {
         //========================================================================================
         //比对
-        Align(ReadsType);
+        Align(FastqFile, SamFile, ReadsType);
         //Sam文件过滤
-        SamFilter(MinQuality);
-        //Sam文件转bam再转bed
-        SamToBed();
-        //对bed文件排序（由于在大量数据下bed文件会比较大，所以为了减少内存消耗，bed文件排序使用串行）
+        SamFilter(SamFile, UniqSamFile, UnMapSamFile, MultiSamFile, MinQuality);
+        BufferedReader sam_read = new BufferedReader(new FileReader(UnMapSamFile));
+        String Line;
+        String[] Str;
+        Hashtable<String, String> ReadsList = new Hashtable<>();
+        while ((Line = sam_read.readLine()) != null) {
+            Str = Line.split("\\s+");
+            ReadsList.put(Str[0], Str[9]);
+        }
+        sam_read.close();
+        File[] TempFile = IterationAlignment(ReadsList, Prefix, 1);
+        UniqSamFile.Append(TempFile[0]);
+        MultiSamFile.Append(TempFile[1]);
+        //Sam文件转bed
+        Tools.SamToBed(UniqSamFile, BedFile);
         BedFile.SortFile(new int[]{4}, "", "\\s+", SortBedFile);
         System.out.println(new Date() + "\tDelete " + BedFile.getName());
         BedFile.delete();
+        Tools.RemoveEmptyFile(OutPath);
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -135,18 +150,24 @@ public class SeProcess {
      */
     private void Init() {
         //=============================================================================================
-        if (!OutPath.isDirectory() && !OutPath.mkdirs()) {
-            System.err.println("Can't create " + OutPath);
-            System.exit(0);
+        IterationDir = new File(OutPath + "/Iteration");
+        synchronized (SeProcess.class) {
+            if (!OutPath.isDirectory() && !OutPath.mkdirs()) {
+                System.err.println("Can't create " + OutPath);
+                System.exit(0);
+            }
+            if (!IterationDir.isDirectory() && !IterationDir.mkdirs()) {
+                System.err.println("Can't create Directory " + IterationDir);
+                System.exit(1);
+            }
         }
         File FilePrefix = new File(OutPath + "/" + Prefix + "." + MisMatchNum);
         SamFile = new File(FilePrefix.getPath() + ".sam");
-        SaiFile = new File(FilePrefix.getPath() + ".sai");
-        FilterSamFile = new File(FilePrefix + ".uniq.sam");
-//        BamFile = new File(FilterSamFile.getPath().replace(".uniq.sam", ".bam"));
+        UniqSamFile = new CustomFile(FilePrefix + ".uniq.sam");
+        UnMapSamFile = new File(FilePrefix + ".unmap.sam");
+        MultiSamFile = new CustomFile(FilePrefix + ".multi.sam");
         BedFile = new CustomFile(FilePrefix + ".bed");
         SortBedFile = new CustomFile(FilePrefix + ".sort.bed");
-
     }
 
     private void ArgumentInit() {
@@ -182,24 +203,25 @@ public class SeProcess {
         }
     }
 
-    private void Align(int ReadsType) throws IOException {
+    private void Align(File FastqFile, File SamFile, int ReadsType) throws IOException, InterruptedException {
         //比对
         String CommandStr;
         System.out.println(new Date() + "\tBegin to align\t" + FastqFile.getName());
         if (ReadsType == Opts.ShortReads) {
+            File SaiFile = new File(FastqFile + ".sai");
             CommandStr = "bwa aln -t " + AlignThreads + " -n " + MisMatchNum + " -f " + SaiFile + " " + IndexPrefix + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
-            new Execute(CommandStr);//执行命令行
+            Tools.ExecuteCommandStr(CommandStr);//执行命令行
             System.out.println(new Date() + "\tsai to sam\t" + FastqFile.getName());
             CommandStr = "bwa samse -f " + SamFile + " " + IndexPrefix + " " + SaiFile + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
-            new Execute(CommandStr);//执行命令行
+            Tools.ExecuteCommandStr(CommandStr);//执行命令行
             System.out.println(new Date() + "\tDelete " + SaiFile.getName());
             SaiFile.delete();//删除sai文件
         } else if (ReadsType == Opts.LongReads) {
             CommandStr = "bwa mem -t " + AlignThreads + " " + IndexPrefix + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
-            new Execute(CommandStr, SamFile.getPath());//执行命令行
+            Tools.ExecuteCommandStr(CommandStr, SamFile.getPath());//执行命令行
         } else {
             System.err.println("Error reads type:" + ReadsType);
             System.exit(1);
@@ -207,10 +229,23 @@ public class SeProcess {
         System.out.println(new Date() + "\tEnd align\t" + FastqFile.getName());
     }
 
-    private void SamFilter(int MinQuality) throws IOException, InterruptedException {
+    /**
+     * @param SamFile
+     * @param UniqSamFile
+     * @param UnMapSamFile
+     * @param MultiSamFile
+     * @param MinQuality
+     * @return <>count of unique map, unmap and multi map</p>
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private long[] SamFilter(File SamFile, File UniqSamFile, File UnMapSamFile, File MultiSamFile, int MinQuality) throws IOException, InterruptedException {
         //sam文件过滤
+        long[] Count = new long[]{0, 0, 0};
         BufferedReader sam_read = new BufferedReader(new FileReader(SamFile));
-        BufferedWriter sam_write = new BufferedWriter(new FileWriter(FilterSamFile));
+        BufferedWriter sam_write = new BufferedWriter(new FileWriter(UniqSamFile));
+        BufferedWriter unmap_write = new BufferedWriter(new FileWriter(UnMapSamFile));
+        BufferedWriter multi_write = new BufferedWriter(new FileWriter(MultiSamFile));
         System.out.println(new Date() + "\tBegin to sam filter\t" + SamFile.getName());
         Thread[] process = new Thread[Threads];
         for (int i = 0; i < Threads; i++) {
@@ -221,16 +256,28 @@ public class SeProcess {
                     try {
                         String line;
                         String[] str;
-//                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " begin");
                         while ((line = sam_read.readLine()) != null) {
                             str = line.split("\\s+");
-                            if (str[0].matches("^@.+") || (Integer.parseInt(str[4]) >= MinQuality)) {
-                                synchronized (process) {
+                            if (str[0].matches("^@.+")) {
+                                continue;
+                            }
+                            if (Integer.parseInt(str[4]) >= MinQuality) {
+                                synchronized (sam_write) {
+                                    Count[0]++;
                                     sam_write.write(line + "\n");
+                                }
+                            } else if (str[2].equals("*")) {
+                                synchronized (unmap_write) {
+                                    Count[1]++;
+                                    unmap_write.write(line + "\n");
+                                }
+                            } else {
+                                synchronized (multi_write) {
+                                    Count[2]++;
+                                    multi_write.write(line + "\n");
                                 }
                             }
                         }
-//                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " end");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -241,74 +288,106 @@ public class SeProcess {
         }
         sam_read.close();
         sam_write.close();
+        unmap_write.close();
+        multi_write.close();
         System.out.println(new Date() + "\tEnd to sam filter\t" + SamFile);
+        return Count;
     }
 
-    private void SamToBed() throws IOException {
-        System.out.println(new Date() + "\tBegin\t" + FilterSamFile.getName() + " to " + BedFile.getName());
-        BufferedReader reader = new BufferedReader(new FileReader(FilterSamFile));
-        BufferedWriter writer = new BufferedWriter(new FileWriter(BedFile));
+    /**
+     * @param ReadsList
+     * @param Prefix
+     * @param Num
+     * @return <>samfile of unique map and multi map</p>
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public File[] IterationAlignment(Hashtable<String, String> ReadsList, String Prefix, int Num) throws IOException, InterruptedException {
+        System.out.println(new Date() + "\tIteration align start " + Num);
+        CustomFile UniqSamFile = new CustomFile(IterationDir + "/" + Prefix + ".iteration" + Num + ".uniq.sam");
+        CustomFile UnMapSamFile = new CustomFile(IterationDir + "/" + Prefix + ".iteration" + Num + ".unmap.sam");
+        CustomFile MultiSamFile = new CustomFile(IterationDir + "/" + Prefix + ".iteration" + Num + ".multi.sam");
+        File FastaFile = new File(IterationDir + "/" + Prefix + "." + Num + ".fasta");
+        BufferedWriter fasta_write = new BufferedWriter(new FileWriter(FastaFile));
         String Line;
         String[] Str;
-        String Orientation;
-        while ((Line = reader.readLine()) != null) {
-            if (Line.matches("^@.*")) {
-                continue;
+        //------------------------------------------fasta file write----------------------------------------------------
+        for (String title : ReadsList.keySet()) {
+            String Seq = ReadsList.get(title);
+            String[] KSeq = Tools.GetKmer(Seq, Num);
+            for (int i = 0; i < KSeq.length; i++) {
+                fasta_write.write(">" + title + "\n");
+                fasta_write.write(KSeq[i] + "\n");
             }
+        }
+        fasta_write.close();
+        //--------------------------------------------------------------------------------------------------------------
+        File TempSamFile = new File(IterationDir + "/" + Prefix + ".sam.temp" + Num);
+        Align(FastaFile, TempSamFile, ReadsType);// align
+        SamFilter(TempSamFile, UniqSamFile, UnMapSamFile, MultiSamFile, MinQuality);//filter
+        //delete useless file
+        FastaFile.delete();
+        UnMapSamFile.delete();
+        TempSamFile.delete();
+        //remove uniq and multi map reads name
+        BufferedReader sam_reader = new BufferedReader(new FileReader(UniqSamFile));
+        while ((Line = sam_reader.readLine()) != null) {
             Str = Line.split("\\s+");
-            Orientation = (Integer.parseInt(Str[1]) & 16) == 16 ? "-" : "+";
-            writer.write(Str[2] + "\t" + Str[3] + "\t" + (Integer.parseInt(Str[3]) + CalculateFragLength(Str[5]) - 1) + "\t" + Str[0] + "\t" + Str[4] + "\t" + Orientation + "\n");
+            ReadsList.remove(Str[0]);
         }
-        writer.close();
-        reader.close();
-    }//OK
-
-    private int CalculateFragLength(String s) {
-        int Length = 0;
-        StringBuilder Str = new StringBuilder();
-        for (int i = 0; i < s.length(); i++) {
-            switch (s.charAt(i)) {
-                case 'M':
-                    Length += Integer.parseInt(Str.toString());
-                    Str.setLength(0);
-                    break;
-                case 'D':
-                    Length += Integer.parseInt(Str.toString());
-                    Str.setLength(0);
-                    break;
-                case 'I':
-                    Str.setLength(0);
-                    break;
-                default:
-                    Str.append(s.charAt(i));
+        sam_reader.close();
+        sam_reader = new BufferedReader(new FileReader(MultiSamFile));
+        while ((Line = sam_reader.readLine()) != null) {
+            Str = Line.split("\\s+");
+            ReadsList.remove(Str[0]);
+        }
+        sam_reader.close();
+        //------------------------------------remove multi unique map-----------------------------------------------------
+        UniqSamFile.SortFile(new int[]{1}, "", "", new File(UniqSamFile + ".sort"));
+        sam_reader = new BufferedReader(new FileReader(UniqSamFile + ".sort"));
+        Hashtable<String, Integer> TempHash = new Hashtable<>();
+        while ((Line = sam_reader.readLine()) != null) {
+            Str = Line.split("\\s+");
+            TempHash.put(Str[0], TempHash.getOrDefault(Str[0], 0) + 1);
+        }
+        sam_reader = new BufferedReader(new FileReader(UniqSamFile + ".sort"));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(UniqSamFile));
+        while ((Line = sam_reader.readLine()) != null) {
+            Str = Line.split("\\s+");
+            if (TempHash.get(Str[0]) == 1) {
+                writer.write(Line + "\n");
             }
         }
-        return Length;
+        TempHash.clear();
+        writer.close();
+        sam_reader.close();
+        new File(UniqSamFile + ".sort").delete();
+        //--------------------------------------------------------------------------------------------------------------
+//        while ((Line = sam_reader.readLine()) != null) {
+//            Str = Line.split("\\s+");
+//            TempHash.put(Str[0], TempHash.getOrDefault(Str[0], 0) + 1);
+//        }
+        if (ReadsList.keySet().size() == 0) {
+            return new File[]{UniqSamFile, MultiSamFile};
+        }
+        File[] TempFile = IterationAlignment(ReadsList, Prefix, ++Num);
+        UniqSamFile.Append(TempFile[0]);
+        MultiSamFile.Append(TempFile[1]);
+        TempFile[0].delete();
+        TempFile[1].delete();
+        return new File[]{UniqSamFile, MultiSamFile};
     }
-
-    /*private void SamToBed() throws IOException {
-        System.out.println(new Date() + "\tBegin\t" + FilterSamFile.getName() + " to " + BedFile.getName());
-        String CommandStr = "samtools view -Sb -o " + BamFile + " " + FilterSamFile;
-        new Execute(CommandStr, FilterSamFile + ".log");
-        CommandStr = "bedtools bamtobed -i " + BamFile;
-        new Execute(CommandStr, BedFile.getPath(), BedFile + ".log");
-        System.out.println(new Date() + "\tEnd\t" + FilterSamFile + " to " + BedFile);
-    }//OK*/
 
     public File getBedFile() {
         return BedFile;
     }
 
-//    public File getBamFile() {
-////        return BamFile;
-////    }
-
     public File getSamFile() {
         return SamFile;
     }
 
-    public File getFilterSamFile() {
-        return FilterSamFile;
+    public File getUniqSamFile() {
+        return UniqSamFile;
     }
 
     public CustomFile getSortBedFile() {

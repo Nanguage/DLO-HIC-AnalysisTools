@@ -70,7 +70,7 @@ public class Report {
         System.out.println();
         System.out.println("\n-----------------------------------------\nLinkers type\tReads number\tPercent");
         for (int i = 0; i < LinkersType.size(); i++) {
-            System.out.println(LinkersType.get(i) + "\t" + new DecimalFormat("#,###").format(LinkersNum.get(i)) + "\t" + (double) LinkersNum.get(i) / Statistic.Average(RawDataReadsNum) / 2 * 100 + "%");
+            System.out.println(LinkersType.get(i) + "\t" + new DecimalFormat("#,###").format(LinkersNum.get(i)) + "\t" + (double) LinkersNum.get(i) / Statistic.Average(RawDataReadsNum) * 100 + "%");
         }
         System.out.println("\n-----------------------------------------\nFastq file\tReads number\tFastq file\tReads number");
         for (int i = 0; i < FastqR1File.size(); i++) {
