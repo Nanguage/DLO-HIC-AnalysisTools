@@ -6,9 +6,8 @@ import java.util.Hashtable;
 
 import lib.tool.Tools;
 import lib.unit.CustomFile;
+import lib.unit.Default;
 import lib.unit.Opts;
-
-import javax.sound.midi.SoundbankResource;
 
 /**
  * @author snowf
@@ -28,11 +27,11 @@ public class SeProcess {
     //========================================================================
     private File OutPath;//输出路径
     private File IterationDir;
-    private String Prefix = Opts.Default.Prefix;
+    private String Prefix = Default.Prefix;
     private File FastqFile;//Fastq文件
     private File IndexPrefix;//比对索引前缀
     private int ReadsType = Opts.ShortReads;//reads类型Long or Short
-    public int Threads = Opts.Default.Thread;//线程数
+    public int Threads = Default.Thread;//线程数
     private int MinQuality;//最小比对质量
     private int MisMatchNum;//错配数，bwa中使用
     public int AlignThreads = 2;//比对线程数
@@ -177,11 +176,11 @@ public class SeProcess {
         for (String opt : OptionalParameter) {
             ArgumentList.put(opt, "");
         }
-        ArgumentList.put(OptPrefix, Opts.Default.Prefix);
-        ArgumentList.put(OptOutPath, Opts.Default.OutPath);
+        ArgumentList.put(OptPrefix, Default.Prefix);
+        ArgumentList.put(OptOutPath, Default.OutPath);
         ArgumentList.put(OptMisMatchNum, "0");
         ArgumentList.put(OptAlignThreads, "2");
-        ArgumentList.put(OptThreads, String.valueOf(Opts.Default.Thread));
+        ArgumentList.put(OptThreads, String.valueOf(Default.Thread));
     }
 
     public boolean SetParameter(String Key, String Value) {
@@ -211,11 +210,11 @@ public class SeProcess {
             File SaiFile = new File(FastqFile + ".sai");
             CommandStr = "bwa aln -t " + AlignThreads + " -n " + MisMatchNum + " -f " + SaiFile + " " + IndexPrefix + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
-            Tools.ExecuteCommandStr(CommandStr);//执行命令行
+            Tools.ExecuteCommandStr(CommandStr, null, FastqFile + ".err");//执行命令行
             System.out.println(new Date() + "\tsai to sam\t" + FastqFile.getName());
             CommandStr = "bwa samse -f " + SamFile + " " + IndexPrefix + " " + SaiFile + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
-            Tools.ExecuteCommandStr(CommandStr);//执行命令行
+            Tools.ExecuteCommandStr(CommandStr, null, SamFile + ".err");//执行命令行
             System.out.println(new Date() + "\tDelete " + SaiFile.getName());
             SaiFile.delete();//删除sai文件
         } else if (ReadsType == Opts.LongReads) {
@@ -223,7 +222,7 @@ public class SeProcess {
             Opts.CommandOutFile.Append(CommandStr + "\n");
             Tools.ExecuteCommandStr(CommandStr, SamFile.getPath());//执行命令行
         } else {
-            System.err.println("Error reads type:" + ReadsType);
+            System.err.println("Error reads type:" + ReadsType + " reads type should set Short or Long");
             System.exit(1);
         }
         System.out.println(new Date() + "\tEnd align\t" + FastqFile.getName());

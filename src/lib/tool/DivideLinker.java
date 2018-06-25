@@ -1,5 +1,6 @@
 package lib.tool;
 
+import lib.unit.Default;
 import lib.unit.Opts;
 
 import java.io.*;
@@ -27,7 +28,7 @@ public class DivideLinker {
     public static final int All = 3;
 
     public DivideLinker(File past_file, String prefix, String[] linker_list, String restriction, int min_score, int type) {
-        this(past_file, prefix, linker_list, restriction, type, Opts.Default.MinReadsLen, Opts.Default.MaxReadsLen, min_score, Opts.Phred33);
+        this(past_file, prefix, linker_list, restriction, type, Default.MinReadsLen, Default.MaxReadsLen, min_score, Opts.Phred33);
     }
 
     public DivideLinker(File past_file, String prefix, String[] linker_list, String restriction, int type, int min_reads_length, int max_reads_length, int min_score, int phred) {

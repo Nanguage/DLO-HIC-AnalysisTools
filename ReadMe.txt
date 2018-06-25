@@ -6,10 +6,13 @@ Usage: java -jar DLO-HIC-AnalysisTools.jar <ConfigFile>
 mafft               need add in "PATH"
 bwa                 need add in "PATH"
 python              2.XX recommend 2.7
-opencv(module)      install by "pip install opencv-python"
-scipy(module)       install by "pip install scipy"
+python module:
+matplotlib          install by "pip install matplotlib"
+opencv              install by "pip install opencv-python"
+scipy               install by "pip install scipy"
 
 recommend install "AnaConda" and then you can install all of above tools by "conda install XXXX" (exclude python)
+//mafft and bwa can install by "conda install bwa/mafft" (if you install AnaConda before)
 
 =====================ConfigFile: Such as follow====================
 
@@ -19,11 +22,11 @@ Chromosome = chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr1
 LinkersType = AA
 Restriction = T^TAA
 LinkerFile = DLO-linker_TP.txt
-Index = Hg19
 AlignMinQuality = 20
 GenomeFile = Hg19.clean.fna
 //------------------------------optional parameters---------------------------
 Prefix = DLO-HiC
+Index = Hg19
 OutPath = /home/hjiang/HiC-test/
 AdapterFile = adapter.txt
 UseLinker = AA
@@ -47,11 +50,11 @@ Chromosome          String      Chromosome name must same as Chromosome name in 
 LinkersType         String      The linker's type in raw data
 Restriction         String      Sequence of restriction, enzyme cutting site expressed by "^"
 LinkerFile          String      A file include linker sequence
-Index               String      Index prefix of reference genome
 AlignMinQuality     Int         Min quality allowed in alignment
 GenomeFile          String      Reference genome file
 //=================================================================================
 Prefix              String      prefix of output    (default    "out")
+Index               String      Index prefix of reference genome
 OutPath             String      Path of output  (default    "./")
 AdapterFile         String      File include adapter sequence    (default    "")
 UseLinker           String      linker's type used  (default    =LinkersType)

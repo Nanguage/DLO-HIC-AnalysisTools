@@ -8,6 +8,7 @@ import bin.*;
 import lib.File.*;
 import lib.tool.*;
 import lib.unit.CustomFile;
+import lib.unit.Default;
 import lib.unit.Opts;
 
 public class Main {
@@ -226,8 +227,8 @@ public class Main {
         Thread[] sepR1 = new Thread[UseLinker.size()];
         Thread[] sepR2 = new Thread[UseLinker.size()];
         for (int i = 0; i < UseLinker.size(); i++) {
-            sepR1[i] = SeProcess(UseLinkerFasqFileR1[i], UseLinkerFasqFileR1[i].getPath().replaceAll(".*/", "").replace(".fastq", ""));
-            sepR2[i] = SeProcess(UseLinkerFasqFileR2[i], UseLinkerFasqFileR2[i].getPath().replaceAll(".*/", "").replace(".fastq", ""));
+            sepR1[i] = SeProcess(UseLinkerFasqFileR1[i], UseLinkerFasqFileR1[i].getName().replace(".fastq", ""));
+            sepR2[i] = SeProcess(UseLinkerFasqFileR2[i], UseLinkerFasqFileR2[i].getName().replace(".fastq", ""));
             if (StepCheck("SeProcess")) {
                 System.out.println(new Date() + "\tStart SeProcess");
                 sepR1[i].start();
@@ -588,7 +589,7 @@ public class Main {
         for (String opt : OptionalParameter) {
             ArgumentList.put(opt, "");
         }
-        ArgumentList.put(OptOutPath, Opts.Default.OutPath);
+        ArgumentList.put(OptOutPath, Default.OutPath);
         ArgumentList.put(OptMaxMisMatchLength, "3");
         ArgumentList.put(OptMinReadsLength, "16");
         ArgumentList.put(OptMaxReadsLength, "20");
@@ -598,7 +599,7 @@ public class Main {
         ArgumentList.put(OptReadsType, "Short");
         ArgumentList.put(OptAlignMisMatch, "0");
         ArgumentList.put(OptAlignThread, "8");
-        ArgumentList.put(OptResolution, String.valueOf(Opts.Default.Resolution));
+        ArgumentList.put(OptResolution, String.valueOf(Default.Resolution));
         ArgumentList.put(OptThreads, "4");
         ArgumentList.put(OptStep, "-");
     }
@@ -643,7 +644,7 @@ public class Main {
         Step.addAll(Arrays.asList(ArgumentList.get(OptStep).split("\\s+")));
         //================================================
         if (Prefix.equals("")) {
-            ArgumentList.put(OptPrefix, Opts.Default.Prefix);
+            ArgumentList.put(OptPrefix, Default.Prefix);
         }
         if (UseLinker.size() == 0) {
             UseLinker = LinkersType;
