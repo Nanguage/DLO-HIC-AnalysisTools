@@ -1,8 +1,6 @@
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Hashtable;
+import java.lang.reflect.Array;
+import java.util.*;
 
 import bin.*;
 import lib.File.*;
@@ -93,6 +91,11 @@ public class Main {
 
     public static void main(String args[]) throws IOException, InterruptedException {
         //==============================================测试区==========================================================
+//        ArrayList<File> src = new ArrayList<>();
+//        src.add(new File("AAA"));
+//        src.add(new File("BBB"));
+//        ArrayList<File> dest= new ArrayList<>(src);
+//        System.out.println(dest);
 
 
         //==============================================================================================================
@@ -227,8 +230,28 @@ public class Main {
         Thread[] sepR1 = new Thread[UseLinker.size()];
         Thread[] sepR2 = new Thread[UseLinker.size()];
         for (int i = 0; i < UseLinker.size(); i++) {
-            sepR1[i] = SeProcess(UseLinkerFasqFileR1[i], UseLinkerFasqFileR1[i].getName().replace(".fastq", ""));
-            sepR2[i] = SeProcess(UseLinkerFasqFileR2[i], UseLinkerFasqFileR2[i].getName().replace(".fastq", ""));
+            int finalI = i;
+            sepR1[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        SeProcess(UseLinkerFasqFileR1[finalI], UseLinkerFasqFileR1[finalI].getName().replace(".fastq", ""));
+                    } catch (IOException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            int finalI1 = i;
+            sepR2[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        SeProcess(UseLinkerFasqFileR2[finalI1], UseLinkerFasqFileR2[finalI1].getName().replace(".fastq", ""));
+                    } catch (IOException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
             if (StepCheck("SeProcess")) {
                 System.out.println(new Date() + "\tStart SeProcess");
                 sepR1[i].start();
@@ -455,99 +478,92 @@ public class Main {
      * @param Prefix
      * @return
      */
-    private Thread SeProcess(CustomFile FastqFile, String Prefix) {
-        Thread t1 = new Thread(new Runnable() {
+    private void SeProcess(CustomFile FastqFile, String Prefix) throws IOException, InterruptedException {
+        ArrayList<File> SplitFastqFile = FastqFile.SplitFile(FastqFile.getPath(), 200000000);//2亿行作为一个单位拆分
+        ArrayList<File> TempSplitFastq = new ArrayList<>(SplitFastqFile);
+//        Collections.copy(TempSplitFastq, SplitFastqFile);
+        File SamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSamFile();
+        File FilterSamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getUniqSamFile();
+        CustomFile SortBedFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSortBedFile();
+        File[] SplitSamFile = new File[SplitFastqFile.size()];
+        File[] SplitFilterSamFile = new File[SplitFastqFile.size()];
+        File[] SplitSortBedFile = new File[SplitFastqFile.size()];
+        Thread[] t2 = new Thread[Default.MaxThreads / 2];
+        int[] Index = new int[]{0};
+        for (int i = 0; i < t2.length; i++) {
+            t2[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (TempSplitFastq.size() > 0) {
+                        int finalI;
+                        File InFile;
+                        synchronized (t2) {
+                            try {
+                                InFile = TempSplitFastq.remove(0);
+                                finalI = Index[0];
+                                Index[0]++;
+                            } catch (IndexOutOfBoundsException e) {
+                                break;
+                            }
+                        }
+                        try {
+                            SeProcess ssp = new SeProcess(InFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + "." + finalI, ReadsType);//单端处理类
+                            ssp.Threads = Threads;//设置线程数
+                            ssp.AlignThreads = AlignThread;
+                            ssp.Run();
+                            SplitSamFile[finalI] = ssp.getSamFile();
+                            SplitFilterSamFile[finalI] = ssp.getUniqSamFile();
+                            SplitSortBedFile[finalI] = ssp.getSortBedFile();
+                        } catch (IOException | InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+            t2[i].start();
+        }
+        for (int i = 0; i < t2.length; i++) {
+            t2[i].join();
+        }
+        for (File s : SplitFastqFile) {
+            s.delete();
+        }
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                ArrayList<File> SplitFile = new ArrayList<>();
                 try {
-                    SplitFile = FastqFile.SplitFile(FastqFile.getPath(), 200000000);//2亿行作为一个单位拆分
+                    FileTool.MergeSamFile(SplitSamFile, SamFile);
+                    FileTool.MergeSamFile(SplitFilterSamFile, FilterSamFile);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                File SamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSamFile();
-                File FilterSamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getUniqSamFile();
-//                File BamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix).getBamFile();
-                CustomFile SortBedFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSortBedFile();
-                Thread[] t2 = new Thread[SplitFile.size()];
-                File[] SplitSamFile = new File[SplitFile.size()];
-                File[] SplitFilterSamFile = new File[SplitFile.size()];
-                File[] SplitSortBedFile = new File[SplitFile.size()];
-                for (int i = 0; i < SplitFile.size(); i++) {
-                    int finalI = i;
-                    File finalSplitFile = SplitFile.get(finalI);
-                    t2[i] = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                SeProcess ssp = new SeProcess(finalSplitFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + "." + finalI, ReadsType);//单端处理类
-                                ssp.Threads = Threads;//设置线程数
-                                ssp.AlignThreads = AlignThread;
-                                ssp.Run();
-                                SplitSamFile[finalI] = ssp.getSamFile();
-                                SplitFilterSamFile[finalI] = ssp.getUniqSamFile();
-                                SplitSortBedFile[finalI] = ssp.getSortBedFile();
-                            } catch (IOException | InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
-                    t2[i].start();
-                }
-                for (int i = 0; i < SplitFile.size(); i++) {
-                    try {
-                        t2[i].join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                for (File s : SplitFile) {
+                for (File s : SplitSamFile) {
                     s.delete();
                 }
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            FileTool.MergeSamFile(SplitSamFile, SamFile);
-                            FileTool.MergeSamFile(SplitFilterSamFile, FilterSamFile);
-//                            FileTool.Merge(SplitBamFile, BamFile);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        for (File s : SplitSamFile) {
-                            s.delete();
-                        }
-                        for (File s : SplitFilterSamFile) {
-                            s.delete();
-                        }
-//                        for (File s : SplitBamFile) {
-//                            s.delete();
-//                        }
-                    }
-                }).start();
-                Thread t3 = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            SortBedFile.MergeSortFile(SplitSortBedFile, new int[]{4}, "", "\\s+");
-                            for (File s : SplitSortBedFile) {
-                                s.delete();
-                            }
-//                            FileTool.Merge(SplitBedFile, BedFile);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                t3.start();
+                for (File s : SplitFilterSamFile) {
+                    s.delete();
+                }
+            }
+        }).start();
+        Thread t3 = new Thread(new Runnable() {
+            @Override
+            public void run() {
                 try {
-                    t3.join();
-                } catch (InterruptedException e) {
+                    SortBedFile.MergeSortFile(SplitSortBedFile, new int[]{4}, "", "\\s+");
+                    for (File s : SplitSortBedFile) {
+                        s.delete();
+                    }
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         });
-        return t1;
+        t3.start();
+        try {
+            t3.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private Thread BedpeProcess(String UseLinker, File SeBedpeFile) {

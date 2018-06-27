@@ -373,7 +373,7 @@ public class BedpeProcess {
         BufferedWriter selffile = new BufferedWriter(new FileWriter(SelfFile));
         BufferedWriter religfile = new BufferedWriter(new FileWriter(ReligFile));
         BufferedWriter valifile = new BufferedWriter(new FileWriter(ValidFile));
-        String[] OutLock = new String[]{"sel", "rel", "val"};
+//        String[] OutLock = new String[]{"sel", "rel", "val"};
         System.out.println(new Date() + "\tBegin to seperate ligation\t" + InFile.getName());
         for (int i = 0; i < Threads; i++) {
             process[i] = new Thread(new Runnable() {
@@ -382,24 +382,22 @@ public class BedpeProcess {
                     String line;
                     String[] str;
                     try {
-//                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " begin");
                         while ((line = infile.readLine()) != null) {
                             str = line.split("\\s+");
                             if (str[str.length - 2].equals(str[str.length - 1])) {
-                                synchronized (OutLock[0]) {
+                                synchronized (selffile) {
                                     selffile.write(line + "\n");
                                 }
                             } else if ((Integer.parseInt(str[str.length - 1]) - Integer.parseInt(str[str.length - 2]) == 1) && (Integer.parseInt(str[4]) < Integer.parseInt(str[2]))) {
-                                synchronized (OutLock[1]) {
+                                synchronized (religfile) {
                                     religfile.write(line + "\n");
                                 }
                             } else {
-                                synchronized (OutLock[2]) {
+                                synchronized (valifile) {
                                     valifile.write(line + "\n");
                                 }
                             }
                         }
-//                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " end");
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

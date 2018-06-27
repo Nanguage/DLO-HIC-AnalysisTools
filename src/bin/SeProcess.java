@@ -8,6 +8,7 @@ import lib.tool.Tools;
 import lib.unit.CustomFile;
 import lib.unit.Default;
 import lib.unit.Opts;
+import org.apache.commons.io.FileUtils;
 
 /**
  * @author snowf
@@ -322,8 +323,17 @@ public class SeProcess {
         fasta_write.close();
         //--------------------------------------------------------------------------------------------------------------
         File TempSamFile = new File(IterationDir + "/" + Prefix + ".sam.temp" + Num);
-        Align(FastaFile, TempSamFile, ReadsType);// align
-        SamFilter(TempSamFile, UniqSamFile, UnMapSamFile, MultiSamFile, MinQuality);//filter
+        try {
+            Align(FastaFile, TempSamFile, ReadsType);// align
+            SamFilter(TempSamFile, UniqSamFile, UnMapSamFile, MultiSamFile, MinQuality);//filter
+        } catch (IOException e) {
+            //不知道为什么有时在sam文件过滤时找不到sam文件，这是暂时的解决办法
+            System.err.println(e.getMessage());
+            FileUtils.touch(UniqSamFile);
+            FileUtils.touch(MultiSamFile);
+            ReadsList.clear();
+            return new File[]{UniqSamFile, MultiSamFile};
+        }
         //delete useless file
         FastaFile.delete();
         UnMapSamFile.delete();
@@ -362,10 +372,6 @@ public class SeProcess {
         sam_reader.close();
         new File(UniqSamFile + ".sort").delete();
         //--------------------------------------------------------------------------------------------------------------
-//        while ((Line = sam_reader.readLine()) != null) {
-//            Str = Line.split("\\s+");
-//            TempHash.put(Str[0], TempHash.getOrDefault(Str[0], 0) + 1);
-//        }
         if (ReadsList.keySet().size() == 0) {
             return new File[]{UniqSamFile, MultiSamFile};
         }

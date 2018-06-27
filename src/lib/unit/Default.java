@@ -10,5 +10,5 @@ public class Default {
     public static final int IndelScore = -1;
     public static final int MaxReadsLen = 20;
     public static final int MinReadsLen = 16;
-    public static final int MaxThreads = 24;
+    public static final int MaxThreads = 10;
 }
