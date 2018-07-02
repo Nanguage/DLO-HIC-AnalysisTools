@@ -1,8 +1,9 @@
 ==================DLO-HiC Analysis Tools====================
 
-Usage: java -jar DLO-HIC-AnalysisTools.jar <ConfigFile>
+Usage: java -jar DLO-HIC-AnalysisTools.jar -conf <ConfigFile> [options]
 
 ==========================require==================================
+jre                 >= 1.8
 mafft               need add in "PATH"
 bwa                 need add in "PATH"
 python              2.XX recommend 2.7
@@ -36,11 +37,12 @@ IndelScore = -1
 ReadsType = Short
 MaxMisMatchLength = 3
 AlignThread = 2
+Iteration = true
 Resolution = 1000000
 AlignMisMatch = 0
 MinReadsLength = 16
 MaxReadsLength = 20
-Thread = 4
+Threads = 4
 Step = -
 
 =================================================================================
@@ -63,12 +65,13 @@ MisMatchScore       Int         MisMatch Score in linker filter (default    "-1"
 IndelScore          Int         Indel Score in linker filter    (default    "-1")
 ReadsType           String      Reads type include ["Short","Long"] (default    "Short")
 MaxMisMatchLength   Int         Max misMatch length in linker filter    (default    "3")
-AlignThread         Int         Thread in alignment (default    "2")
+AlignThread         Int         Threads in alignment (default    "2")
+Iteration           boolen      "true" or "false" represent whether do iteration alignment
 Resolution          Int         Bin size when creat interaction matrix  (default    "1000000" byte)
 AlignMisMatch       Int         MisMatch number in alignment    (default    "0")
 MinReadsLength      Int         Min reads length when extract interaction reads (default    "16")
 MaxReadsLength      Int         Max reads length when extract interaction reads (default    "20")
-Thread              Int         Number of threads    (default    "4")
+Threads             Int         Number of threads    (default    "4")
 Step                String      assign  where start and end (default    "-")
 
 //if we set ReadsType "Short", we will align with "bwa aln",and if set "Long",we will align with "bwa mem"

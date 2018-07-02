@@ -313,54 +313,52 @@ public class BedpeProcess {
         }
         EnySiteRead.close();
         //---------------------多线程-------------------------
-        Thread[] Process = new Thread[Threads];
-        for (int i = 0; i < Process.length; i++) {
-            Process[i] = new Thread(new Runnable() {
-
-                @Override
-                public void run() {
-                    try {
-                        String line;
-                        String[] str;
-//                        System.out.println(new Date() + "\t" + BedpeFile + "\t" + Threads.currentThread().getName() + " start");
-                        while ((line = SeqRead.readLine()) != null) {
-                            str = line.split("\\s+");
-                            int[] position = {(Integer.parseInt(str[1]) + Integer.parseInt(str[2])) / 2, (Integer.parseInt(str[4]) + Integer.parseInt(str[5])) / 2};
-                            //PositionList.add(position);
-                            int[] index = new int[position.length];
-                            //-----------------------二分法查找-----------------
-                            for (int j = 0; j < position.length; j++) {
-                                int start = 0;
-                                int end = EnySiteList.size();
-                                int middle = (start + end) / 2;
-                                while (start < end) {
-                                    middle = (start + end) / 2;
-                                    if (position[j] < EnySiteList.get(middle)) {
-                                        end = middle;
-                                    } else if (position[j] >= EnySiteList.get(middle)) {
-                                        start = middle + 1;
-                                    }
-                                }
-                                if (position[j] < EnySiteList.get(middle)) {
-                                    index[j] = middle;
-                                } else {
-                                    index[j] = middle + 1;
-                                }
-                            }
-                            //-----------------------------------------------------------------
-                            synchronized (Process) {
-                                OutWrite.write(line + "\t" + String.valueOf(index[0]) + "\t" + String.valueOf(index[1]) + "\n");
-                            }
-                        }
-//                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " end");
-                    } catch (IOException e) {
-                        e.printStackTrace();
+//        Thread[] Process = new Thread[Threads];
+//        for (int i = 0; i < Process.length; i++) {
+//            Process[i] = new Thread(new Runnable() {
+//
+//                @Override
+//                public void run() {
+//                    try {
+//                        String line;
+//                        String[] str;
+        while ((line = SeqRead.readLine()) != null) {
+            str = line.split("\\s+");
+            int[] position = {(Integer.parseInt(str[1]) + Integer.parseInt(str[2])) / 2, (Integer.parseInt(str[4]) + Integer.parseInt(str[5])) / 2};
+            int[] index = new int[position.length];
+            //-----------------------二分法查找-----------------
+            for (int j = 0; j < position.length; j++) {
+                int start = 0;
+                int end = EnySiteList.size();
+                int middle = (start + end) / 2;
+                while (start < end) {
+                    middle = (start + end) / 2;
+                    if (position[j] < EnySiteList.get(middle)) {
+                        end = middle;
+                    } else if (position[j] >= EnySiteList.get(middle)) {
+                        start = middle + 1;
                     }
                 }
-            });
-            Process[i].start();
-            Process[i].join();
+                if (position[j] < EnySiteList.get(middle)) {
+                    index[j] = middle;
+                } else {
+                    index[j] = middle + 1;
+                }
+            }
+            //-----------------------------------------------------------------
+//                            synchronized (Process) {
+            OutWrite.write(line + "\t" + String.valueOf(index[0]) + "\t" + String.valueOf(index[1]) + "\n");
+//                            }
         }
+//                        System.out.println(new Date() + "\t" + Threads.currentThread().getName() + " end");
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            });
+//            Process[i].start();
+//            Process[i].join();
+//        }
         //----------------------------------------------------
         SeqRead.close();
         OutWrite.close();
@@ -368,50 +366,50 @@ public class BedpeProcess {
     }//OK
 
     private void SeparateLigationType(File InFile, File SelfFile, File ReligFile, File ValidFile) throws IOException {
-        Thread[] process = new Thread[Threads];
+//        Thread[] process = new Thread[Threads];
         BufferedReader infile = new BufferedReader(new FileReader(InFile));
         BufferedWriter selffile = new BufferedWriter(new FileWriter(SelfFile));
         BufferedWriter religfile = new BufferedWriter(new FileWriter(ReligFile));
         BufferedWriter valifile = new BufferedWriter(new FileWriter(ValidFile));
 //        String[] OutLock = new String[]{"sel", "rel", "val"};
         System.out.println(new Date() + "\tBegin to seperate ligation\t" + InFile.getName());
-        for (int i = 0; i < Threads; i++) {
-            process[i] = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    String line;
-                    String[] str;
-                    try {
-                        while ((line = infile.readLine()) != null) {
-                            str = line.split("\\s+");
-                            if (str[str.length - 2].equals(str[str.length - 1])) {
-                                synchronized (selffile) {
-                                    selffile.write(line + "\n");
-                                }
-                            } else if ((Integer.parseInt(str[str.length - 1]) - Integer.parseInt(str[str.length - 2]) == 1) && (Integer.parseInt(str[4]) < Integer.parseInt(str[2]))) {
-                                synchronized (religfile) {
-                                    religfile.write(line + "\n");
-                                }
-                            } else {
-                                synchronized (valifile) {
-                                    valifile.write(line + "\n");
-                                }
-                            }
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            process[i].start();
-        }
-        for (int i = 0; i < Threads; i++) {
-            try {
-                process[i].join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+//        for (int i = 0; i < Threads; i++) {
+//            process[i] = new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+        String line;
+        String[] str;
+//                    try {
+        while ((line = infile.readLine()) != null) {
+            str = line.split("\\s+");
+            if (str[str.length - 2].equals(str[str.length - 1])) {
+//                                synchronized (selffile) {
+                selffile.write(line + "\n");
+//                                }
+            } else if ((Integer.parseInt(str[str.length - 1]) - Integer.parseInt(str[str.length - 2]) == 1) && (Integer.parseInt(str[4]) < Integer.parseInt(str[2]))) {
+//                                synchronized (religfile) {
+                religfile.write(line + "\n");
+//                                }
+            } else {
+//                                synchronized (valifile) {
+                valifile.write(line + "\n");
+//                                }
             }
         }
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            });
+//            process[i].start();
+//        }
+//        for (int i = 0; i < Threads; i++) {
+//            try {
+//                process[i].join();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        }
         infile.close();
         selffile.close();
         religfile.close();

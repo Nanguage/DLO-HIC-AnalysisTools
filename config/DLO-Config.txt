@@ -22,5 +22,5 @@ Resolution = 1000000
 AlignMisMatch = 0
 MinReadsLength = 16
 MaxReadsLength = 20
-Thread = 4
+Threads = 4
 Step = -

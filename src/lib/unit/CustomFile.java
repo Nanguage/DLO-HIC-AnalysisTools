@@ -1,8 +1,6 @@
 package lib.unit;
 
-import bin.SeProcess;
 import lib.tool.Tools;
-import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
@@ -77,9 +75,7 @@ public class CustomFile extends File {
             System.out.print(" " + col);
         }
         System.out.println();
-        if (Regex.isEmpty()) {
-            Regex = "\\s+";
-        }
+        Regex = Regex.isEmpty() ? "\\s+" : Regex;
         final long LineBin = 5000000;//500万行一个bin
         String line = null;
         long linecount = 0;
@@ -89,10 +85,10 @@ public class CustomFile extends File {
         if (Model.matches(".*n.*")) {
             //数字排序
             while (true) {
-                ArrayList<String> List = new ArrayList<>();
+                ArrayList<char[]> List = new ArrayList<>();
                 ArrayList<IntegerArrays> SortList = new ArrayList<>();
                 while (linecount < LineBin && (line = infile.readLine()) != null) {
-                    List.add(line);
+                    List.add(line.toCharArray());
                     str = line.split(Regex);
                     IntegerArrays tempint = new IntegerArrays(Col.length + 1);
                     for (int i = 0; i < Col.length; i++) {
@@ -122,7 +118,7 @@ public class CustomFile extends File {
             infile.close();
             File[] tempfile = new File[bin];
             for (int i = 0; i < tempfile.length; i++) {
-                tempfile[i] = new File(OutFile + ".temp" + String.valueOf(i + 1));
+                tempfile[i] = new File(OutFile + ".temp" + (i + 1));
             }
             new CustomFile(OutFile.getPath()).MergeSortFile(tempfile, Col, Model, Regex);
             for (File aTempfile : tempfile) {
@@ -131,10 +127,10 @@ public class CustomFile extends File {
         } else {
             //字符串排序
             while (true) {
-                ArrayList<String> List = new ArrayList<>();
+                ArrayList<char[]> List = new ArrayList<>();
                 ArrayList<StringArrays> SortList = new ArrayList<>();
                 while (linecount < LineBin && (line = infile.readLine()) != null) {
-                    List.add(line);
+                    List.add(line.toCharArray());
                     str = line.split(Regex);
                     StringArrays tempstr = new StringArrays(Col.length + 1);
                     for (int i = 0; i < Col.length; i++) {
@@ -315,16 +311,14 @@ public class CustomFile extends File {
         BufferedWriter outfile = new BufferedWriter(new FileWriter(Outfile.get(Outfile.size() - 1)));
         while ((line = infile.readLine()) != null) {
             count++;
-            if (count <= LineNum) {
-                outfile.write(line + "\n");
-            } else {
+            if (count > LineNum) {
                 outfile.close();
                 filecount++;
                 Outfile.add(new File(Prefix + ".Split" + filecount));
                 outfile = new BufferedWriter(new FileWriter(Outfile.get(Outfile.size() - 1)));
-                outfile.write(line + "\n");
                 count = 1;
             }
+            outfile.write(line + "\n");
         }
         outfile.close();
         infile.close();

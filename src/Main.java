@@ -1,5 +1,5 @@
 import java.io.*;
-import java.lang.reflect.Array;
+import java.text.DecimalFormat;
 import java.util.*;
 
 import bin.*;
@@ -8,10 +8,10 @@ import lib.tool.*;
 import lib.unit.CustomFile;
 import lib.unit.Default;
 import lib.unit.Opts;
+import org.apache.commons.cli.*;
 
 public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
-    //    private final String OptFileType = "FileType";
     private final String OptGenomeFile = "GenomeFile";//基因组文件
     private final String OptPrefix = "Prefix";//输出前缀
     private final String OptOutPath = "OutPath";//输出路径
@@ -34,7 +34,9 @@ public class Main {
     private final String OptMaxReadsLength = "MaxReadsLength";//最大reads长度
     private final String OptResolution = "Resolution";//分辨率
     private final String OptThreads = "Threads";//线程数
+    private final String OptIteration = "Iteration";//是否迭代
     private final String OptStep = "Step";
+
     //===================================================================
     private CustomFile[] FastqFile;
     private CustomFile GenomeFile;
@@ -58,6 +60,7 @@ public class Main {
     private int MinReadsLength;
     private int MaxReadsLength;
     private int Resolution;
+    private boolean Iteration = true;
     private int Threads;
     private Date PreTime, SeTime, BedpeTime, MatrixTime, TransTime, EndTime;
     private ArrayList<String> Step = new ArrayList<>();
@@ -65,58 +68,87 @@ public class Main {
 
     //===================================================================
     private String[] RequiredParameter = new String[]{OptFastqFile, OptGenomeFile, OptLinkerFile, OptChromosome, OptRestriction, OptLinkersType, OptAlignMinQuality};
-    private String[] OptionalParameter = new String[]{OptOutPath, OptIndexFile, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptReadsType, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptThreads};
-    private Hashtable<String, String> ArgumentList = new Hashtable<>();
+    private String[] OptionalParameter = new String[]{OptOutPath, OptIndexFile, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptReadsType, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptIteration, OptThreads};
+    private Hashtable<String, String> ArgumentList = new Hashtable<>();//参数列表
     private Hashtable<String, Integer> ChrSize = new Hashtable<>();//染色体大小
     private int MinLinkerFilterQuality;
-    //    private String AddQuality;
     private File EnzyPath;//酶切位点文件目录
     private String EnzyFilePrefix;//酶切位点文件前缀
     private File PreProcessDir;//预处理输出目录
     private File SeProcessDir;//单端处理输出目录
     private File BedpeProcessDir;//bedpe处理输出目录
     private File MakeMatrixDir;//建立矩阵输出目录
-    //    private Routine step = new Routine();
     private Report Stat = new Report();
 
-    Main(File ConfigFile) throws IOException {
+    private Main(String[] args) throws IOException {
+        Options Argument = new Options();
+        Argument.addOption(Option.builder("i").hasArgs().argName("file").desc("input file").build());//输入文件
+        Argument.addOption(Option.builder("conf").hasArg().argName("file").desc("Configure file").build());//配置文件
+        Argument.addOption(Option.builder("p").hasArg().argName("string").desc("Prefix").build());//输出前缀(不需要包括路径)
+        Argument.addOption(Option.builder("adv").hasArg().argName("file").desc("Advanced configure file").build());//高级配置文件(一般不用修改)
+        Argument.addOption(Option.builder("o").longOpt("out").hasArg().argName("dir").desc("Out put directory").build());//输出路径
+        final String helpHeader = "Version: " + Opts.Version + "\nAuthor: " + Opts.Author + "\nContact: " + Opts.Email;
+        final String helpFooter = "Note: Have a good day!\n      JVM can get " + String.format("%.2f", Opts.MaxMemory / Math.pow(10, 9)) + "G memory";
+        if (args.length == 0) {
+            //没有参数时打印帮助信息
+            new HelpFormatter().printHelp("java -jar Path/" + Opts.JarFile.getName(), helpHeader, Argument, helpFooter, true);
+            System.exit(1);
+        }
+        CommandLine ComLine = null;
+        try {
+            ComLine = new DefaultParser().parse(Argument, args);
+        } catch (ParseException e) {
+            //缺少参数时打印帮助信息
+            System.err.println(e.getMessage());
+            new HelpFormatter().printHelp("java -jar Path/" + Opts.JarFile.getName(), helpHeader, Argument, helpFooter, true);
+            System.exit(1);
+        }
         OptionListInit();
-        GetOption(ConfigFile);//获取参数
-        Init();
+        //获取配置文件和高级配置文件
+        CustomFile ConfigureFile = ComLine.hasOption("conf") ? new CustomFile(ComLine.getOptionValue("conf")) : Opts.ConfigFile;
+        CustomFile AdvConfigFile = ComLine.hasOption("adv") ? new CustomFile(ComLine.getOptionValue("adv")) : Opts.AdvConfigFile;
+        GetOption(ConfigureFile, AdvConfigFile);//读取配置信息
+        //获取命令行参数信息
+        if (ComLine.hasOption("i")) {
+            ArgumentList.put(OptFastqFile, String.join(" ", ComLine.getOptionValues("i")));
+        }
+        if (ComLine.hasOption("p")) {
+            ArgumentList.put(OptPrefix, ComLine.getOptionValue("p"));
+        }
+        if (ComLine.hasOption("o")) {
+            ArgumentList.put(OptOutPath, ComLine.getOptionValue("o"));
+        }
+        Init();//变量初始化
     }
 
-    Main() {
-        OptionListInit();
-    }
-
-    public static void main(String args[]) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         //==============================================测试区==========================================================
-//        ArrayList<File> src = new ArrayList<>();
+//        ArrayList<char[]> src = new ArrayList<>();
+//        src.add("AAAA".toCharArray());
+//        System.out.println(src.get(0));
 //        src.add(new File("AAA"));
 //        src.add(new File("BBB"));
 //        ArrayList<File> dest= new ArrayList<>(src);
 //        System.out.println(dest);
-
+//        char a =1;
+//        System.out.println(a);
 
         //==============================================================================================================
-        if (args.length < 1) {
-            System.out.println("Usage:    java -jar DLO-HIC-AnalysisTools.jar <config.txt>");
-            System.exit(0);
-        }
-        System.out.println("===============Welcome to use " + Opts.JarFile.getName() + "===================");
-        System.out.println("Version:\t" + Opts.Version);
-        System.out.println("Author:\t" + Opts.Author);
-        System.out.println("===============================================================================");
-        Main main = new Main(new File(args[0]));
-        main.ShowParameter();
+
+        Main main = new Main(args);
+        main.ShowParameter();//显示参数
         main.Run();
     }
 
     public void Run() throws IOException, InterruptedException {
         //============================================print system information==========================================
-
+        System.out.println("===============Welcome to use " + Opts.JarFile.getName() + "===================");
+        System.out.println("Version:\t" + Opts.Version);
+        System.out.println("Author:\t" + Opts.Author);
+        System.out.println("Max Memory:\t" + String.format("%.2f", Opts.MaxMemory / Math.pow(10, 9)) + "G");
+        System.out.println("-------------------------------------------------------------------------------");
         //===========================================初始化输出文件======================================================
-        File[] FinalLinkerBedpe = new File[UseLinker.size()];
+        File[] FinalLinkerBedpe = new File[UseLinker.size()];//有效的bedpe文件,每种linker一个文件
         File[] LinkerFastqFileR1;
         File[] LinkerFastqFileR2;
         CustomFile[] UseLinkerFasqFileR1 = new CustomFile[UseLinker.size()];
@@ -311,7 +343,7 @@ public class Main {
         }
         //==============================================BedpeFile Process====bedpe 处理=====================================
         Thread[] LinkerProcess = new Thread[UseLinker.size()];//不同linker类型并行
-        for (int i = 0; i < UseLinker.size(); i++) {
+        for (int i = 0; i < LinkerProcess.length; i++) {
             LinkerProcess[i] = BedpeProcess(UseLinker.get(i), SeBedpeFile[i]);
             if (StepCheck("BedPeProcess")) {
                 LinkerProcess[i].start();
@@ -479,9 +511,8 @@ public class Main {
      * @return
      */
     private void SeProcess(CustomFile FastqFile, String Prefix) throws IOException, InterruptedException {
-        ArrayList<File> SplitFastqFile = FastqFile.SplitFile(FastqFile.getPath(), 200000000);//2亿行作为一个单位拆分
+        ArrayList<File> SplitFastqFile = FastqFile.SplitFile(FastqFile.getPath(), 100000000);//1亿行作为一个单位拆分
         ArrayList<File> TempSplitFastq = new ArrayList<>(SplitFastqFile);
-//        Collections.copy(TempSplitFastq, SplitFastqFile);
         File SamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSamFile();
         File FilterSamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getUniqSamFile();
         CustomFile SortBedFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSortBedFile();
@@ -510,6 +541,7 @@ public class Main {
                             SeProcess ssp = new SeProcess(InFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + "." + finalI, ReadsType);//单端处理类
                             ssp.Threads = Threads;//设置线程数
                             ssp.AlignThreads = AlignThread;
+                            ssp.setIteration(Iteration);
                             ssp.Run();
                             SplitSamFile[finalI] = ssp.getSamFile();
                             SplitFilterSamFile[finalI] = ssp.getUniqSamFile();
@@ -526,7 +558,9 @@ public class Main {
             t2[i].join();
         }
         for (File s : SplitFastqFile) {
-            s.delete();
+            if (Opts.DeBugLevel < 1) {
+                s.delete();
+            }
         }
         new Thread(new Runnable() {
             @Override
@@ -538,10 +572,14 @@ public class Main {
                     e.printStackTrace();
                 }
                 for (File s : SplitSamFile) {
-                    s.delete();
+                    if (Opts.DeBugLevel < 1) {
+                        s.delete();
+                    }
                 }
                 for (File s : SplitFilterSamFile) {
-                    s.delete();
+                    if (Opts.DeBugLevel < 1) {
+                        s.delete();
+                    }
                 }
             }
         }).start();
@@ -551,7 +589,9 @@ public class Main {
                 try {
                     SortBedFile.MergeSortFile(SplitSortBedFile, new int[]{4}, "", "\\s+");
                     for (File s : SplitSortBedFile) {
-                        s.delete();
+                        if (Opts.DeBugLevel < 1) {
+                            s.delete();
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -559,11 +599,7 @@ public class Main {
             }
         });
         t3.start();
-        try {
-            t3.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        t3.join();
     }
 
     private Thread BedpeProcess(String UseLinker, File SeBedpeFile) {
@@ -571,7 +607,7 @@ public class Main {
             @Override
             public void run() {
                 try {
-                    BedpeProcess bedpe = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker, Chromosome.toArray(new String[Chromosome.size()]), EnzyFilePrefix, SeBedpeFile);//bedpe文件处理类
+                    BedpeProcess bedpe = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker, Chromosome.toArray(new String[0]), EnzyFilePrefix, SeBedpeFile);//bedpe文件处理类
                     bedpe.Threads = Threads;//设置线程数
                     bedpe.Run();//运行
                 } catch (IOException | InterruptedException e) {
@@ -581,10 +617,15 @@ public class Main {
         });
     }
 
-    private void GetOption(File ConfFile) throws IOException {
+    private void GetOption(File ConfFile, File AdvConfFile) throws IOException {
+        ReadConfFile(ConfFile);
+        ReadConfFile(AdvConfFile);
+    }
+
+    private void ReadConfFile(File file) throws IOException {
         String line;
         String[] str;
-        BufferedReader infile = new BufferedReader(new FileReader(ConfFile));
+        BufferedReader infile = new BufferedReader(new FileReader(file));
         while ((line = infile.readLine()) != null) {
             line = line.trim();
             if (line.equals("") || line.matches("^/.*|^#.*")) {
@@ -657,6 +698,7 @@ public class Main {
         MaxReadsLength = Integer.parseInt(ArgumentList.get(OptMaxReadsLength));
         Resolution = Integer.parseInt(ArgumentList.get(OptResolution));
         Threads = Integer.parseInt(ArgumentList.get(OptThreads));
+        Iteration = Boolean.valueOf(ArgumentList.get(OptIteration));
         Step.addAll(Arrays.asList(ArgumentList.get(OptStep).split("\\s+")));
         //================================================
         if (Prefix.equals("")) {
@@ -666,21 +708,21 @@ public class Main {
             UseLinker = LinkersType;
         }
         if (!OutPath.isDirectory()) {
-            System.err.println("Wrong OutPath " + OutPath + " is not a directory");
+            System.err.println("Error, " + OutPath + " is not a directory");
             System.exit(0);
         }
         if (!GenomeFile.isFile()) {
-            System.err.println("Wrong " + OptGenomeFile + " " + GenomeFile + " is not a file");
+            System.err.println("Error, " + GenomeFile + " is not a file");
             System.exit(0);
         }
         for (int i = 0; i < FastqFile.length; i++) {
             if (!FastqFile[i].isFile()) {
-                System.err.println("Wrong " + FastqFile[i] + " is not a file");
+                System.err.println("Error, " + FastqFile[i] + " is not a file");
                 System.exit(0);
             }
         }
         if (!LinkerFile.isFile()) {
-            System.err.println("Wrong " + OptLinkerFile + " " + LinkerFile + " is not a file");
+            System.err.println("Error, " + LinkerFile + " is not a file");
             System.exit(0);
         }
         //=======================================================================
@@ -714,7 +756,6 @@ public class Main {
             System.exit(1);
         }
         EnzyFilePrefix = EnzyPath + "/" + Prefix + "." + Restriction.replace("^", "");
-//        step.Threads = Threads;
         Stat.OutPath = OutPath;
     }
 

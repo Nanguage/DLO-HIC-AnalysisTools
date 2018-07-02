@@ -14,47 +14,51 @@ import org.apache.commons.io.FileUtils;
 public class CreateMatrix {
     private CustomFile BedpeFile;
     private Chromosome[] Chromosome;
-    //    private String[] Chromosome;
-//    private int[] ChrSize;
+    private ChrRegion Region1;
+    private ChrRegion Region2;
     private int Resolution;
     private String Prefix;
-    private int Thread;
+    private int Threads;
+    private float Version = 1.0f;
 
-    public CreateMatrix(CustomFile BedpeFile, Chromosome[] Chr, int Resolution, String Prefix, int Thread){
+    public CreateMatrix(CustomFile BedpeFile, Chromosome[] Chr, int Resolution, String Prefix, int Threads) {
         this.BedpeFile = BedpeFile;
         Chromosome = Chr;
-//        this.Chromosome = Chromosome;
-//        this.ChrSize = ChrSize;
         this.Resolution = Resolution;
         this.Prefix = Prefix;
-        this.Thread = Thread;
+        this.Threads = Threads;
     }
 
-    public static void main(String[] args) throws IOException {
+    private CreateMatrix(String[] args) throws IOException {
         Options Argument = new Options();
-        Argument.addOption(Option.builder("f").hasArg().argName("file").desc("[required] bedpefile").build());
-        Argument.addOption(Option.builder("s").hasArg().argName("file").longOpt("size").desc("Chromosome size file").build());
-        Argument.addOption(Option.builder("chr").hasArgs().argName("strings").desc("[required, need't when region has set] the chromosome name that you want to calculator").build());
-//        Argument.addOption(Option.builder("size").hasArgs().argName("ints").desc("[required, need't when region has set] the chromosome size that you want to calculator").build());
-        Argument.addOption(Option.builder("res").hasArg().argName("int").desc("resolution (default 1M)").build());
+        Argument.addOption(Option.builder("f").hasArg().argName("file").required().desc("[required] bedpefile").build());
+        Argument.addOption(Option.builder("s").hasArg().longOpt("size").argName("file").desc("Chromosome size file").build());
+        Argument.addOption(Option.builder("chr").hasArgs().argName("strings").desc("The chromosome name which you want to calculator").build());
+        Argument.addOption(Option.builder("res").hasArg().argName("int").desc("Resolution (default 1M)").build());
         Argument.addOption(Option.builder("region").hasArgs().argName("strings").desc("(sample chr1:0:100 chr4:100:400) region you want to calculator, if not set, will calculator chromosome size").build());
-        Argument.addOption("t", true, "thread (default 1)");
-        Argument.addOption("p", true, "out prefix (default bedpefile)");
+        Argument.addOption(Option.builder("t").hasArg().argName("int").desc("Thread (default 1)").build());
+        Argument.addOption(Option.builder("p").hasArg().argName("string").desc("out prefix (default bedpefile)").build());
+        final String helpHeader = "Version: " + Version + "\nAuthor: " + Opts.Author;
+        final String helpFooter = "Note:\n" +
+                "you can set -chr like \"Chr:ChrSize\" or use -s to define the \"ChrSize\"\n" +
+                "If you set -s, you can set -chr like \"Chr\"\n" +
+                "The file format of option -s is \"Chromosome    Size\" for each row\n" +
+                "We will calculate all chromosome in Chromosome size file if you don't set -chr\n" +
+                "You needn't set -s and -chr if you set -region";
         if (args.length == 0) {
-            new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreateMatrix [option]", Argument);
+            new HelpFormatter().printHelp("java -cp Path/" + Opts.JarFile.getName() + " " + CreateMatrix.class.getName(), helpHeader, Argument, helpFooter, true);
             System.exit(1);
         }
         CommandLine ComLine = null;
         try {
             ComLine = new DefaultParser().parse(Argument, args);
         } catch (ParseException e) {
-            e.printStackTrace();
-            new HelpFormatter().printHelp("java -cp DLO-HIC-AnalysisTools.jar script.CreateMatrix [option]", Argument);
+            System.err.println(e.getMessage());
+            new HelpFormatter().printHelp("java -cp Path/" + Opts.JarFile.getName() + " " + CreateMatrix.class.getName(), helpHeader, Argument, helpFooter, true);
             System.exit(1);
         }
-        CustomFile BedpeFile = new CustomFile(ComLine.getOptionValue("f"));
+        BedpeFile = new CustomFile(ComLine.getOptionValue("f"));
         String[] Chr = ComLine.hasOption("chr") ? ComLine.getOptionValues("chr") : null;
-        Chromosome[] Chromosome = null;
         if (Chr != null) {
             Chromosome = new Chromosome[Chr.length];
             for (int i = 0; i < Chr.length; i++) {
@@ -62,11 +66,11 @@ public class CreateMatrix {
             }
         }
         String SizeFile = ComLine.hasOption("size") ? ComLine.getOptionValue("size") : null;
-        int Resolution = ComLine.hasOption("res") ? Integer.parseInt(ComLine.getOptionValue("res")) : 1000000;
-        String Prefix = ComLine.hasOption("p") ? ComLine.getOptionValue("p") : BedpeFile.getPath();
-        int Thread = ComLine.hasOption("t") ? Integer.parseInt(ComLine.getOptionValue("t")) : 1;
-        ChrRegion Reg1 = ComLine.hasOption("region") ? new ChrRegion(ComLine.getOptionValue("region").split(":")) : null;
-        ChrRegion Reg2 = ComLine.hasOption("region") && ComLine.getOptionValues("region").length > 1 ? new ChrRegion(ComLine.getOptionValues("region")[1].split(":")) : Reg1;
+        Resolution = ComLine.hasOption("res") ? Integer.parseInt(ComLine.getOptionValue("res")) : Default.Resolution;
+        Prefix = ComLine.hasOption("p") ? ComLine.getOptionValue("p") : BedpeFile.getPath();
+        Threads = ComLine.hasOption("t") ? Integer.parseInt(ComLine.getOptionValue("t")) : 1;
+        Region1 = ComLine.hasOption("region") ? new ChrRegion(ComLine.getOptionValue("region").split(":")) : null;
+        Region2 = ComLine.hasOption("region") && ComLine.getOptionValues("region").length > 1 ? new ChrRegion(ComLine.getOptionValues("region")[1].split(":")) : Region1;
         if (SizeFile != null) {
             List<String> ChrSizeList = FileUtils.readLines(new File(SizeFile), Charsets.UTF_8);
             if (Chromosome == null) {
@@ -76,7 +80,7 @@ public class CreateMatrix {
                 }
             } else {
                 for (String aChrSizeList : ChrSizeList) {
-                    for (lib.unit.Chromosome aChromosome : Chromosome) {
+                    for (Chromosome aChromosome : Chromosome) {
                         if (aChromosome.Name.equals(aChrSizeList.split("\\s+")[0])) {
                             aChromosome.Size = Integer.parseInt(aChrSizeList.split("\\s+")[1]);
                             break;
@@ -85,14 +89,19 @@ public class CreateMatrix {
                 }
             }
         }
-        if (Reg1 == null) {
-            new CreateMatrix(BedpeFile, Chromosome, Resolution, Prefix, Thread).Run();
-        } else {
-            new CreateMatrix(BedpeFile, Chromosome, Resolution, Prefix, Thread).Run(Reg1, Reg2);
-        }
+    }
+
+    public static void main(String[] args) throws IOException {
+
+        new CreateMatrix(args).Run();
+
     }
 
     public void Run() throws IOException {
+        if (Region1 != null) {
+            Run(Region1, Region2);
+            return;
+        }
         if (Chromosome == null) {
             System.err.println("Error! no -chr  argument");
             System.exit(1);
@@ -119,9 +128,9 @@ public class CreateMatrix {
             Arrays.fill(InterMatrix[i], 0);//数组初始化为0
         }
         BufferedReader infile = new BufferedReader(new FileReader(BedpeFile));
-        Thread[] Process = new Thread[Thread];
+        Thread[] Process = new Thread[Threads];
         //----------------------------------------------------------------------------
-        for (int i = 0; i < Thread; i++) {
+        for (int i = 0; i < Threads; i++) {
             int finalSumBin = SumBin;
             Process[i] = new Thread(new Runnable() {
                 @Override
@@ -201,7 +210,7 @@ public class CreateMatrix {
             Process[i].start();
         }
         //-------------------------------------------------
-        for (int i = 0; i < Thread; i++) {
+        for (int i = 0; i < Threads; i++) {
             try {
                 Process[i].join();
             } catch (InterruptedException e) {
@@ -238,9 +247,9 @@ public class CreateMatrix {
             Arrays.fill(InterMatrix[i], 0);//数组初始化为0
         }
         BufferedReader infile = new BufferedReader(new FileReader(BedpeFile));
-        Thread[] Process = new Thread[Thread];
+        Thread[] Process = new Thread[Threads];
         //----------------------------------------------------------------------------
-        for (int i = 0; i < Thread; i++) {
+        for (int i = 0; i < Threads; i++) {
             Process[i] = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -299,7 +308,7 @@ public class CreateMatrix {
             Process[i].start();
         }
         //-------------------------------------------------
-        for (int i = 0; i < Thread; i++) {
+        for (int i = 0; i < Threads; i++) {
             try {
                 Process[i].join();
             } catch (InterruptedException e) {

@@ -2,7 +2,6 @@
 package bin;
 
 import kotlin.text.Charsets;
-import lib.Command.Execute;
 import lib.File.FileTool;
 import lib.Image.HeatMap;
 import lib.tool.Tools;
@@ -10,14 +9,11 @@ import lib.unit.*;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.distribution.PoissonDistribution;
-//import org.opencv.core.Mat;
-//import org.opencv.imgcodecs.Imgcodecs;
 import script.CreateMatrix;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -150,71 +146,6 @@ public class TranslocationDetection {
             }
 
         }
-        /*ArrayList<InterAction> ValidList = new ArrayList<>();
-        Area = InterMatrix.getSize()[0] * InterMatrix.getSize()[1];
-        Count = InterMatrix.Count;
-        int Size = 1;
-        while (Count / Area * Size * Size <= 50) {
-            Size += 1;
-        }
-        ArrayList<int[]> Index = ChangePointDetect(MatrixFile, OutPrefix);//Edge detect
-        int[] RowIndex = Index.get(0);// get row edge
-        int[] ColIndex = Index.get(1);// get col edge
-        HeatMap map = new HeatMap(InterMatrix.getMatrix());// Create heatmap figure
-        BufferedImage HeatMapImage = map.Draw().getImage();
-        //draw change point line
-        ImageIO.write(HeatMapImage, "png", new File(OutPrefix + ".cpt.png"));//Print heatmap figure
-        //==============================================================================================================
-        ArrayList<ChrRegion> RowRegion = new ArrayList<>();//Row region about each apartment
-        ArrayList<ChrRegion> ColRegion = new ArrayList<>();//Col region about each apartment
-        RowRegion.add(new ChrRegion(Chr1.Chr, 1, RowIndex[0] - 1));
-        for (int i = 0; i < RowIndex.length - 1; i++) {
-            RowRegion.add(new ChrRegion(Chr1.Chr, RowIndex[i], RowIndex[i + 1] - 1));
-        }
-        RowRegion.add(new ChrRegion(Chr1.Chr, RowIndex[RowIndex.length - 1], InterMatrix.getSize()[0]));
-        ColRegion.add(new ChrRegion(Chr2.Chr, 1, ColIndex[0] - 1));
-        for (int i = 0; i < ColIndex.length - 1; i++) {
-            ColRegion.add(new ChrRegion(Chr2.Chr, ColIndex[i], ColIndex[i + 1] - 1));
-        }
-        ColRegion.add(new ChrRegion(Chr2.Chr, ColIndex[ColIndex.length - 1], InterMatrix.getSize()[1]));
-        //==============================================================================================================
-        int max = Confidence(P_Value);//calculate the max density
-        for (int i = 0; i < RowRegion.size(); i++) {
-            for (int j = 0; j < ColRegion.size(); j++) {
-                double[][] tempmatrix = SubMatrix(InterMatrix.getMatrix(), new int[]{RowRegion.get(i).Begin - 1, RowRegion.get(i).Terminal - 1}, new int[]{ColRegion.get(j).Begin - 1, ColRegion.get(j).Terminal - 1});
-                double[] rowsum = GetRowSum(tempmatrix);
-                double[] colsum = GetColSum(tempmatrix);
-                double count = GetCount(tempmatrix);
-                double area = (RowRegion.get(i).Terminal - RowRegion.get(i).Begin + 1) * (ColRegion.get(j).Terminal - ColRegion.get(j).Begin + 1);
-                if (count / area * Size * Size <= max) {
-                    for (int k = RowRegion.get(i).Begin - 1; k <= RowRegion.get(i).Terminal - 1; k++) {
-                        for (int l = ColRegion.get(j).Begin - 1; l <= ColRegion.get(j).Terminal - 1; l++) {
-                            FilteredMatrix.getMatrix()[k][l] = 0;
-                        }
-                    }
-                } else {
-                    double[] rarray = new double[rowsum.length];
-                    double[] carray = new double[colsum.length];
-                    for (int k = 0; k < rowsum.length; k++) {
-                        rarray[k] = k;
-                    }
-                    for (int k = 0; k < colsum.length; k++) {
-                        carray[k] = k;
-                    }
-                    if (new SpearmansCorrelation().correlation(rarray, rowsum) < 0.2 && new SpearmansCorrelation().correlation(carray, colsum) < 0.2) {
-                        for (int k = RowRegion.get(i).Begin - 1; k <= RowRegion.get(i).Terminal - 1; k++) {
-                            for (int l = ColRegion.get(j).Begin - 1; l <= ColRegion.get(j).Terminal - 1; l++) {
-                                FilteredMatrix.getMatrix()[k][l] = 0;
-                            }
-                        }
-                    } else {
-                        ValidList.add(new InterAction(new ChrRegion(Chr1.Chr, Chr1.Begin + (RowRegion.get(i).Begin - 1) * Resolution, Chr1.Begin + (RowRegion.get(i).Terminal - 1) * Resolution), new ChrRegion(Chr2.Chr, Chr2.Begin + (ColRegion.get(j).Begin - 1) * Resolution, Chr2.Begin + (ColRegion.get(j).Terminal - 1) * Resolution)));
-                        System.out.println(Chr1.Chr.Name + "\t" + (Chr1.Begin + (RowRegion.get(i).Begin - 1) * Resolution) + "\t" + (Chr1.Begin + (RowRegion.get(i).Terminal - 1) * Resolution) + "\t" + Chr2.Chr.Name + "\t" + (Chr2.Begin + (ColRegion.get(j).Begin - 1) * Resolution) + "\t" + (Chr2.Begin + (ColRegion.get(j).Terminal - 1) * Resolution) + "\t" + String.valueOf(count / area * Size * Size));
-                    }
-                }
-            }
-        }
-        return ValidList;*/
     }
 
     /**
@@ -340,10 +271,6 @@ public class TranslocationDetection {
         }
         return ColSum;
     }
-
-//    public void setInterList(ArrayList<InterAction> interList) {
-//        InterList = interList;
-//    }
 
     public void setInterMatrix(Matrix interMatrix) {
         InterMatrix = interMatrix;

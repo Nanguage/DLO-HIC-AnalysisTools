@@ -70,7 +70,7 @@ public class Report {
         System.out.println();
         System.out.println("\n-----------------------------------------\nLinkers type\tReads number\tPercent");
         for (int i = 0; i < LinkersType.size(); i++) {
-            System.out.println(LinkersType.get(i) + "\t" + new DecimalFormat("#,###").format(LinkersNum.get(i)) + "\t" + (double) LinkersNum.get(i) / Statistic.Average(RawDataReadsNum) * 100 + "%");
+            System.out.println(LinkersType.get(i) + "\t" + new DecimalFormat("#,###").format(LinkersNum.get(i)) + "\t" + String.format("%.2f", (double) LinkersNum.get(i) / Statistic.Average(RawDataReadsNum) * 100) + "%");
         }
         System.out.println("\n-----------------------------------------\nFastq file\tReads number\tFastq file\tReads number");
         for (int i = 0; i < FastqR1File.size(); i++) {
@@ -78,7 +78,7 @@ public class Report {
         }
         System.out.println("\n-----------------------------------------\nBed file\tUniq reads number\tPercent\tBed file\tUniq reads number\tPercent");
         for (int i = 0; i < UseBed1.size(); i++) {
-            System.out.println(UseBed1.get(i).getName() + "\t" + new DecimalFormat("#,###").format(UniqMapR1Num.get(i)) + "\t" + (double) UniqMapR1Num.get(i) / LinkersNum.get(i) * 100 + "%" + "\t" + UseBed2.get(i).getName() + "\t" + new DecimalFormat("#,###").format(UniqMapR2Num.get(i)) + "\t" + (double) UniqMapR2Num.get(i) / LinkersNum.get(i) * 100 + "%");
+            System.out.println(UseBed1.get(i).getName() + "\t" + new DecimalFormat("#,###").format(UniqMapR1Num.get(i)) + "\t" + String.format("%.2f", (double) UniqMapR1Num.get(i) / LinkersNum.get(i) * 100) + "%" + "\t" + UseBed2.get(i).getName() + "\t" + new DecimalFormat("#,###").format(UniqMapR2Num.get(i)) + "\t" + String.format("%.2f", (double) UniqMapR2Num.get(i) / LinkersNum.get(i) * 100) + "%");
         }
         long sum = 0;
         System.out.println("\n-----------------------------------------\nBedpe file\tReads number\tPercent");
@@ -86,21 +86,21 @@ public class Report {
             sum = sum + BedpeNum.get(i);
             System.out.println("UniqMap\t" + new DecimalFormat("#,###").format(BedpeNum.get(i)));
             for (int j = 0; j < LigationFile.get(i).length; j++) {
-                System.out.println(LigationFile.get(i)[j].replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(LigationNum.get(i)[j]) + "\t" + (double) LigationNum.get(i)[j] / BedpeNum.get(i) * 100 + "%");
+                System.out.println(LigationFile.get(i)[j].replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(LigationNum.get(i)[j]) + "\t" + String.format("%.2f", (double) LigationNum.get(i)[j] / BedpeNum.get(i) * 100) + "%");
             }
-            System.out.println(NoRmdupName.get(i).replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(NoRmdupNum.get(i)) + "\t" + (double) NoRmdupNum.get(i) / BedpeNum.get(i) * 100 + "%");
+            System.out.println(NoRmdupName.get(i).replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(NoRmdupNum.get(i)) + "\t" + String.format("%.2f", (double) NoRmdupNum.get(i) / BedpeNum.get(i) * 100) + "%");
         }
         System.out.println("\n-------------------------------------------------------------");
-        System.out.println("Total action number:\t" + new DecimalFormat("#,###").format(FinalBedpeNum) + "\t" + (double) FinalBedpeNum / Statistic.Average(RawDataReadsNum) * 100 + "%");
-        System.out.println("Intra action number:\t" + new DecimalFormat("#,###").format(IntraActionNum) + "\t" + (double) IntraActionNum / FinalBedpeNum * 100 + "%");
-        System.out.println("Inter action number:\t" + new DecimalFormat("#,###").format(InterActionNum) + "\t" + (double) InterActionNum / FinalBedpeNum * 100 + "%");
+        System.out.println("Total action number:\t" + new DecimalFormat("#,###").format(FinalBedpeNum) + "\t" + String.format("%.2f", (double) FinalBedpeNum / Statistic.Average(RawDataReadsNum) * 100) + "%");
+        System.out.println("Intra action number:\t" + new DecimalFormat("#,###").format(IntraActionNum) + "\t" + String.format("%.2f", (double) IntraActionNum / FinalBedpeNum * 100) + "%");
+        System.out.println("Inter action number:\t" + new DecimalFormat("#,###").format(InterActionNum) + "\t" + String.format("%.2f", (double) InterActionNum / FinalBedpeNum * 100) + "%");
         System.out.println("\n-------------------------------------------------------------");
         if (RestrictionSeq.replace("^", "").length() <= 4) {
-            System.out.println("Short region <= 5k :\t" + new DecimalFormat("#,###").format(ShortRegionNum) + "\t" + (double) ShortRegionNum / IntraActionNum * 100 + "%");
-            System.out.println("Long region > 5k :\t" + new DecimalFormat("#,###").format(LongRegionNum) + "\t" + (double) LongRegionNum / IntraActionNum * 100 + "%");
+            System.out.println("Short region <= 5k :\t" + new DecimalFormat("#,###").format(ShortRegionNum) + "\t" + String.format("%.2f", (double) ShortRegionNum / IntraActionNum * 100) + "%");
+            System.out.println("Long region > 5k :\t" + new DecimalFormat("#,###").format(LongRegionNum) + "\t" + String.format("%.2f", (double) LongRegionNum / IntraActionNum * 100) + "%");
         } else {
-            System.out.println("Short region <= 20k :\t" + new DecimalFormat("#,###").format(ShortRegionNum) + "\t" + (double) ShortRegionNum / IntraActionNum * 100 + "%");
-            System.out.println("Long region > 20k :\t" + new DecimalFormat("#,###").format(LongRegionNum) + "\t" + (double) LongRegionNum / IntraActionNum * 100 + "%");
+            System.out.println("Short region <= 20k :\t" + new DecimalFormat("#,###").format(ShortRegionNum) + "\t" + String.format("%.2f", (double) ShortRegionNum / IntraActionNum * 100) + "%");
+            System.out.println("Long region > 20k :\t" + new DecimalFormat("#,###").format(LongRegionNum) + "\t" + String.format("%.2f", (double) LongRegionNum / IntraActionNum * 100) + "%");
         }
 //        System.out.println("No duplication:\t" + NoRmdupNum * 100 + "%");
 //        System.out.println("Ligation type\tPercent");

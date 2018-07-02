@@ -25,10 +25,17 @@ public class Opts {
     public static final String TransDir = "TransDetect";
     public static final String[] Step = new String[]{"LinkerFilter", "DivideLinker", "SeProcess", "Bed2BedPe", "BedPe2Inter", "MakeMatrix", "TranslocationDetect"};
     public static final File JarFile = new File(Opts.class.getProtectionDomain().getCodeSource().getLocation().getFile());
-    public static final File PlotScriptFile = new File(Opts.JarFile.getParent() + "/script/PlotHeatmap.py");
     public static final CustomFile CommandOutFile = new CustomFile("./command.log");
+    public static final CustomFile ConfigFile = new CustomFile(JarFile.getParent() + "/default.conf");
+    public static final CustomFile AdvConfigFile = new CustomFile(JarFile.getParent() + "/default_adv.conf");
+    public static final File PlotScriptFile = new File(JarFile.getParent() + "/script/PlotHeatmap.py");
     public static final Float Version = 1.0F;
     public static final String Author = "Snowflakes";
+    public static final String Email = "john-jh@foxmail.com";
+    public static String Bwa = "bwa";
+    public static String Bowtie = "bowtie2";
+    public static int DeBugLevel = 0;
+    public static final long MaxMemory = Runtime.getRuntime().maxMemory();
 }
 
 

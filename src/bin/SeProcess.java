@@ -12,14 +12,13 @@ import org.apache.commons.io.FileUtils;
 
 /**
  * @author snowf
- * @version 1.0
+ * @version 1.1
  */
 
 public class SeProcess {
     private final String OptFastqFile = "FastqFile";//不同linker类型的Fastq文件
     private final String OptIndexFile = "Index";//比对索引文件
     private final String OptOutPath = "OutPath";//输出目录
-    //    private final String OptSeType = "Type";//单端类型(R1 or R2)
     private final String OptPrefix = "Prefix";//输出前缀
     public final String OptThreads = "Threads";//线程数
     private final String OptMinQuality = "MinQuality";//最小比对质量
@@ -32,24 +31,23 @@ public class SeProcess {
     private File FastqFile;//Fastq文件
     private File IndexPrefix;//比对索引前缀
     private int ReadsType = Opts.ShortReads;//reads类型Long or Short
-    public int Threads = Default.Thread;//线程数
     private int MinQuality;//最小比对质量
     private int MisMatchNum;//错配数，bwa中使用
     public int AlignThreads = 2;//比对线程数
+    public int Threads = Default.Thread;//线程数
     //========================================================================
     private Hashtable<String, String> ArgumentList = new Hashtable<>();
     private String[] RequiredParameter = new String[]{OptFastqFile, OptIndexFile, OptMinQuality};
     private String[] OptionalParameter = new String[]{OptOutPath, OptPrefix, OptMisMatchNum, OptAlignThreads, OptThreads};
     private File SamFile;//Sam文件
-    //    private File SaiFile;
     private CustomFile UniqSamFile;//唯一比对的Sam文件
     private File UnMapSamFile;//未比对上的Sam文件
     private CustomFile MultiSamFile;//多比对文件
     private CustomFile BedFile;//Bed文件
     private CustomFile SortBedFile;//排序后的bed文件
+    private boolean Iteration = true;//是否进行迭代比对
 
     public SeProcess(File fastqfile, File index, int mismatch, int minquality, File outpath, String prefix, int readstype) {
-//        ArgumentInit();
         FastqFile = fastqfile;
         IndexPrefix = index;
         MisMatchNum = mismatch;
@@ -81,24 +79,26 @@ public class SeProcess {
         Align(FastqFile, SamFile, ReadsType);
         //Sam文件过滤
         SamFilter(SamFile, UniqSamFile, UnMapSamFile, MultiSamFile, MinQuality);
-        BufferedReader sam_read = new BufferedReader(new FileReader(UnMapSamFile));
-        String Line;
-        String[] Str;
-        Hashtable<String, String> ReadsList = new Hashtable<>();
-        while ((Line = sam_read.readLine()) != null) {
-            Str = Line.split("\\s+");
-            ReadsList.put(Str[0], Str[9]);
+        if (Iteration) {
+            BufferedReader sam_read = new BufferedReader(new FileReader(UnMapSamFile));
+            String Line;
+            String[] Str;
+            Hashtable<String, char[]> ReadsList = new Hashtable<>();
+            while ((Line = sam_read.readLine()) != null) {
+                Str = Line.split("\\s+");
+                ReadsList.put(Str[0], Str[9].toCharArray());
+            }
+            sam_read.close();
+            File[] TempFile = IterationAlignment(ReadsList, Prefix, 1);
+            UniqSamFile.Append(TempFile[0]);
+            MultiSamFile.Append(TempFile[1]);
         }
-        sam_read.close();
-        File[] TempFile = IterationAlignment(ReadsList, Prefix, 1);
-        UniqSamFile.Append(TempFile[0]);
-        MultiSamFile.Append(TempFile[1]);
         //Sam文件转bed
         Tools.SamToBed(UniqSamFile, BedFile);
         BedFile.SortFile(new int[]{4}, "", "\\s+", SortBedFile);
         System.out.println(new Date() + "\tDelete " + BedFile.getName());
         BedFile.delete();
-        Tools.RemoveEmptyFile(OutPath);
+//        Tools.RemoveEmptyFile(OutPath);//不能放在这里
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -131,7 +131,6 @@ public class SeProcess {
         Prefix = ArgumentList.get(OptPrefix);
         FastqFile = new File(ArgumentList.get(OptFastqFile));
         IndexPrefix = new File(ArgumentList.get(OptIndexFile));
-//        String seType = ArgumentList.get(OptSeType);
         Threads = Integer.parseInt(ArgumentList.get(OptThreads));
         MinQuality = Integer.parseInt(ArgumentList.get(OptMinQuality));
         MisMatchNum = Integer.parseInt(ArgumentList.get(OptMisMatchNum));
@@ -209,17 +208,19 @@ public class SeProcess {
         System.out.println(new Date() + "\tBegin to align\t" + FastqFile.getName());
         if (ReadsType == Opts.ShortReads) {
             File SaiFile = new File(FastqFile + ".sai");
-            CommandStr = "bwa aln -t " + AlignThreads + " -n " + MisMatchNum + " -f " + SaiFile + " " + IndexPrefix + " " + FastqFile;
+            CommandStr = Opts.Bwa + " aln -t " + AlignThreads + " -n " + MisMatchNum + " -f " + SaiFile + " " + IndexPrefix + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
-            Tools.ExecuteCommandStr(CommandStr, null, FastqFile + ".err");//执行命令行
+            Tools.ExecuteCommandStr(CommandStr);//执行命令行
             System.out.println(new Date() + "\tsai to sam\t" + FastqFile.getName());
-            CommandStr = "bwa samse -f " + SamFile + " " + IndexPrefix + " " + SaiFile + " " + FastqFile;
+            CommandStr = Opts.Bwa + " samse -f " + SamFile + " " + IndexPrefix + " " + SaiFile + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
-            Tools.ExecuteCommandStr(CommandStr, null, SamFile + ".err");//执行命令行
+            Tools.ExecuteCommandStr(CommandStr);//执行命令行
             System.out.println(new Date() + "\tDelete " + SaiFile.getName());
-            SaiFile.delete();//删除sai文件
+            if (Opts.DeBugLevel < 1) {
+                SaiFile.delete();//删除sai文件
+            }
         } else if (ReadsType == Opts.LongReads) {
-            CommandStr = "bwa mem -t " + AlignThreads + " " + IndexPrefix + " " + FastqFile;
+            CommandStr = Opts.Bwa + " mem -t " + Threads + " " + IndexPrefix + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
             Tools.ExecuteCommandStr(CommandStr, SamFile.getPath());//执行命令行
         } else {
@@ -302,27 +303,27 @@ public class SeProcess {
      * @throws IOException
      * @throws InterruptedException
      */
-    public File[] IterationAlignment(Hashtable<String, String> ReadsList, String Prefix, int Num) throws IOException, InterruptedException {
+    private File[] IterationAlignment(Hashtable<String, char[]> ReadsList, String Prefix, int Num) throws IOException, InterruptedException {
         System.out.println(new Date() + "\tIteration align start " + Num);
         CustomFile UniqSamFile = new CustomFile(IterationDir + "/" + Prefix + ".iteration" + Num + ".uniq.sam");
         CustomFile UnMapSamFile = new CustomFile(IterationDir + "/" + Prefix + ".iteration" + Num + ".unmap.sam");
         CustomFile MultiSamFile = new CustomFile(IterationDir + "/" + Prefix + ".iteration" + Num + ".multi.sam");
-        File FastaFile = new File(IterationDir + "/" + Prefix + "." + Num + ".fasta");
+        File FastaFile = new File(IterationDir + "/" + Prefix + ".iteration" + Num + ".fasta");
         BufferedWriter fasta_write = new BufferedWriter(new FileWriter(FastaFile));
         String Line;
         String[] Str;
         //------------------------------------------fasta file write----------------------------------------------------
         for (String title : ReadsList.keySet()) {
-            String Seq = ReadsList.get(title);
-            String[] KSeq = Tools.GetKmer(Seq, Num);
+            char[] Seq = ReadsList.get(title);
+            String[] KSeq = Tools.GetKmer(String.valueOf(Seq), Num);
             for (int i = 0; i < KSeq.length; i++) {
-                fasta_write.write(">" + title + "\n");
+                fasta_write.write(">" + String.valueOf(title) + "\n");
                 fasta_write.write(KSeq[i] + "\n");
             }
         }
         fasta_write.close();
         //--------------------------------------------------------------------------------------------------------------
-        File TempSamFile = new File(IterationDir + "/" + Prefix + ".sam.temp" + Num);
+        File TempSamFile = new File(IterationDir + "/" + Prefix + ".iteration" + Num + ".sam.temp");
         try {
             Align(FastaFile, TempSamFile, ReadsType);// align
             SamFilter(TempSamFile, UniqSamFile, UnMapSamFile, MultiSamFile, MinQuality);//filter
@@ -335,9 +336,11 @@ public class SeProcess {
             return new File[]{UniqSamFile, MultiSamFile};
         }
         //delete useless file
-        FastaFile.delete();
-        UnMapSamFile.delete();
-        TempSamFile.delete();
+        if (Opts.DeBugLevel < 1) {
+            FastaFile.delete();
+            UnMapSamFile.delete();
+            TempSamFile.delete();
+        }
         //remove uniq and multi map reads name
         BufferedReader sam_reader = new BufferedReader(new FileReader(UniqSamFile));
         while ((Line = sam_reader.readLine()) != null) {
@@ -378,8 +381,10 @@ public class SeProcess {
         File[] TempFile = IterationAlignment(ReadsList, Prefix, ++Num);
         UniqSamFile.Append(TempFile[0]);
         MultiSamFile.Append(TempFile[1]);
-        TempFile[0].delete();
-        TempFile[1].delete();
+        if (Opts.DeBugLevel < 1) {
+            TempFile[0].delete();
+            TempFile[1].delete();
+        }
         return new File[]{UniqSamFile, MultiSamFile};
     }
 
@@ -397,5 +402,9 @@ public class SeProcess {
 
     public CustomFile getSortBedFile() {
         return SortBedFile;
+    }
+
+    public void setIteration(boolean iteration) {
+        Iteration = iteration;
     }
 }
