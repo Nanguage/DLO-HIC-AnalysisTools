@@ -25,6 +25,7 @@ import java.util.List;
 public class TranslocationDetection {
     private ChrRegion Chr1;
     private ChrRegion Chr2;
+    private File MatrixFile;
     private Matrix<?> InterMatrix;
     private Matrix FilteredMatrix;
     private CustomFile BedpeFile;
@@ -35,45 +36,15 @@ public class TranslocationDetection {
     private String OutPrefix;
     private double P_Value = 0.01;
     private PoissonDistribution BackgroundDistribution = new PoissonDistribution(1);
+    public static final float Version = 1.0f;
 
 //    static {
 //        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 //    }
 
     public static void main(String[] args) throws ParseException, IOException, InterruptedException {
-        Options Arguement = new Options();
-        Arguement.addOption(Option.builder("chr").hasArgs().argName("name:size").desc("Chromosome name and region (such as chr1:100:500)").build());
-        Arguement.addOption(Option.builder("r").required().longOpt("res").hasArg().argName("int").desc("Resolution").build());
-        Arguement.addOption(Option.builder("m").required().longOpt("matrix").argName("file").hasArg().desc("Inter action matrix").build());
-        Arguement.addOption(Option.builder("f").required().longOpt("bedpe").hasArg().argName("string").desc("Interaction bedpe file").build());
-        Arguement.addOption(Option.builder("p").hasArg().argName("string").desc("out prefix").build());
-        Arguement.addOption("v", true, "p value");
-        if (args.length == 0) {
-            new HelpFormatter().printHelp("java -cp " + Opts.JarFile.getAbsolutePath() + " " + TranslocationDetection.class.getName() + " [option]", Arguement);
-            System.exit(1);
-        }
-        CommandLine Comline = new DefaultParser().parse(Arguement, args);
-        ChrRegion chr1 = new ChrRegion(new Chromosome("?"), 0, 0), chr2 = new ChrRegion(new Chromosome("?"), 0, 0);
-        if (Comline.hasOption("chr")) {
-            String[] s = Comline.getOptionValues("chr");
-            chr1 = new ChrRegion(new Chromosome(s[0].split(":")[0]), Integer.parseInt(s[0].split(":")[1]), Integer.parseInt(s[0].split(":")[2]));
-            if (s.length > 1) {
-                chr2 = new ChrRegion(new Chromosome(s[1].split(":")[0]), Integer.parseInt(s[1].split(":")[1]), Integer.parseInt(s[1].split(":")[2]));
-            } else {
-                chr2 = chr1;
-            }
-        }
-        double pvalue = Comline.hasOption("v") ? Double.parseDouble(Comline.getOptionValue("v")) : 0.05;
-        File MatrixFile = new File(Comline.getOptionValue("matrix"));
-        int Resolution = Integer.parseInt(Comline.getOptionValue("r"));
-        CustomFile BedpeFile = new CustomFile(Comline.getOptionValue("f"));
-        String Prefix = Comline.hasOption("p") ? Comline.getOptionValue("p") : chr1.Chr.Name + "-" + chr2.Chr.Name;
-
-        ArrayList<InterAction> List = new ArrayList<>();
-
-        TranslocationDetection Tld = new TranslocationDetection(chr1, chr2, new Matrix<>(FileTool.ReadMatrixFile(MatrixFile)), BedpeFile, Resolution, Prefix);
-        Tld.setP_Value(pvalue);
-        Tld.Run(MatrixFile);
+        TranslocationDetection Tld = new TranslocationDetection(args);
+        Tld.Run();
     }
 
     TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix<?> matrix, CustomFile bedpefile, String prefix) {
@@ -89,6 +60,45 @@ public class TranslocationDetection {
     TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix<?> matrix, CustomFile bedpefile, int Resolution, String prefix) {
         this(chr1, chr2, matrix, bedpefile, prefix);
         this.setResolution(Resolution);
+    }
+
+    private TranslocationDetection(String[] args) throws IOException {
+        Options Arguement = new Options();
+        Arguement.addOption(Option.builder("chr").hasArgs().argName("name:size").desc("Chromosome name and region (such as chr1:100:500)").build());
+        Arguement.addOption(Option.builder("r").required().longOpt("res").hasArg().argName("int").desc("Resolution").build());
+        Arguement.addOption(Option.builder("m").required().longOpt("matrix").argName("file").hasArg().desc("Inter action matrix").build());
+        Arguement.addOption(Option.builder("f").required().longOpt("bedpe").hasArg().argName("string").desc("Interaction bedpe file").build());
+        Arguement.addOption(Option.builder("p").hasArg().argName("string").desc("out prefix").build());
+        Arguement.addOption("v", true, "p value");
+        final String Helpheader = "Version: " + Version;
+        final String Helpfooter = "";
+        if (args.length == 0) {
+            new HelpFormatter().printHelp("java -cp path/" + Opts.JarFile.getName() + " " + TranslocationDetection.class.getName(), Helpheader, Arguement, Helpfooter, true);
+            System.exit(1);
+        }
+        CommandLine Comline = null;
+        try {
+            Comline = new DefaultParser().parse(Arguement, args);
+        } catch (ParseException e) {
+            new HelpFormatter().printHelp("java -cp path/" + Opts.JarFile.getName() + " " + TranslocationDetection.class.getName(), Helpheader, Arguement, Helpfooter, true);
+            System.exit(1);
+        }
+        ChrRegion chr1 = new ChrRegion(new Chromosome("?"), 0, 0), chr2 = new ChrRegion(new Chromosome("?"), 0, 0);
+        if (Comline.hasOption("chr")) {
+            String[] s = Comline.getOptionValues("chr");
+            chr1 = new ChrRegion(new Chromosome(s[0].split(":")[0]), Integer.parseInt(s[0].split(":")[1]), Integer.parseInt(s[0].split(":")[2]));
+            if (s.length > 1) {
+                chr2 = new ChrRegion(new Chromosome(s[1].split(":")[0]), Integer.parseInt(s[1].split(":")[1]), Integer.parseInt(s[1].split(":")[2]));
+            } else {
+                chr2 = chr1;
+            }
+        }
+        P_Value = Comline.hasOption("v") ? Double.parseDouble(Comline.getOptionValue("v")) : 0.05;
+        MatrixFile = new File(Comline.getOptionValue("matrix"));
+        Resolution = Integer.parseInt(Comline.getOptionValue("r"));
+        BedpeFile = new CustomFile(Comline.getOptionValue("f"));
+        OutPrefix = Comline.hasOption("p") ? Comline.getOptionValue("p") : chr1.Chr.Name + "-" + chr2.Chr.Name;
+        InterMatrix = new Matrix<>(FileTool.ReadMatrixFile(MatrixFile));
     }
 
     /***
@@ -120,10 +130,10 @@ public class TranslocationDetection {
 
     /***
      * 我的图像识别算法
-     * @param MatrixFile
+     *
      * @throws IOException
      */
-    public void Run(File MatrixFile) throws IOException, InterruptedException {
+    public void Run() throws IOException, InterruptedException {
         String ComLine = "python " + Opts.JarFile.getParent() + "/script/LongCornerDetect.py -i " + MatrixFile + " -c " + Chr1.toString().replace("\t", ":") + " " + Chr2.toString().replace("\t", ":") + " -r " + Resolution + " -p " + OutPrefix;
         Opts.CommandOutFile.Append(ComLine + "\n");
         Tools.ExecuteCommandStr(ComLine);
