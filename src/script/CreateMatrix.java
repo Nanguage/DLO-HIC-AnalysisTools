@@ -97,10 +97,9 @@ public class CreateMatrix {
 
     }
 
-    public void Run() throws IOException {
+    public Integer[][] Run() throws IOException {
         if (Region1 != null) {
-            Run(Region1, Region2);
-            return;
+            return Run(Region1, Region2);
         }
         if (Chromosome == null) {
             System.err.println("Error! no -chr  argument");
@@ -232,9 +231,10 @@ public class CreateMatrix {
             outfile.write(temp + "\n");
         }
         outfile.close();
+        return InterMatrix;
     }//OK
 
-    public void Run(ChrRegion reg1, ChrRegion reg2) throws IOException {
+    public Integer[][] Run(ChrRegion reg1, ChrRegion reg2) throws IOException {
         System.out.println(new Date() + "\tBegin to creat interaction matrix " + reg1.toString().replace("\t", ":") + " " + reg2.toString().replace("\t", ":"));
         int[] ChrBinSize;
         ChrBinSize = Statistic.CalculatorBinSize(new int[]{reg1.Length, reg2.Length}, Resolution);
@@ -325,5 +325,6 @@ public class CreateMatrix {
         outfile.write(reg1.toString() + "\n");
         outfile.write(reg2.toString() + "\n");
         outfile.close();
+        return InterMatrix;
     }
 }

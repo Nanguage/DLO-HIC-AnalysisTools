@@ -1,14 +1,13 @@
 import java.io.*;
-import java.text.DecimalFormat;
 import java.util.*;
+import java.util.Properties;
 
 import bin.*;
 import lib.File.*;
 import lib.tool.*;
-import lib.unit.CustomFile;
-import lib.unit.Default;
-import lib.unit.Opts;
+import lib.unit.*;
 import org.apache.commons.cli.*;
+import script.CreateMatrix;
 
 public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
@@ -78,6 +77,7 @@ public class Main {
     private File SeProcessDir;//单端处理输出目录
     private File BedpeProcessDir;//bedpe处理输出目录
     private File MakeMatrixDir;//建立矩阵输出目录
+    private File TransLocationDir;//染色体易位输出目录
     private Report Stat = new Report();
 
     private Main(String[] args) throws IOException {
@@ -123,15 +123,10 @@ public class Main {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         //==============================================测试区==========================================================
-//        ArrayList<char[]> src = new ArrayList<>();
-//        src.add("AAAA".toCharArray());
-//        System.out.println(src.get(0));
-//        src.add(new File("AAA"));
-//        src.add(new File("BBB"));
-//        ArrayList<File> dest= new ArrayList<>(src);
-//        System.out.println(dest);
-//        char a =1;
-//        System.out.println(a);
+
+//        Properties ConfigFile = new Properties();
+//        ConfigFile.load(new FileReader(Opts.ConfigFile));
+//        String Temp = ConfigFile.getProperty("");
 
         //==============================================================================================================
 
@@ -397,7 +392,7 @@ public class Main {
                 chrSize[i++] = ChrSize.get(chr);
             }
         }
-        MakeMatrix matrix = new MakeMatrix(MakeMatrixDir, Prefix, InterBedpeFile.getPath(), Chromosome.toArray(new String[Chromosome.size()]), chrSize, Resolution);//生成交互矩阵类
+        MakeMatrix matrix = new MakeMatrix(MakeMatrixDir, Prefix, InterBedpeFile.getPath(), Chromosome.toArray(new String[0]), chrSize, Resolution);//生成交互矩阵类
         if (StepCheck("MakeMatrix")) {
             matrix.Run();//运行
         }
@@ -514,12 +509,12 @@ public class Main {
         ArrayList<File> SplitFastqFile = FastqFile.SplitFile(FastqFile.getPath(), 100000000);//1亿行作为一个单位拆分
         ArrayList<File> TempSplitFastq = new ArrayList<>(SplitFastqFile);
         File SamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSamFile();
-        File FilterSamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getUniqSamFile();
+        File UniqSamFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getUniqSamFile();
         CustomFile SortBedFile = new SeProcess(FastqFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix, ReadsType).getSortBedFile();
         File[] SplitSamFile = new File[SplitFastqFile.size()];
         File[] SplitFilterSamFile = new File[SplitFastqFile.size()];
         File[] SplitSortBedFile = new File[SplitFastqFile.size()];
-        Thread[] t2 = new Thread[Default.MaxThreads / 2];
+        Thread[] t2 = new Thread[Default.MaxThreads];
         int[] Index = new int[]{0};
         for (int i = 0; i < t2.length; i++) {
             t2[i] = new Thread(new Runnable() {
@@ -538,7 +533,7 @@ public class Main {
                             }
                         }
                         try {
-                            SeProcess ssp = new SeProcess(InFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + "." + finalI, ReadsType);//单端处理类
+                            SeProcess ssp = new SeProcess(InFile, IndexPrefix, AlignMisMatch, AlignMinQuality, SeProcessDir, Prefix + ".split" + finalI, ReadsType);//单端处理类
                             ssp.Threads = Threads;//设置线程数
                             ssp.AlignThreads = AlignThread;
                             ssp.setIteration(Iteration);
@@ -554,8 +549,8 @@ public class Main {
             });
             t2[i].start();
         }
-        for (int i = 0; i < t2.length; i++) {
-            t2[i].join();
+        for (Thread aT2 : t2) {
+            aT2.join();
         }
         for (File s : SplitFastqFile) {
             if (Opts.DeBugLevel < 1) {
@@ -567,7 +562,7 @@ public class Main {
             public void run() {
                 try {
                     FileTool.MergeSamFile(SplitSamFile, SamFile);
-                    FileTool.MergeSamFile(SplitFilterSamFile, FilterSamFile);
+                    FileTool.MergeSamFile(SplitFilterSamFile, UniqSamFile);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -617,6 +612,32 @@ public class Main {
         });
     }
 
+    //======================================developing===========================================
+    private Thread TransLocationDetection(Hashtable<String, Integer> ChrSize, CustomFile BedPeFile, int Resolution) {
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    String[] KeySet = ChrSize.keySet().toArray(new String[0]);
+                    for (int i = 0; i < KeySet.length; i++) {
+                        for (int j = i + 1; j < KeySet.length; j++) {
+                            lib.unit.Chromosome Chr1 = new Chromosome(KeySet[i], ChrSize.get(KeySet[i]));
+                            lib.unit.Chromosome Chr2 = new Chromosome(KeySet[j], ChrSize.get(KeySet[j]));
+                            String prefix = TransLocationDir + "/" + Chr1.Name + "-" + Chr2.Name;
+                            Integer[][] matrix = new CreateMatrix(BedPeFile, null, Resolution, prefix, 1).Run(new ChrRegion(Chr1, 0, Chr1.Size), new ChrRegion(Chr2, 0, Chr2.Size));
+                            TranslocationDetection Trans = new TranslocationDetection(new ChrRegion(Chr1, 0, Chr1.Size), new ChrRegion(Chr2, 0, Chr2.Size), new Matrix<>(matrix), BedPeFile, Resolution, prefix);
+                            Trans.Run();
+                        }
+                    }
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        return t;
+    }
+
+    //==============================
     private void GetOption(File ConfFile, File AdvConfFile) throws IOException {
         ReadConfFile(ConfFile);
         ReadConfFile(AdvConfFile);
@@ -734,6 +755,7 @@ public class Main {
         SeProcessDir = new File(OutPath + "/" + Opts.SeDir);
         BedpeProcessDir = new File(OutPath + "/" + Opts.BedpeDir);
         MakeMatrixDir = new File(OutPath + "/" + Opts.MatrixDir);
+        TransLocationDir = new File(OutPath + "/" + Opts.TransDir);
         EnzyPath = new File(OutPath + "/" + Opts.EnzyFragDir);
         if (!PreProcessDir.isDirectory() && !PreProcessDir.mkdirs()) {
             System.err.println("Can't create " + PreProcessDir);

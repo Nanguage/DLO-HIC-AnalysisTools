@@ -174,7 +174,7 @@ public class CustomFile extends File {
         System.out.println();
     }
 
-    public void MergeSortFile(File[] InFile, int[] Row, String Model, String Regex) throws IOException {
+    public void MergeSortFile(File[] InFile, int[] Col, String Model, String Regex) throws IOException {
         System.out.print(new Date() + "\tMerge ");
         for (File s : InFile) {
             System.out.print(s.getName() + " ");
@@ -200,34 +200,34 @@ public class CustomFile extends File {
             //数字排序
             LinkedList<IntegerArrays> list = new LinkedList<>();
             for (int i = 0; i < infile.length; i++) {
-                line[i] = infile[i].readLine();
+                line[i] = infile[i].readLine();//读取每个文件
                 if (line[i] == null) {
                     continue;
                 }
-                str = line[i].split(regex);
-                IntegerArrays tempint = new IntegerArrays(Row.length + 1);
-                tempint.set(tempint.getLength() - 1, i);
-                for (int j = 0; j < Row.length; j++) {
-                    tempint.set(j, Integer.parseInt(str[Row[j] - 1]));
+                str = line[i].split(regex);//拆分
+                IntegerArrays tempint = new IntegerArrays(Col.length + 1);
+                tempint.set(tempint.getLength() - 1, i);//最后一列为文件序号
+                for (int j = 0; j < Col.length; j++) {
+                    tempint.set(j, Integer.parseInt(str[Col[j] - 1]));//取相应列
                 }
-                //================插入链表===sort====================
-                list.add(tempint);
-                Collections.sort(list);
+                list.add(tempint);//插入链表
             }
+            Collections.sort(list);//排序
             //=================================================
             while (list.size() > 1) {
-                IntegerArrays tempint = list.removeFirst();
-                int index = tempint.getItem()[tempint.getLength() - 1];
-                outfile.write(line[index] + "\n");
+                IntegerArrays tempint = list.removeFirst();//移除第一个元素
+                int index = tempint.getItem()[tempint.getLength() - 1];//获取文件索引号
+                outfile.write(line[index] + "\n");//写入对应文件的内容
+                //读取对应文件下一行的内容
                 if ((line[index] = infile[index].readLine()) != null) {
                     str = line[index].split(regex);
-                    for (int j = 0; j < Row.length; j++) {
-                        tempint.set(j, Integer.parseInt(str[Row[j] - 1]));
+                    for (int j = 0; j < Col.length; j++) {
+                        tempint.set(j, Integer.parseInt(str[Col[j] - 1]));
                     }
-                    list.add(tempint);
-                    Collections.sort(list);
+                    list.add(tempint);//插入新的内容
+                    Collections.sort(list);//排序
                 } else {
-                    infile[index].close();
+                    infile[index].close();//没有新内容可以读取时，关闭文件句柄
                 }
             }
             IntegerArrays tempint = list.removeFirst();
@@ -236,6 +236,7 @@ public class CustomFile extends File {
             while ((line[index] = infile[index].readLine()) != null) {
                 outfile.write(line[index] + "\n");
             }
+            infile[index].close();
         } else {
             //字符串排序
             LinkedList<StringArrays> list = new LinkedList<>();
@@ -245,15 +246,15 @@ public class CustomFile extends File {
                     continue;
                 }
                 str = line[i].split(regex);
-                StringArrays tempstr = new StringArrays(Row.length + 1);
+                StringArrays tempstr = new StringArrays(Col.length + 1);
                 tempstr.set(tempstr.getLength() - 1, String.valueOf(i));
-                for (int j = 0; j < Row.length; j++) {
-                    tempstr.set(j, str[Row[j] - 1]);
+                for (int j = 0; j < Col.length; j++) {
+                    tempstr.set(j, str[Col[j] - 1]);
                 }
                 //================插入链表=========================
                 list.add(tempstr);
-                Collections.sort(list);
             }
+            Collections.sort(list);
             //======================================================================================================
             while (list.size() > 1) {
                 StringArrays tempstr = list.removeFirst();
@@ -261,8 +262,8 @@ public class CustomFile extends File {
                 outfile.write(line[index] + "\n");
                 if ((line[index] = infile[index].readLine()) != null) {
                     str = line[index].split(regex);
-                    for (int j = 0; j < Row.length; j++) {
-                        tempstr.set(j, str[Row[j] - 1]);
+                    for (int j = 0; j < Col.length; j++) {
+                        tempstr.set(j, str[Col[j] - 1]);
                     }
                     list.add(tempstr);
                     Collections.sort(list);

@@ -11,6 +11,6 @@ public class Default {
     public static final int MatchScore = 1;
     public static final int MisMatchScore = -1;
     public static final int IndelScore = -1;
-    public static final int MaxThreads = 8;
+    public static final int MaxThreads = 4;
 
 }

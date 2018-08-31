@@ -1,6 +1,7 @@
 
 package bin;
 
+import com.sun.istack.internal.NotNull;
 import kotlin.text.Charsets;
 import lib.File.FileTool;
 import lib.Image.HeatMap;
@@ -47,7 +48,7 @@ public class TranslocationDetection {
         Tld.Run();
     }
 
-    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix<?> matrix, CustomFile bedpefile, String prefix) {
+    public TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix<?> matrix, CustomFile bedpefile, String prefix) {
         Chr1 = chr1;
         Chr2 = chr2;
         InterMatrix = matrix;
@@ -57,7 +58,7 @@ public class TranslocationDetection {
         Resolution = InterMatrix.getResolution();
     }
 
-    TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix<?> matrix, CustomFile bedpefile, int Resolution, String prefix) {
+    public TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix<?> matrix, CustomFile bedpefile, int Resolution, String prefix) {
         this(chr1, chr2, matrix, bedpefile, prefix);
         this.setResolution(Resolution);
     }
@@ -80,6 +81,7 @@ public class TranslocationDetection {
         try {
             Comline = new DefaultParser().parse(Arguement, args);
         } catch (ParseException e) {
+            System.out.println(e.getMessage());
             new HelpFormatter().printHelp("java -cp path/" + Opts.JarFile.getName() + " " + TranslocationDetection.class.getName(), Helpheader, Arguement, Helpfooter, true);
             System.exit(1);
         }
@@ -93,7 +95,7 @@ public class TranslocationDetection {
                 chr2 = chr1;
             }
         }
-        P_Value = Comline.hasOption("v") ? Double.parseDouble(Comline.getOptionValue("v")) : 0.05;
+        P_Value = Comline.hasOption("v") ? Double.parseDouble(Comline.getOptionValue("v")) : P_Value;
         MatrixFile = new File(Comline.getOptionValue("matrix"));
         Resolution = Integer.parseInt(Comline.getOptionValue("r"));
         BedpeFile = new CustomFile(Comline.getOptionValue("f"));

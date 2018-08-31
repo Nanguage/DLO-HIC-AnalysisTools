@@ -306,7 +306,7 @@ public class MakeMatrix {
                     try {
                         String line;
                         String[] str;
-                        if (bedpeFile.BedpeDetect() == 1) {
+                        if (bedpeFile.BedpeDetect() == Opts.BedpePointFormat) {
                             while ((line = infile.readLine()) != null) {
                                 str = line.split("\\s+");
                                 int hang = Integer.parseInt(str[1]) / resolution;
@@ -336,7 +336,7 @@ public class MakeMatrix {
                                     }
                                 }
                             }
-                        } else if (bedpeFile.BedpeDetect() == 2) {
+                        } else if (bedpeFile.BedpeDetect() == Opts.BedpeRegionFormat) {
                             while ((line = infile.readLine()) != null) {
                                 str = line.split("\\s+");
                                 int hang = (Integer.parseInt(str[1]) + Integer.parseInt(str[2])) / 2 / resolution;
