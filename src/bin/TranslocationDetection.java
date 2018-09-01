@@ -48,18 +48,19 @@ public class TranslocationDetection {
         Tld.Run();
     }
 
-    public TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix<?> matrix, CustomFile bedpefile, String prefix) {
+    private TranslocationDetection(ChrRegion chr1, ChrRegion chr2, File matrixfile, CustomFile bedpefile, String prefix) {
         Chr1 = chr1;
         Chr2 = chr2;
-        InterMatrix = matrix;
-        FilteredMatrix = matrix;
+//        InterMatrix = matrix;
+//        FilteredMatrix = matrix;
+        MatrixFile = matrixfile;
         BedpeFile = bedpefile;
         OutPrefix = prefix;
-        Resolution = InterMatrix.getResolution();
+//        Resolution = InterMatrix.getResolution();
     }
 
-    public TranslocationDetection(ChrRegion chr1, ChrRegion chr2, Matrix<?> matrix, CustomFile bedpefile, int Resolution, String prefix) {
-        this(chr1, chr2, matrix, bedpefile, prefix);
+    public TranslocationDetection(ChrRegion chr1, ChrRegion chr2, File matrixfile, CustomFile bedpefile, int Resolution, String prefix) {
+        this(chr1, chr2, matrixfile, bedpefile, prefix);
         this.setResolution(Resolution);
     }
 

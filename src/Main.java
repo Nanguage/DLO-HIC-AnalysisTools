@@ -8,6 +8,7 @@ import lib.tool.*;
 import lib.unit.*;
 import org.apache.commons.cli.*;
 import script.CreateMatrix;
+import sun.util.resources.cldr.br.CurrencyNames_br;
 
 public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
@@ -421,8 +422,11 @@ public class Main {
         });
         ST.start();
         SThread.add(ST);
-        //=============================================Cluster==========================================================
+        //=============================================TransLocation Detection==========================================
         TransTime = new Date();
+        if (StepCheck("TransLocationDetection")) {
+            TransLocationDetection(ChrSize, FinalBedpeFile, Resolution / 10, Threads);
+        }
         EndTime = new Date();
         System.out.println("\n-------------------------------Time----------------------------------------");
         System.out.println("PreProcess:\t" + Tools.DateFormat((SeTime.getTime() - PreTime.getTime()) / 1000));
@@ -613,28 +617,63 @@ public class Main {
     }
 
     //======================================developing===========================================
-    private Thread TransLocationDetection(Hashtable<String, Integer> ChrSize, CustomFile BedPeFile, int Resolution) {
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    String[] KeySet = ChrSize.keySet().toArray(new String[0]);
-                    for (int i = 0; i < KeySet.length; i++) {
-                        for (int j = i + 1; j < KeySet.length; j++) {
-                            lib.unit.Chromosome Chr1 = new Chromosome(KeySet[i], ChrSize.get(KeySet[i]));
-                            lib.unit.Chromosome Chr2 = new Chromosome(KeySet[j], ChrSize.get(KeySet[j]));
-                            String prefix = TransLocationDir + "/" + Chr1.Name + "-" + Chr2.Name;
-                            Integer[][] matrix = new CreateMatrix(BedPeFile, null, Resolution, prefix, 1).Run(new ChrRegion(Chr1, 0, Chr1.Size), new ChrRegion(Chr2, 0, Chr2.Size));
-                            TranslocationDetection Trans = new TranslocationDetection(new ChrRegion(Chr1, 0, Chr1.Size), new ChrRegion(Chr2, 0, Chr2.Size), new Matrix<>(matrix), BedPeFile, Resolution, prefix);
+
+    /**
+     * @param ChrSize    染色体大小
+     * @param BedPeFile  bedpe文件
+     * @param Resolution 分辨率
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    private void TransLocationDetection(Hashtable<String, Integer> ChrSize, CustomFile BedPeFile, int Resolution, int Threads) throws InterruptedException, IOException {
+        String[] ChrSet = Chromosome.toArray(new String[0]);
+        //创建列表
+        ArrayList<String> Prefix = new ArrayList<>();
+        ArrayList<Chromosome> Chr1 = new ArrayList<>();
+        ArrayList<Chromosome> Chr2 = new ArrayList<>();
+        for (int i = 0; i < ChrSet.length - 1; i++) {
+            for (int j = i + 1; j < ChrSet.length; j++) {
+                Chr1.add(new Chromosome(ChrSet[i], ChrSize.get(ChrSet[i])));
+                Chr2.add(new Chromosome(ChrSet[j], ChrSize.get(ChrSet[j])));
+                Prefix.add(TransLocationDir + "/" + Chr1.get(Chr1.size() - 1).Name + "-" + Chr2.get(Chr2.size() - 1).Name + "." + Tools.UnitTrans(Resolution, "b", "M") + "M");
+            }
+        }
+        Thread[] t = new Thread[Threads];//创建多个线程
+        for (int i = 0; i < t.length; i++) {
+            t[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while (Prefix.size() > 0) {
+                        lib.unit.Chromosome chr1, chr2;
+                        String prefix;
+                        synchronized (t) {
+                            try {
+                                chr1 = Chr1.remove(0);
+                                chr2 = Chr2.remove(0);
+                                prefix = Prefix.remove(0);
+                            } catch (IndexOutOfBoundsException e) {
+                                break;
+                            }
+                        }
+                        try {
+                            //如果存在矩阵文件就不创建，节省时间
+                            if (!new File(prefix + ".2d.matrix").exists()) {
+                                new CreateMatrix(BedPeFile, null, Resolution, prefix, 1).Run(new ChrRegion(chr1, 0, chr1.Size), new ChrRegion(chr2, 0, chr2.Size));
+                            }
+                            //开始识别
+                            TranslocationDetection Trans = new TranslocationDetection(new ChrRegion(chr1, 0, chr1.Size), new ChrRegion(chr2, 0, chr2.Size), new File(prefix + ".2d.matrix"), BedPeFile, Resolution, prefix);
                             Trans.Run();
+                        } catch (IOException | InterruptedException e) {
+                            e.printStackTrace();
                         }
                     }
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
                 }
-            }
-        });
-        return t;
+            });
+            t[i].start();
+        }
+        for (Thread aT : t) {
+            aT.join();
+        }
     }
 
     //==============================
@@ -771,6 +810,10 @@ public class Main {
         }
         if (!MakeMatrixDir.isDirectory() && !MakeMatrixDir.mkdirs()) {
             System.err.println("Can't create " + MakeMatrixDir);
+            System.exit(1);
+        }
+        if (!TransLocationDir.isDirectory() && !TransLocationDir.mkdirs()) {
+            System.err.println("Can't create " + TransLocationDir);
             System.exit(1);
         }
         if (!EnzyPath.isDirectory() && !EnzyPath.mkdirs()) {
