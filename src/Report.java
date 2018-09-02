@@ -92,8 +92,8 @@ public class Report {
         }
         System.out.println("\n-------------------------------------------------------------");
         System.out.println("Total action number:\t" + new DecimalFormat("#,###").format(FinalBedpeNum) + "\t" + String.format("%.2f", (double) FinalBedpeNum / Statistic.Average(RawDataReadsNum) * 100) + "%");
-        System.out.println("Intra action number:\t" + new DecimalFormat("#,###").format(IntraActionNum) + "\t" + String.format("%.2f", (double) IntraActionNum / FinalBedpeNum * 100) + "%");
         System.out.println("Inter action number:\t" + new DecimalFormat("#,###").format(InterActionNum) + "\t" + String.format("%.2f", (double) InterActionNum / FinalBedpeNum * 100) + "%");
+        System.out.println("Intra action number:\t" + new DecimalFormat("#,###").format(IntraActionNum) + "\t" + String.format("%.2f", (double) IntraActionNum / FinalBedpeNum * 100) + "%");
         System.out.println("\n-------------------------------------------------------------");
         if (RestrictionSeq.replace("^", "").length() <= 4) {
             System.out.println("Short region <= 5k :\t" + new DecimalFormat("#,###").format(ShortRegionNum) + "\t" + String.format("%.2f", (double) ShortRegionNum / IntraActionNum * 100) + "%");
@@ -102,13 +102,6 @@ public class Report {
             System.out.println("Short region <= 20k :\t" + new DecimalFormat("#,###").format(ShortRegionNum) + "\t" + String.format("%.2f", (double) ShortRegionNum / IntraActionNum * 100) + "%");
             System.out.println("Long region > 20k :\t" + new DecimalFormat("#,###").format(LongRegionNum) + "\t" + String.format("%.2f", (double) LongRegionNum / IntraActionNum * 100) + "%");
         }
-//        System.out.println("No duplication:\t" + NoRmdupNum * 100 + "%");
-//        System.out.println("Ligation type\tPercent");
-//        for (int i = 0; i < LigationFile.size(); i++) {
-//            System.out.println(LigationFile.get(i) + "\t" + LigationNum.get(i) * 100 + "%");
-//        }
-//        System.out.println("Inter action:\t" + InterActionNum * 100 + "%");
-//        System.out.println("Intra action:\t" + IntraActionNum * 100 + "%");
     }
 
     public void ReportHtml(String outfile) throws IOException {

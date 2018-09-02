@@ -171,6 +171,7 @@ public class Main {
         CustomFile FinalBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".bedpe");
         CustomFile InterBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".inter.bedpe");
         Thread ST;
+        Thread[] STS;
         //==========================================Create Index========================================================
         Thread createindex = new Thread();
         if (IndexPrefix == null || IndexPrefix.getName().equals("")) {
@@ -351,23 +352,31 @@ public class Main {
             LinkerProcess[i].join();
         }
         //==============================================================================================================
+        STS = new Thread[UseLinker.size()];
         for (int i = 0; i < UseLinker.size(); i++) {
-            BedpeProcess Temp = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker.get(i), Chromosome.toArray(new String[0]), EnzyFilePrefix, SeBedpeFile[i]);
-            Stat.LigationFile.add(new String[]{Temp.getSelfLigationFile().getPath(), Temp.getReLigationFile().getPath(), Temp.getValidBedpeFile().getPath()});
-            Stat.NoRmdupName.add(Temp.getFinalBedpeFile().getPath());
-            ST = new Thread(new Runnable() {
+            int finalI = i;
+            STS[i] = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        Stat.LigationNum.add(new Long[]{Temp.getSelfLigationFile().CalculatorLineNumber(), Temp.getReLigationFile().CalculatorLineNumber(), Temp.getValidBedpeFile().CalculatorLineNumber()});
-                        Stat.NoRmdupNum.add(Temp.getFinalBedpeFile().CalculatorLineNumber());
+                        BedpeProcess Temp = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker.get(finalI), Chromosome.toArray(new String[0]), EnzyFilePrefix, SeBedpeFile[finalI]);
+                        long selfnum = Temp.getSelfLigationFile().CalculatorLineNumber();
+                        long renum = Temp.getReLigationFile().CalculatorLineNumber();
+                        long validnum = Temp.getValidBedpeFile().CalculatorLineNumber();
+                        long nodupnum = Temp.getFinalBedpeFile().CalculatorLineNumber();
+                        synchronized (STS) {
+                            Stat.LigationFile.add(new String[]{Temp.getSelfLigationFile().getPath(), Temp.getReLigationFile().getPath(), Temp.getValidBedpeFile().getPath()});
+                            Stat.NoRmdupName.add(Temp.getFinalBedpeFile().getPath());
+                            Stat.LigationNum.add(new Long[]{selfnum, renum, validnum});
+                            Stat.NoRmdupNum.add(nodupnum);
+                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             });
-            ST.start();
-            SThread.add(ST);
+            STS[i].start();
+            SThread.add(STS[i]);
         }
         //=================================================BedpeFile To Inter===========================================
         if (StepCheck("BedPeProcess")) {
