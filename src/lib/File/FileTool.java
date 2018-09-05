@@ -55,7 +55,7 @@ public class FileTool {
         String[] str;
         ArrayList<InterAction> List = new ArrayList<>();
         BufferedReader in = new BufferedReader(new FileReader(file));
-        if (file.BedpeDetect() == 1) {
+        if (file.BedpeDetect() == Opts.FileFormat.BedpePointFormat) {
             while ((line = in.readLine()) != null) {
                 str = line.split("\\s+");
                 InterAction inter = new InterAction(new ChrRegion(new String[]{str[0], str[1], str[1]}), new ChrRegion(new String[]{str[2], str[3], str[3]}));
@@ -82,7 +82,7 @@ public class FileTool {
                 }
                 List.add(inter);
             }
-        } else if (file.BedpeDetect() == 2) {
+        } else if (file.BedpeDetect() == Opts.FileFormat.BedpeRegionFormat) {
             while ((line = in.readLine()) != null) {
                 str = line.split("\\s+");
                 InterAction inter = new InterAction(new ChrRegion(new String[]{str[0], str[1], str[2]}), new ChrRegion(new String[]{str[3], str[4], str[5]}));

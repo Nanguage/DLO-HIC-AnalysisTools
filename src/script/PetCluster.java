@@ -36,56 +36,59 @@ public class PetCluster {
             System.exit(1);
         }
         CommandLine comline = new DefaultParser().parse(Arguement, args);
-        CustomFile infile =new CustomFile(comline.getOptionValue("f"));
+        CustomFile infile = new CustomFile(comline.getOptionValue("f"));
         String outprefix = comline.hasOption("p") ? comline.getOptionValue("p") : infile.getPath();
         int Length = comline.hasOption("l") ? Integer.parseInt(comline.getOptionValue("l")) : 0;
         String line;
         BufferedReader in = new BufferedReader(new FileReader(infile));
         Hashtable<String, ArrayList<int[]>> ChrMatrix = new Hashtable<>();
-        if (infile.BedpeDetect() == Opts.BedpePointFormat) {
-            if (Length == 0) {
-                System.err.println("Error! extend length is 0");
+        switch (infile.BedpeDetect()) {
+            case BedpePointFormat:
+                if (Length == 0) {
+                    System.err.println("Error! extend length is 0");
+                    System.exit(1);
+                }
+                while ((line = in.readLine()) != null) {
+                    String[] str = line.split("\\s+");
+                    String chr1 = str[0];
+                    String chr2 = str[2];
+                    String key = chr1 + "-" + chr2;
+                    int count = 1;
+                    if (!ChrMatrix.containsKey(key)) {
+                        ChrMatrix.put(key, new ArrayList<>());
+                    }
+                    if (str.length >= 5) {
+                        try {
+                            count = Integer.parseInt(str[4]);
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+                    ChrMatrix.get(key).add(new int[]{Integer.parseInt(str[1]) - Length, Integer.parseInt(str[1]) + Length, Integer.parseInt(str[3]) - Length, Integer.parseInt(str[3]) + Length, count});
+                }
+                break;
+            case BedpeRegionFormat:
+                while ((line = in.readLine()) != null) {
+                    String[] str = line.split("\\s+");
+                    String chr1 = str[0];
+                    String chr2 = str[3];
+                    String key = chr1 + "-" + chr2;
+                    int count = 1;
+                    if (!ChrMatrix.containsKey(key)) {
+                        ChrMatrix.put(key, new ArrayList<>());
+                    }
+                    if (str.length >= 7) {
+                        try {
+                            count = Integer.parseInt(str[6]);
+                        } catch (NumberFormatException e) {
+                            count = 1;
+                        }
+                    }
+                    ChrMatrix.get(key).add(new int[]{Integer.parseInt(str[1]) - Length, Integer.parseInt(str[2]) + Length, Integer.parseInt(str[4]) - Length, Integer.parseInt(str[5]) + Length, count});
+                }
+                break;
+            default:
+                System.err.println("Error format !");
                 System.exit(1);
-            }
-            while ((line = in.readLine()) != null) {
-                String[] str = line.split("\\s+");
-                String chr1 = str[0];
-                String chr2 = str[2];
-                String key = chr1 + "-" + chr2;
-                int count = 1;
-                if (!ChrMatrix.containsKey(key)) {
-                    ChrMatrix.put(key, new ArrayList<>());
-                }
-                if (str.length >= 5) {
-                    try {
-                        count = Integer.parseInt(str[4]);
-                    } catch (NumberFormatException ignored) {
-                    }
-                }
-                ChrMatrix.get(key).add(new int[]{Integer.parseInt(str[1]) - Length, Integer.parseInt(str[1]) + Length, Integer.parseInt(str[3]) - Length, Integer.parseInt(str[3]) + Length, count});
-            }
-        } else if (infile.BedpeDetect() == Opts.BedpeRegionFormat) {
-            while ((line = in.readLine()) != null) {
-                String[] str = line.split("\\s+");
-                String chr1 = str[0];
-                String chr2 = str[3];
-                String key = chr1 + "-" + chr2;
-                int count = 1;
-                if (!ChrMatrix.containsKey(key)) {
-                    ChrMatrix.put(key, new ArrayList<>());
-                }
-                if (str.length >= 7) {
-                    try {
-                        count = Integer.parseInt(str[6]);
-                    } catch (NumberFormatException e) {
-                        count = 1;
-                    }
-                }
-                ChrMatrix.get(key).add(new int[]{Integer.parseInt(str[1]) - Length, Integer.parseInt(str[2]) + Length, Integer.parseInt(str[4]) - Length, Integer.parseInt(str[5]) + Length, count});
-            }
-        } else {
-            System.err.println("Error format !");
-            System.exit(1);
         }
         in.close();
         BufferedWriter out = new BufferedWriter(new FileWriter(outprefix + ".cluster"));

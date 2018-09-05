@@ -33,23 +33,26 @@ public class BedpeFilter {
         BufferedWriter out = new BufferedWriter(new FileWriter(OutFile));
         String line;
         String[] str;
-        if (InFile.BedpeDetect() == Opts.BedpePointFormat) {
-            while ((line = in.readLine()) != null) {
-                str = line.split("\\s+");
-                if (Filter.Run(new InterAction(new ChrRegion(new String[]{str[0], str[1], str[1]}), new ChrRegion(new String[]{str[2], str[3], str[3]})))) {
-                    out.write(line + "\n");
+        switch (InFile.BedpeDetect()) {
+            case BedpePointFormat:
+                while ((line = in.readLine()) != null) {
+                    str = line.split("\\s+");
+                    if (Filter.Run(new InterAction(new ChrRegion(new String[]{str[0], str[1], str[1]}), new ChrRegion(new String[]{str[2], str[3], str[3]})))) {
+                        out.write(line + "\n");
+                    }
                 }
-            }
-        } else if (InFile.BedpeDetect() == Opts.BedpeRegionFormat) {
-            while ((line = in.readLine()) != null) {
-                str = line.split("\\s+");
-                if (Filter.Run(new InterAction(new ChrRegion(new String[]{str[0], str[1], str[2]}), new ChrRegion(new String[]{str[3], str[4], str[5]})))) {
-                    out.write(line + "\n");
+                break;
+            case BedpeRegionFormat:
+                while ((line = in.readLine()) != null) {
+                    str = line.split("\\s+");
+                    if (Filter.Run(new InterAction(new ChrRegion(new String[]{str[0], str[1], str[2]}), new ChrRegion(new String[]{str[3], str[4], str[5]})))) {
+                        out.write(line + "\n");
+                    }
                 }
-            }
-        } else {
-            System.err.println("Error format");
-            System.exit(1);
+                break;
+            default:
+                System.err.println("Error format");
+                System.exit(1);
         }
         out.close();
     }

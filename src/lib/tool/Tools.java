@@ -15,7 +15,7 @@ public class Tools {
 
     }
 
-    public static void PrintList(ArrayList<?> List, String OutFile) throws IOException {
+    public static void PrintList(ArrayList<?> List, File OutFile) throws IOException {
         BufferedWriter outfile = new BufferedWriter(new FileWriter(OutFile));
         for (Object s : List) {
             outfile.write(s + "\n");
@@ -23,7 +23,7 @@ public class Tools {
         outfile.close();
     }
 
-    public static void PrintMatrix(Number[][] Matrix, String TwoDMatrixFile, String SpareMatrix) throws IOException {
+    public static void PrintMatrix(Number[][] Matrix, File TwoDMatrixFile, File SpareMatrix) throws IOException {
         BufferedWriter twodfile = new BufferedWriter(new FileWriter(TwoDMatrixFile));
         BufferedWriter sparefile = new BufferedWriter(new FileWriter(SpareMatrix));
         //打印二维矩阵
@@ -85,7 +85,7 @@ public class Tools {
         return Num * UnitMap.get(PrimaryUint) / UnitMap.get(TransedUint);
     }
 
-    public static int ExecuteCommandStr(String CommandStr, String... args) throws IOException, InterruptedException {
+    public static int ExecuteCommandStr(String CommandStr, File OutFile,File ErrorFile) throws IOException, InterruptedException {
         Process P;
         int ExitValue;
         System.out.println(new Date() + "\t" + CommandStr);
@@ -97,8 +97,8 @@ public class Tools {
                 try {
                     String line;
                     BufferedReader bufferedReaderIn = new BufferedReader(new InputStreamReader(P.getInputStream()));
-                    if (args.length >= 1 && args[0] != null) {
-                        String OutFile = args[0];
+                    if (OutFile != null) {
+//                        String OutFile = args[0];
                         BufferedWriter bufferedwriter_out = new BufferedWriter(new FileWriter(OutFile));
                         while ((line = bufferedReaderIn.readLine()) != null) {
                             bufferedwriter_out.write(line + "\n");
@@ -121,9 +121,9 @@ public class Tools {
                 try {
                     String line;
                     BufferedReader bufferedReaderIn = new BufferedReader(new InputStreamReader(P.getErrorStream()));
-                    if (args.length >= 2 && args[1] != null) {
-                        String LogFile = args[1];
-                        BufferedWriter bufferedwriter_err = new BufferedWriter(new FileWriter(LogFile));
+                    if (ErrorFile != null) {
+//                        String ErrorFile = args[1];
+                        BufferedWriter bufferedwriter_err = new BufferedWriter(new FileWriter(ErrorFile));
                         while ((line = bufferedReaderIn.readLine()) != null) {
                             bufferedwriter_err.write(line + "\n");
                         }
@@ -217,4 +217,6 @@ public class Tools {
         }
         return Kmer;
     }
+
+
 }

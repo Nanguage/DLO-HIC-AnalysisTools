@@ -139,7 +139,7 @@ public class TranslocationDetection {
     public void Run() throws IOException, InterruptedException {
         String ComLine = "python " + Opts.JarFile.getParent() + "/script/LongCornerDetect.py -i " + MatrixFile + " -c " + Chr1.toString().replace("\t", ":") + " " + Chr2.toString().replace("\t", ":") + " -r " + Resolution + " -p " + OutPrefix;
         Opts.CommandOutFile.Append(ComLine + "\n");
-        Tools.ExecuteCommandStr(ComLine);
+        Tools.ExecuteCommandStr(ComLine,null,null);
         List<String> PointList = FileUtils.readLines(new File(OutPrefix + ".HisD.point"), Charsets.UTF_8);
         for (String point : PointList) {
             String[] str = point.split("\\s+");
@@ -155,7 +155,7 @@ public class TranslocationDetection {
                 }
                 ComLine = "python " + Opts.JarFile.getParent() + "/script/ShortCornerDetect.py -i " + prefix + ".2d.matrix -r " + (Resolution / 50) + " -c " + region1.Chr.Name + ":" + region1.Begin + " " + region2.Chr.Name + ":" + region2.Begin + " -q " + str[8] + " -p " + prefix;
                 Opts.CommandOutFile.Append(ComLine + "\n");
-                Tools.ExecuteCommandStr(ComLine);
+                Tools.ExecuteCommandStr(ComLine,null,null);
             }
 
         }
@@ -190,7 +190,7 @@ public class TranslocationDetection {
     private ArrayList<int[]> ChangePointDetect(String matrixfile, String outprefix) throws IOException, InterruptedException {
         String ComLine = "Rscript " + Opts.JarFile.getParent() + "/script/ChangePointDetect.R " + matrixfile + " " + outprefix;
         Opts.CommandOutFile.Append(ComLine + "\n");
-        Tools.ExecuteCommandStr(ComLine);
+        Tools.ExecuteCommandStr(ComLine,null,null);
         ArrayList<int[]> ChangePointList = new ArrayList<>();
         List<String> LineStr = FileUtils.readLines(new File(outprefix + ".cpt"), Charsets.UTF_8);
         for (String line : LineStr) {

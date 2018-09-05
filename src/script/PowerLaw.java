@@ -5,6 +5,7 @@ import lib.unit.Opts;
 import org.apache.commons.cli.*;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -53,7 +54,7 @@ public class PowerLaw {
         String line;
         String[] str;
         int distant;
-        if (BedpeFile.BedpeDetect() == Opts.BedpePointFormat) {
+        if (BedpeFile.BedpeDetect() == Opts.FileFormat.BedpePointFormat) {
             while ((line = infile.readLine()) != null) {
                 str = line.split("\\s+");
                 distant = Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3]));
@@ -75,7 +76,7 @@ public class PowerLaw {
                     List.get(i)[2]++;
                 }
             }
-        } else if (BedpeFile.BedpeDetect() == Opts.BedpeRegionFormat) {
+        } else if (BedpeFile.BedpeDetect() == Opts.FileFormat.BedpeRegionFormat) {
             while ((line = infile.readLine()) != null) {
                 str = line.split("\\s+");
                 distant = Math.abs(Integer.parseInt(str[5]) + Integer.parseInt(str[4]) - Integer.parseInt(str[2]) - Integer.parseInt(str[1])) / 2;
@@ -111,7 +112,7 @@ public class PowerLaw {
         String line;
         String[] str;
         int distant;
-        if (BedpeFile.BedpeDetect() == Opts.BedpePointFormat) {
+        if (BedpeFile.BedpeDetect() == Opts.FileFormat.BedpePointFormat) {
             while ((line = infile.readLine()) != null) {
                 str = line.split("\\s+");
                 distant = Math.abs(Integer.parseInt(str[1]) - Integer.parseInt(str[3]));
@@ -133,7 +134,7 @@ public class PowerLaw {
                     List.get(i)[2]++;
                 }
             }
-        } else if (BedpeFile.BedpeDetect() == Opts.BedpeRegionFormat) {
+        } else if (BedpeFile.BedpeDetect() == Opts.FileFormat.BedpeRegionFormat) {
             while ((line = infile.readLine()) != null) {
                 str = line.split("\\s+");
                 distant = Math.abs(Integer.parseInt(str[5]) + Integer.parseInt(str[4]) - Integer.parseInt(str[2]) - Integer.parseInt(str[1])) / 2;
@@ -163,7 +164,7 @@ public class PowerLaw {
         for (int[] anlist : List) {
             templist.add(String.join("\t", IntegerArrays.toString(anlist)));
         }
-        Tools.PrintList(templist, outfile);
+        Tools.PrintList(templist, new File(outfile));
 
     }
 

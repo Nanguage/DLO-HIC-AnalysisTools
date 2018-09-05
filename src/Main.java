@@ -1,21 +1,22 @@
 import java.io.*;
 import java.util.*;
-import java.util.Properties;
 
 import bin.*;
 import lib.File.*;
+import lib.Image.PlotMatrix;
 import lib.tool.*;
+import lib.tool.FindRestrictionSite;
 import lib.unit.*;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 import script.CreateMatrix;
-import sun.util.resources.cldr.br.CurrencyNames_br;
 
 public class Main {
     private final String OptFastqFile = "FastqFile";//fastq文件
     private final String OptGenomeFile = "GenomeFile";//基因组文件
     private final String OptPrefix = "Prefix";//输出前缀
     private final String OptOutPath = "OutPath";//输出路径
-    private final String OptChromosome = "Chromosome";//染色体名
+    private final String OptChromosome = "Chromosomes";//染色体名
     private final String OptRestriction = "Restriction";//酶切位点序列
     private final String OptLinkerFile = "LinkerFile";//linker文件
     private final String OptAdapterFile = "AdapterFile";//Adapter文件
@@ -33,6 +34,7 @@ public class Main {
     private final String OptMinReadsLength = "MinReadsLength";//最小reads长度
     private final String OptMaxReadsLength = "MaxReadsLength";//最大reads长度
     private final String OptResolution = "Resolution";//分辨率
+    private final String OptDrawResolution = "DrawRes";
     private final String OptThreads = "Threads";//线程数
     private final String OptIteration = "Iteration";//是否迭代
     private final String OptStep = "Step";
@@ -42,7 +44,8 @@ public class Main {
     private CustomFile GenomeFile;
     private File OutPath;
     private String Prefix;
-    private ArrayList<String> Chromosome = new ArrayList<>();
+    private Chromosome[] Chromosomes;
+    //    private ArrayList<String> Chrs = new ArrayList<>();
     private String Restriction;
     private File LinkerFile;
     private File AdapterFile;
@@ -59,7 +62,9 @@ public class Main {
     private int AlignMinQuality;
     private int MinReadsLength;
     private int MaxReadsLength;
-    private int Resolution;
+    private int[] Resolution;
+    private int[] DrawResolution;
+    private int DetectResolution;
     private boolean Iteration = true;
     private int Threads;
     private Date PreTime, SeTime, BedpeTime, MatrixTime, TransTime, EndTime;
@@ -74,11 +79,13 @@ public class Main {
     private int MinLinkerFilterQuality;
     private File EnzyPath;//酶切位点文件目录
     private String EnzyFilePrefix;//酶切位点文件前缀
+    private File[] ChrEnzyFile;//每条染色体的酶切位点位置文件
     private File PreProcessDir;//预处理输出目录
     private File SeProcessDir;//单端处理输出目录
     private File BedpeProcessDir;//bedpe处理输出目录
     private File MakeMatrixDir;//建立矩阵输出目录
     private File TransLocationDir;//染色体易位输出目录
+    //    private CustomFile[] ChrBedpeFile;
     private Report Stat = new Report();
 
     private Main(String[] args) throws IOException {
@@ -124,7 +131,15 @@ public class Main {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         //==============================================测试区==========================================================
-
+//        int i =0;
+//        switch (new CustomFile("chr3-chr9-500k.2d.matrix").MatrixDetect()){
+//            case TwoDMatrixFormat:
+//                System.out.println(2);
+//                break;
+//            case SpareMatrixFormat:
+//                System.out.println(3);
+//                break;
+//        }
 //        Properties ConfigFile = new Properties();
 //        ConfigFile.load(new FileReader(Opts.ConfigFile));
 //        String Temp = ConfigFile.getProperty("");
@@ -144,7 +159,6 @@ public class Main {
         System.out.println("Max Memory:\t" + String.format("%.2f", Opts.MaxMemory / Math.pow(10, 9)) + "G");
         System.out.println("-------------------------------------------------------------------------------");
         //===========================================初始化输出文件======================================================
-        File[] FinalLinkerBedpe = new File[UseLinker.size()];//有效的bedpe文件,每种linker一个文件
         File[] LinkerFastqFileR1;
         File[] LinkerFastqFileR2;
         CustomFile[] UseLinkerFasqFileR1 = new CustomFile[UseLinker.size()];
@@ -163,13 +177,13 @@ public class Main {
         Stat.Thread = Threads;
         Stat.LinkersType = LinkersType;
         Stat.UseLinker = UseLinker;
-        Stat.Chromosome = Chromosome;
+        for (int i = 0; i < Chromosomes.length; i++) {
+            Stat.Chromosome.add(Chromosomes[i].Name);
+        }
         Stat.RawDataFile = FastqFile;
         Stat.RawDataReadsNum = new Long[FastqFile.length];
         //==============================================================================================================
         Opts.CommandOutFile.delete();
-        CustomFile FinalBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".bedpe");
-        CustomFile InterBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".inter.bedpe");
         Thread ST;
         Thread[] STS;
         //==========================================Create Index========================================================
@@ -333,20 +347,23 @@ public class Main {
         if (StepCheck("BedPeProcess")) {
             findenzy.start();
         }
-        try {
-            findenzy.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        findenzy.join();
         //==============================================BedpeFile Process====bedpe 处理=====================================
+        CustomFile[][] LinkerChrSameCleanBedpeFile = new CustomFile[UseLinker.size()][];
+        CustomFile[] LinkerFinalSameCleanBedpeFile = new CustomFile[UseLinker.size()];
+        CustomFile[] LinkerFinalDiffCleanBedpeFile = new CustomFile[UseLinker.size()];
+        File[] FinalLinkerBedpe = new File[UseLinker.size()];//有效的bedpe文件,每种linker一个文件
         Thread[] LinkerProcess = new Thread[UseLinker.size()];//不同linker类型并行
         for (int i = 0; i < LinkerProcess.length; i++) {
             LinkerProcess[i] = BedpeProcess(UseLinker.get(i), SeBedpeFile[i]);
             if (StepCheck("BedPeProcess")) {
                 LinkerProcess[i].start();
             }
-            BedpeProcess Temp = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker.get(i), Chromosome.toArray(new String[0]), EnzyFilePrefix, SeBedpeFile[i]);
-            FinalLinkerBedpe[i] = Temp.getFinalBedpeFile();
+            BedpeProcess Temp = new BedpeProcess(new File(BedpeProcessDir + "/" + UseLinker.get(i)), Prefix + "." + UseLinker.get(i), Chromosomes, ChrEnzyFile, SeBedpeFile[i]);
+            FinalLinkerBedpe[i] = Temp.getFinalFile();
+            LinkerFinalSameCleanBedpeFile[i] = Temp.getSameNoDumpFile();
+            LinkerFinalDiffCleanBedpeFile[i] = Temp.getDiffNoDumpFile();
+            LinkerChrSameCleanBedpeFile[i] = Temp.getChrSameNoDumpFile();
         }
         for (int i = 0; i < UseLinker.size(); i++) {
             LinkerProcess[i].join();
@@ -359,14 +376,14 @@ public class Main {
                 @Override
                 public void run() {
                     try {
-                        BedpeProcess Temp = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker.get(finalI), Chromosome.toArray(new String[0]), EnzyFilePrefix, SeBedpeFile[finalI]);
+                        BedpeProcess Temp = new BedpeProcess(new File(BedpeProcessDir + "/" + UseLinker.get(finalI)), Prefix + "." + UseLinker.get(finalI), Chromosomes, ChrEnzyFile, SeBedpeFile[finalI]);
                         long selfnum = Temp.getSelfLigationFile().CalculatorLineNumber();
                         long renum = Temp.getReLigationFile().CalculatorLineNumber();
-                        long validnum = Temp.getValidBedpeFile().CalculatorLineNumber();
-                        long nodupnum = Temp.getFinalBedpeFile().CalculatorLineNumber();
+                        long validnum = Temp.getValidFile().CalculatorLineNumber();
+                        long nodupnum = Temp.getFinalFile().CalculatorLineNumber();
                         synchronized (STS) {
-                            Stat.LigationFile.add(new String[]{Temp.getSelfLigationFile().getPath(), Temp.getReLigationFile().getPath(), Temp.getValidBedpeFile().getPath()});
-                            Stat.NoRmdupName.add(Temp.getFinalBedpeFile().getPath());
+                            Stat.LigationFile.add(new String[]{Temp.getSelfLigationFile().getPath(), Temp.getReLigationFile().getPath(), Temp.getValidFile().getPath()});
+                            Stat.NoRmdupName.add(Temp.getFinalFile().getPath());
                             Stat.LigationNum.add(new Long[]{selfnum, renum, validnum});
                             Stat.NoRmdupNum.add(nodupnum);
                         }
@@ -379,34 +396,143 @@ public class Main {
             SThread.add(STS[i]);
         }
         //=================================================BedpeFile To Inter===========================================
+        CustomFile FinalBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".clean.bedpe");
+        CustomFile SameBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".same.clean.bedpe");
+        CustomFile DiffBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".diff.clean.bedpe");
+        CustomFile[] ChrBedpeFile = new CustomFile[Chromosomes.length];
+        for (int i = 0; i < Chromosomes.length; i++) {
+            ChrBedpeFile[i] = new CustomFile(BedpeProcessDir + "/" + Prefix + "." + Chromosomes[i].Name + ".same.clean.bedpe");
+        }
+        CustomFile InterBedpeFile = new CustomFile(BedpeProcessDir + "/" + Prefix + ".inter.clean.bedpe");
+        //--------------------------------------------------------------------------------------------------------------
         if (StepCheck("BedPeProcess")) {
-            FinalBedpeFile.Merge(FinalLinkerBedpe);//合并不同linker类型的bedpe文件
+            Thread t1 = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        SameBedpeFile.Merge(LinkerFinalSameCleanBedpeFile);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            t1.start();
+            Thread t2 = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        DiffBedpeFile.Merge(LinkerFinalDiffCleanBedpeFile);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            t2.start();
+            Thread t3 = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        FinalBedpeFile.Merge(FinalLinkerBedpe);//合并不同linker类型的bedpe文件
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            t3.start();
+            //合并不同linker的染色体内的交互，作为构建矩阵的输入文件
+            Thread t4 = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        for (int i = 0; i < Chromosomes.length; i++) {
+                            for (int j = 0; j < UseLinker.size(); j++) {
+                                ChrBedpeFile[i].Append(LinkerChrSameCleanBedpeFile[j][i]);
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            t4.start();
+            t1.join();
+            t2.join();
+            t3.join();
+            t4.join();
         }
         if (StepCheck("BedPe2Inter")) {
             new BedpeToInter(FinalBedpeFile.getPath(), InterBedpeFile.getPath());//将交互区间转换成交互点
         }
         //=================================================Make Matrix==================================================
+//        for (int i = 0; i < ChrBedpeFile.length; i++) {
+//            System.out.println(ChrBedpeFile[i] + "\n");
+//        }
+        //-------------------------------------
         MatrixTime = new Date();
-        int i = 0;
-        if (ChrSize.keySet().size() == 0) {
-            findenzy.start();
-            try {
+        for (Chromosome s : Chromosomes) {
+            if (s.Size == 0) {
+                findenzy.start();
                 findenzy.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }
-        int[] chrSize = new int[ChrSize.size()];
-        for (String chr : Chromosome) {
-            if (ChrSize.containsKey(chr)) {
-                chrSize[i++] = ChrSize.get(chr);
-            }
-        }
-        MakeMatrix matrix = new MakeMatrix(MakeMatrixDir, Prefix, InterBedpeFile.getPath(), Chromosome.toArray(new String[0]), chrSize, Resolution);//生成交互矩阵类
+//        int i = 0;
+//        if (ChrSize.keySet().size() == 0) {
+//            findenzy.start();
+//            findenzy.join();
+//        }
+//        int[] chrSize = new int[ChrSize.size()];
+//        for (String chr : Chromosomes) {
+//            if (ChrSize.containsKey(chr)) {
+//                chrSize[i++] = ChrSize.get(chr);
+//            }
+//        }
+//        System.out.println(Resolution.length + "\n");
         if (StepCheck("MakeMatrix")) {
-            matrix.Run();//运行
+            Thread[] mmt = new Thread[Resolution.length];
+            for (int i = 0; i < Resolution.length; i++) {
+                int finalI = i;
+                mmt[i] = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            MakeMatrix matrix = new MakeMatrix(new File(MakeMatrixDir + "/" + Resolution[finalI]), Prefix, InterBedpeFile, ChrBedpeFile, Chromosomes, Resolution[finalI],Threads);//生成交互矩阵类
+//                            matrix.Threads = Threads;
+                            matrix.Run();//运行
+                        } catch (InterruptedException | IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                mmt[i].start();
+            }
+            for (int i = 0; i < Resolution.length; i++) {
+                mmt[i].join();
+            }
+            //------------------------------------------------------画热图-----------------------------------------
+            for (int i = 0; i < DrawResolution.length; i++) {
+                File OutDir = new File(MakeMatrixDir + "/img_" + Tools.UnitTrans(DrawResolution[i], "B", "M") + "M");
+                if (!OutDir.isDirectory() && !OutDir.mkdir()) {
+                    System.err.println(new Date() + "\tWarning! Can't Create " + OutDir);
+                }
+                if (new File(MakeMatrixDir + "/" + DrawResolution[i]).isDirectory()) {
+                    MakeMatrix matrix = new MakeMatrix(new File(MakeMatrixDir + "/" + DrawResolution[i]), Prefix, InterBedpeFile, ChrBedpeFile, Chromosomes, DrawResolution[i],Threads);//生成交互矩阵类
+                    File[] TwoDMatrixFile = matrix.getChrTwoDMatrixFile();
+                    for (int j = 0; j < Chromosomes.length; j++) {
+                        new PlotMatrix(TwoDMatrixFile[j], new File(OutDir + "/" + Prefix + "." + Chromosomes[j].Name + "." + Tools.UnitTrans(DrawResolution[i], "B", "M") + "M.png"), DrawResolution[i]).Run(new String[]{Chromosomes[j].Name + ":0", Chromosomes[j].Name + ":0"});
+                    }
+
+                } else {
+                    MakeMatrix matrix = new MakeMatrix(new File(MakeMatrixDir + "/" + DrawResolution[i]), Prefix, InterBedpeFile, ChrBedpeFile, Chromosomes, DrawResolution[i],Threads);//生成交互矩阵类
+                    matrix.Run();
+                    File[] TwoDMatrixFile = matrix.getChrTwoDMatrixFile();
+                    for (int j = 0; j < Chromosomes.length; j++) {
+                        new PlotMatrix(TwoDMatrixFile[j], new File(OutDir + "/" + Prefix + "." + Chromosomes[j].Name + "." + Tools.UnitTrans(DrawResolution[i], "B", "M") + "M.png"), DrawResolution[i]).Run(new String[]{Chromosomes[j].Name + ":0", Chromosomes[j].Name + ":0"});
+                    }
+                }
+            }
         }
-        CustomFile[] IntraActionFile = matrix.getChrInterBedpeFile();
+
+//        CustomFile[] IntraActionFile = matrix.getChrBedpeFile();
         //==============================================================================================================
         ST = new Thread(new Runnable() {
             @Override
@@ -414,13 +540,11 @@ public class Main {
                 try {
                     Stat.FinalBedpeName = FinalBedpeFile;
                     Stat.FinalBedpeNum = Stat.FinalBedpeName.CalculatorLineNumber();
-                    for (CustomFile s : IntraActionFile) {
-                        Stat.IntraActionNum = Stat.IntraActionNum + s.CalculatorLineNumber();
-                        if (Stat.RestrictionSeq.replace("^", "").length() <= 4) {
-                            Stat.ShortRegionNum += Statistic.RangeCount(s, 0, 5000, 4);
-                        } else {
-                            Stat.ShortRegionNum += Statistic.RangeCount(s, 0, 20000, 4);
-                        }
+                    Stat.IntraActionNum = SameBedpeFile.CalculatorLineNumber();
+                    if (Stat.RestrictionSeq.replace("^", "").length() <= 4) {
+                        Stat.ShortRegionNum = Statistic.RangeCount(SameBedpeFile, 0, 5000, 4);
+                    } else {
+                        Stat.ShortRegionNum += Statistic.RangeCount(SameBedpeFile, 0, 20000, 4);
                     }
                     Stat.InterActionNum = Stat.FinalBedpeNum - Stat.IntraActionNum;
                     Stat.LongRegionNum = Stat.IntraActionNum - Stat.ShortRegionNum;
@@ -434,7 +558,7 @@ public class Main {
         //=============================================TransLocation Detection==========================================
         TransTime = new Date();
         if (StepCheck("TransLocationDetection")) {
-            TransLocationDetection(ChrSize, FinalBedpeFile, Resolution / 10, Threads);
+            TransLocationDetection(Chromosomes, FinalBedpeFile, DetectResolution, Threads);
         }
         EndTime = new Date();
         System.out.println("\n-------------------------------Time----------------------------------------");
@@ -472,7 +596,7 @@ public class Main {
                 try {
                     String ComLine = "bwa index -p " + IndexPrefix + " " + fastfile;
                     Opts.CommandOutFile.Append(ComLine + "\n");
-                    Tools.ExecuteCommandStr(ComLine);
+                    Tools.ExecuteCommandStr(ComLine, null, null);
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -491,19 +615,37 @@ public class Main {
             @Override
             public void run() {
                 try {
+                    System.out.println(new Date() + "\tStart to find restriction fragment");
 //                    Routine step = new Routine();
                     ArrayList<String> list = new ArrayList<>();
                     if (!EnzyPath.isDirectory() && !EnzyPath.mkdir()) {
-                        System.out.println(new Date() + "\tCreate " + EnzyPath + " false !");
+                        System.err.println(new Date() + "\tCreate " + EnzyPath + " false !");
                     }
-                    Hashtable<String, Integer> temphash = Statistic.FindRestrictionSite(GenomeFile.getPath(), Restriction, EnzyFilePrefix);
-                    for (String chr : Chromosome) {
-                        if (temphash.containsKey(chr)) {
-                            ChrSize.put(chr, temphash.get(chr));
+                    FindRestrictionSite fr = new FindRestrictionSite(GenomeFile, EnzyPath, Restriction, EnzyFilePrefix);
+                    ArrayList<Chromosome> TempChrs = fr.Run();
+                    File[] TempChrEnzyFile = fr.getChrFragmentFile();
+//                     = Statistic.FindRestrictionSite(GenomeFile.getPath(), Restriction, EnzyFilePrefix);
+                    for (int i = 0; i < Chromosomes.length; i++) {
+                        boolean flag = false;
+                        for (int j = 0; j < TempChrs.size(); j++) {
+                            if (TempChrs.get(j).Name.equals(Chromosomes[i].Name)) {
+                                Chromosomes[i] = TempChrs.get(j);
+                                ChrEnzyFile[i] = TempChrEnzyFile[j];
+                                flag = true;
+                                break;
+                            }
                         }
-                        list.add(chr + "\t" + temphash.get(chr));
+                        if (!flag) {
+                            System.err.println(new Date() + "\tWarning! No " + Chromosomes[i].Name + " in genomic file");
+                        }
+//                        if (temphash.containsKey(chr.Name)) {
+//                            Chromosomes
+////                            ChrSize.put(chr.Name, temphash.get(chr.Name));
+//                        }
+//                        list.add(chr + "\t" + temphash.get(chr));
                     }
-                    Tools.PrintList(list, EnzyPath + "/" + Prefix + ".ChrSize");//打印染色体大小信息
+                    System.out.println(new Date() + "\tEnd find restriction fragment");
+//                    Tools.PrintList(list, new File(EnzyPath + "/" + Prefix + ".ChrSize"));//打印染色体大小信息
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -610,12 +752,12 @@ public class Main {
         t3.join();
     }
 
-    private Thread BedpeProcess(String UseLinker, File SeBedpeFile) {
+    private Thread BedpeProcess(String UseLinker, CustomFile SeBedpeFile) {
         return new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    BedpeProcess bedpe = new BedpeProcess(BedpeProcessDir, Prefix + "." + UseLinker, Chromosome.toArray(new String[0]), EnzyFilePrefix, SeBedpeFile);//bedpe文件处理类
+                    BedpeProcess bedpe = new BedpeProcess(new File(BedpeProcessDir + "/" + UseLinker), Prefix + "." + UseLinker, Chromosomes, ChrEnzyFile, SeBedpeFile);//bedpe文件处理类
                     bedpe.Threads = Threads;//设置线程数
                     bedpe.Run();//运行
                 } catch (IOException | InterruptedException e) {
@@ -628,23 +770,23 @@ public class Main {
     //======================================developing===========================================
 
     /**
-     * @param ChrSize    染色体大小
-     * @param BedPeFile  bedpe文件
-     * @param Resolution 分辨率
+     * @param Chromosomes 染色体列表
+     * @param BedPeFile   bedpe文件
+     * @param Resolution  分辨率
      * @throws InterruptedException
      * @throws IOException
      */
-    private void TransLocationDetection(Hashtable<String, Integer> ChrSize, CustomFile BedPeFile, int Resolution, int Threads) throws InterruptedException, IOException {
-        String[] ChrSet = Chromosome.toArray(new String[0]);
+    private void TransLocationDetection(Chromosome[] Chromosomes, CustomFile BedPeFile, int Resolution, int Threads) throws InterruptedException, IOException {
+//        String[] ChrSet = Chromosomes.toArray(new String[0]);
         //创建列表
         ArrayList<String> Prefix = new ArrayList<>();
         ArrayList<Chromosome> Chr1 = new ArrayList<>();
         ArrayList<Chromosome> Chr2 = new ArrayList<>();
-        for (int i = 0; i < ChrSet.length - 1; i++) {
-            for (int j = i + 1; j < ChrSet.length; j++) {
-                Chr1.add(new Chromosome(ChrSet[i], ChrSize.get(ChrSet[i])));
-                Chr2.add(new Chromosome(ChrSet[j], ChrSize.get(ChrSet[j])));
-                Prefix.add(TransLocationDir + "/" + Chr1.get(Chr1.size() - 1).Name + "-" + Chr2.get(Chr2.size() - 1).Name + "." + Tools.UnitTrans(Resolution, "b", "M") + "M");
+        for (int i = 0; i < Chromosomes.length - 1; i++) {
+            for (int j = i + 1; j < Chromosomes.length; j++) {
+                Chr1.add(Chromosomes[i]);
+                Chr2.add(Chromosomes[j]);
+                Prefix.add(TransLocationDir + "/" + Chromosomes[i].Name + "-" + Chromosomes[j].Name + "." + Tools.UnitTrans(Resolution, "b", "M") + "M");
             }
         }
         Thread[] t = new Thread[Threads];//创建多个线程
@@ -653,7 +795,7 @@ public class Main {
                 @Override
                 public void run() {
                     while (Prefix.size() > 0) {
-                        lib.unit.Chromosome chr1, chr2;
+                        Chromosome chr1, chr2;
                         String prefix;
                         synchronized (t) {
                             try {
@@ -726,6 +868,7 @@ public class Main {
         ArgumentList.put(OptAlignMisMatch, "0");
         ArgumentList.put(OptAlignThread, "8");
         ArgumentList.put(OptResolution, String.valueOf(Default.Resolution));
+        ArgumentList.put(OptDrawResolution, String.valueOf(Default.Resolution));
         ArgumentList.put(OptThreads, "4");
         ArgumentList.put(OptStep, "-");
     }
@@ -734,7 +877,7 @@ public class Main {
         for (String opt : RequiredParameter) {
             if (ArgumentList.get(opt).equals("")) {
                 System.err.println("Error ! no " + opt);
-                System.exit(0);
+                System.exit(1);
             }
         }
         //================================================
@@ -748,7 +891,8 @@ public class Main {
         GenomeFile = new CustomFile(ArgumentList.get(OptGenomeFile));
         Prefix = ArgumentList.get(OptPrefix);
         OutPath = new File(ArgumentList.get(OptOutPath));
-        Chromosome.addAll(Arrays.asList(ArgumentList.get(OptChromosome).split("\\s+")));
+        ArrayList<String> Chrs = new ArrayList<>();
+        Chrs.addAll(Arrays.asList(ArgumentList.get(OptChromosome).split("\\s+")));
         Restriction = ArgumentList.get(OptRestriction);
         LinkerFile = new CustomFile(ArgumentList.get(OptLinkerFile));
         AdapterFile = new CustomFile(ArgumentList.get(OptAdapterFile));
@@ -765,10 +909,17 @@ public class Main {
         AlignMinQuality = Integer.parseInt(ArgumentList.get(OptAlignMinQuality));
         MinReadsLength = Integer.parseInt(ArgumentList.get(OptMinReadsLength));
         MaxReadsLength = Integer.parseInt(ArgumentList.get(OptMaxReadsLength));
-        Resolution = Integer.parseInt(ArgumentList.get(OptResolution));
+        Resolution = StringArrays.toInteger(ArgumentList.get(OptResolution).split("\\s+"));
+        DrawResolution = StringArrays.toInteger(ArgumentList.get(OptDrawResolution).split("\\s+"));
         Threads = Integer.parseInt(ArgumentList.get(OptThreads));
         Iteration = Boolean.valueOf(ArgumentList.get(OptIteration));
         Step.addAll(Arrays.asList(ArgumentList.get(OptStep).split("\\s+")));
+        Chromosomes = new Chromosome[Chrs.size()];
+        ChrEnzyFile = new File[Chrs.size()];
+        for (int i = 0; i < Chromosomes.length; i++) {
+            Chromosomes[i] = new Chromosome(Chrs.get(i));
+        }
+
         //================================================
         if (Prefix.equals("")) {
             ArgumentList.put(OptPrefix, Default.Prefix);
@@ -829,7 +980,7 @@ public class Main {
             System.err.println("Can't create " + EnzyPath);
             System.exit(1);
         }
-        EnzyFilePrefix = EnzyPath + "/" + Prefix + "." + Restriction.replace("^", "");
+        EnzyFilePrefix = Prefix + "." + Restriction.replace("^", "");
         Stat.OutPath = OutPath;
     }
 

@@ -5,34 +5,51 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 
+import lib.unit.Chromosome;
 import lib.unit.CustomFile;
+import lib.unit.Opts;
 
 public class BedpeProcess {
     private final String OptBedpeFile = "BedpeFile";
-    private final String OptChromosome = "Chromosome";
+    private final String OptChromosome = "Chromosomes";
     private final String OptEnzyFilePrefix = "EnzyFilePrefix";
     private final String OptOutPath = "OutPath";
     private final String OptPrefix = "Prefix";
     public final String OptThreads = "Threads";
     //======================================================
+    private File OutPath;
+    private File FinalDir;//存放最终结果的目录
+    private File MiddleDir;//存放中间文件的目录
+    private File LigationDir;
+    private String Prefix;
     private CustomFile BedpeFile;
-    private String EnzyFilePrefix;
+    private File[] EnzyFile;
     public int Threads;
-    private String[] Chromosome;
+    private Chromosome[] Chromosomes;
     //    private String[] LigationType;
-    private CustomFile FinalBedpeFile;
-    private CustomFile ValidBedpeFile;
-    private CustomFile SelfLigationFile;
-    private CustomFile ReLigationFile;
-    private CustomFile SameBedpeFile;
-    private CustomFile DiffBedpeFile;
-    private CustomFile[] SameBedpeChrFile;
-    private CustomFile[] DiffBedpeChrFile;
-    private CustomFile[] ChrFragLocation;
-    private CustomFile EnzyFragment;
-    private CustomFile[][] LigationChrFile;
-    private String EnzyDir;
-    private String LigationDir;
+    private CustomFile SameFile;//染色体内的交互文件
+    private CustomFile DiffFile;//染色体间的交互文件
+    private CustomFile FragmentLocationFile;
+    private CustomFile[] ChrFragLocationFile;//每条染色体的交互定位
+    /**
+     * 每一行表示一条染色体，每一列表示一种连接类型例如：
+     * Sel     Rel     Valid
+     * Chr1  -       -       -
+     * Chr2  -       -       -
+     * Chr3  -       -       -
+     * Chr4  -       -       -
+     */
+    private CustomFile[][] ChrLigationFile;
+    private CustomFile SelfLigationFile;//总的自连接文件=SUM(ChrLigationFile[:][0])
+    private CustomFile ReLigationFile;//总的再连接文件=SUM(ChrLigationFile[:][1])
+    private CustomFile ValidFile;//总的有效数据文件=SUM(ChrLigationFile[:][2])
+    private CustomFile[] ChrSameFile;//每条染色体内的交互
+    private CustomFile[] ChrSameNoDumpFile;//每条染色体内的交互（去duplication）=ChrLigationFile[:][2]去duplication
+    //    private CustomFile[] ChrDiffFile;
+    private CustomFile SameNoDumpFile;//最终的染色体内的交互文件=SUM(ChrSameNoDumpFile[:])
+    private CustomFile DiffNoDumpFile;//最终的染色体间的交互文件=DiffFile去duplication
+    //    private File EnzyDir;
+    private CustomFile FinalFile;//最终文件=SameNoDumpFile+DiffNoDumpFile
     //============================================================
     private Hashtable<String, String> ParameterList = new Hashtable<>();
     private String[] RequiredParameter = new String[]{OptBedpeFile, OptChromosome, OptEnzyFilePrefix};
@@ -56,33 +73,49 @@ public class BedpeProcess {
         ShowParameter();
     }
 
-    public BedpeProcess(File outpath, String outprefix, String[] chr, String enzyfileprefix, File bedpefile) {
-        ParameterInit();
-        ParameterList.put(OptOutPath, outpath.getPath());
-        ParameterList.put(OptPrefix, outprefix);
-        Chromosome = chr;
-        ParameterList.put(OptEnzyFilePrefix, enzyfileprefix);
-        ParameterList.put(OptBedpeFile, bedpefile.getPath());
+    public BedpeProcess(File OutPath, String Prefix, Chromosome[] Chrs, File[] EnzyFile, CustomFile BedpeFile) {
+        this.OutPath = OutPath;
+        this.Prefix = Prefix;
+        this.Chromosomes = Chrs;
+        this.BedpeFile = BedpeFile;
+        this.EnzyFile = EnzyFile;
+//        ParameterInit();
+//        ParameterList.put(OptOutPath, OutPath.getPath());
+//        ParameterList.put(OptPrefix, outprefix);
+//        Chromosomes = Chrs;
+//        ParameterList.put(OptEnzyFilePrefix, enzyfileprefix);
+//        ParameterList.put(OptBedpeFile, bedpefile.getPath());
         Init();
     }
 
     public void Run() throws IOException, InterruptedException {
-        BedpeToSameAndDiff(BedpeFile, SameBedpeFile, DiffBedpeFile);
-        SameBedpeChrFile = SeparateChromosome(SameBedpeFile, 1, Chromosome, SameBedpeFile);
-        DiffBedpeChrFile = SeparateChromosome(DiffBedpeFile, 1, Chromosome, DiffBedpeFile);
-        Thread[] Process = new Thread[Chromosome.length];
-        for (int i = 0; i < Chromosome.length; i++) {
+        //将bedpe分成染色体内的交互和染色体间的交互
+        BedpeToSameAndDiff(BedpeFile, SameFile, DiffFile);
+        ChrSameFile = SameFile.SeparateBedpe(Chromosomes, OutPath + "/" + Prefix, Threads);
+//        ChrDiffFile = SeparateChromosome(DiffFile, 1, Chromosomes, DiffFile);
+        //==================================same=========================================
+        //=====================================染色体内的交互处理=========================================
+        Thread[] Process = new Thread[Chromosomes.length];
+        for (int i = 0; i < Chromosomes.length; i++) {
             int finalI = i;
             Process[i] = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        FragmentLocation(SameBedpeChrFile[finalI], new File(EnzyFilePrefix + "." + Chromosome[finalI] + ".txt"), ChrFragLocation[finalI]);
-                        SeparateLigationType(ChrFragLocation[finalI], LigationChrFile[finalI][0], LigationChrFile[finalI][1], LigationChrFile[finalI][2]);
-//                        FileTool.Append(DiffBedpeChrFile[finalI], LigationChrFile[finalI][2]);
-                        LigationChrFile[finalI][2].Append(DiffBedpeChrFile[finalI]);
-                        LigationChrFile[finalI][2].SortFile(new int[]{2, 3, 5, 6}, "n", "", new File(LigationChrFile[finalI][2] + ".sort"));
-                        RemoveRepeat(new File(LigationChrFile[finalI][2] + ".sort"), new int[]{2, 3, 4, 5, 6, 10, 11}, new File(LigationChrFile[finalI][2] + ".clean.sort"));
+                        //定位交互发生在哪个酶切片段
+                        FragmentLocation(ChrSameFile[finalI], EnzyFile[finalI], ChrFragLocationFile[finalI]);
+                        //区分不同的连接类型（自连接，再连接，有效数据）
+                        SeparateLigationType(ChrFragLocationFile[finalI], ChrLigationFile[finalI][0], ChrLigationFile[finalI][1], ChrLigationFile[finalI][2]);
+//                        FileTool.Append(ChrDiffFile[finalI], ChrLigationFile[finalI][2]);
+//                        ChrLigationFile[finalI][2].Append(ChrDiffFile[finalI]);
+                        File SortChrLigationFile = new File(ChrLigationFile[finalI][2] + ".sort");
+                        //按交互位置排序
+                        ChrLigationFile[finalI][2].SortFile(new int[]{2, 3, 5, 6}, "n", "", SortChrLigationFile);
+                        //去除duplication
+                        RemoveRepeat(SortChrLigationFile, new int[]{2, 3, 4, 5, 6, 10, 11}, ChrSameNoDumpFile[finalI]);
+                        if (Opts.DeBugLevel < 1) {
+                            SortChrLigationFile.delete();
+                        }
                     } catch (IOException | InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -90,44 +123,46 @@ public class BedpeProcess {
             });
             Process[i].start();
         }
-        for (int j = 0; j < Chromosome.length; j++) {
+        for (int j = 0; j < Chromosomes.length; j++) {
             Process[j].join();
         }
-        if (ValidBedpeFile.exists()) {
-            ValidBedpeFile.delete();
-        }
-        if (SelfLigationFile.exists()) {
-            SelfLigationFile.delete();
-        }
-        if (ReLigationFile.exists()) {
-            ReLigationFile.delete();
-        }
-        if (EnzyFragment.exists()) {
-            EnzyFragment.delete();
-        }
-        if (FinalBedpeFile.exists()) {
-            FinalBedpeFile.delete();
-        }
-        for (int j = 0; j < Chromosome.length; j++) {
-            FinalBedpeFile.Append(new File(LigationChrFile[j][2] + ".clean.sort"));
-            SelfLigationFile.Append(LigationChrFile[j][0]);
-            ReLigationFile.Append(LigationChrFile[j][1]);
-            ValidBedpeFile.Append(LigationChrFile[j][2]);
-            EnzyFragment.Append(ChrFragLocation[j]);
-            //删除中间文件
-            for (int i = 0; i < 3; i++) {
-                LigationChrFile[j][i].delete();
+        //========================diff===================================
+        //==========================================染色体间的交互处理==================================================
+        File SortDiffFile = new File(DiffFile + ".sort");
+        DiffFile.SortFile(new int[]{2, 3, 5, 6}, "n", "", SortDiffFile);//排序
+        RemoveRepeat(SortDiffFile, new int[]{2, 3, 4, 5, 6, 10, 11}, DiffNoDumpFile);//去duplication
+        //================================================================
+        File[] NeedRemove = new File[]{SameNoDumpFile, SelfLigationFile, ReLigationFile, ValidFile, FragmentLocationFile};
+        for (File f : NeedRemove) {
+            if (f.exists() && !f.delete()) {
+                System.err.println(new Date() + "\tWarning! Can't delete " + f.getName());
             }
-            new File(LigationChrFile[j][2] + ".sort").delete();
-            new File(LigationChrFile[j][2] + ".clean.sort").delete();
-            ChrFragLocation[j].delete();
-            SameBedpeChrFile[j].delete();
-            DiffBedpeChrFile[j].delete();
         }
+        for (int j = 0; j < Chromosomes.length; j++) {
+            SameNoDumpFile.Append(ChrSameNoDumpFile[j]);//合并染色体内的交互（去除duplication）
+            SelfLigationFile.Append(ChrLigationFile[j][0]);//合并自连接
+            ReLigationFile.Append(ChrLigationFile[j][1]);//合并再连接
+            ValidFile.Append(ChrLigationFile[j][2]);//合并有效数据（未去duplication）
+            FragmentLocationFile.Append(ChrFragLocationFile[j]);//合并定位的交互片段
+            //删除中间文件
+            if (Opts.DeBugLevel < 1) {
+                for (int i = 0; i < 3; i++) {
+                    ChrLigationFile[j][i].delete();//删除（自连接，再连接，有效数据）
+                }
+//                ChrSameFile[j].delete();
+                ChrFragLocationFile[j].delete();
+//                ChrSameNoDumpFile[j].delete();
+            }
+
+//            new File(ChrLigationFile[j][2] + ".sort").delete();
+//            new File(ChrLigationFile[j][2] + ".clean.sort").delete();
+//            ChrDiffFile[j].delete();
+        }
+        FinalFile.Merge(new File[]{SameNoDumpFile, DiffNoDumpFile});
     }
 
-    public CustomFile getFinalBedpeFile() {
-        return FinalBedpeFile;
+    public CustomFile getFinalFile() {
+        return FinalFile;
     }
 
     public CustomFile getSelfLigationFile() {
@@ -138,71 +173,77 @@ public class BedpeProcess {
         return ReLigationFile;
     }
 
-    public CustomFile getValidBedpeFile() {
-        return ValidBedpeFile;
+    public CustomFile getValidFile() {
+        return ValidFile;
     }
 
     private void Init() {
-        try {
-            if (Chromosome.length > 0) {
-                String ValChr = Chromosome[0];
-                for (int i = 1; i < Chromosome.length; i++) {
-                    ValChr = ValChr + " " + Chromosome[i];
-                }
-                ParameterList.put(OptChromosome, ValChr);
-            }
-        } catch (NullPointerException ignored) {
-
-        }
-        for (String opt : RequiredParameter) {
-            if (ParameterList.get(opt).equals("")) {
-                System.err.println("Error ! No " + opt);
-                System.exit(0);
-            }
-        }
+//        try {
+//            if (Chromosomes.length > 0) {
+//                String ValChr = Chromosomes[0];
+//                for (int i = 1; i < Chromosomes.length; i++) {
+//                    ValChr = ValChr + " " + Chromosomes[i];
+//                }
+//                ParameterList.put(OptChromosome, ValChr);
+//            }
+//        } catch (NullPointerException ignored) {
+//
+//        }
+//        for (String opt : RequiredParameter) {
+//            if (ParameterList.get(opt).equals("")) {
+//                System.err.println("Error ! No " + opt);
+//                System.exit(0);
+//            }
+//        }
         //=============================================================
-        String OutPath = ParameterList.get(OptOutPath);
-        String Prefix = ParameterList.get(OptPrefix);
-        BedpeFile = new CustomFile(ParameterList.get(OptBedpeFile));
-        EnzyFilePrefix = ParameterList.get(OptEnzyFilePrefix);
-        Threads = Integer.parseInt(ParameterList.get(OptThreads));
+//        String OutPath = ParameterList.get(OptOutPath);
+//        String Prefix = ParameterList.get(OptPrefix);
+//        BedpeFile = new CustomFile(ParameterList.get(OptBedpeFile));
+//        EnzyFilePrefix = ParameterList.get(OptEnzyFilePrefix);
+//        Threads = Integer.parseInt(ParameterList.get(OptThreads));
         //===========================================================
-        if (EnzyDir == null) {
-            EnzyDir = "FragmentLocation";
-        }
-        if (LigationDir == null) {
-            LigationDir = "Ligation";
-        }
-        if (!new File(OutPath).isDirectory()) {
-            new File(OutPath).mkdirs();
-        }
-        if (!new File(OutPath + "/" + LigationDir).isDirectory()) {
-            new File(OutPath + "/" + LigationDir).mkdir();
-        }
-        if (!new File(OutPath + "/" + EnzyDir).isDirectory()) {
-            new File(OutPath + "/" + EnzyDir).mkdir();
+//        if (EnzyDir == null) {
+//            EnzyDir = "FragmentLocation";
+//        }
+//        if (LigationDir == null) {
+//            LigationDir = "Ligation";
+//        }
+        File LigationDir = new File(OutPath + "/Ligation");
+        File MiddleDir = new File(OutPath + "/Temp");
+        File FinalDir = new File(OutPath + "/Clean");
+        File[] CheckDir = new File[]{OutPath, LigationDir, MiddleDir, FinalDir};
+        for (File f : CheckDir) {
+            synchronized (BedpeProcess.class) {
+                if (!f.isDirectory() && !f.mkdir()) {
+                    System.err.println(new Date() + "\tERROR! Can't Create " + f);
+                    System.exit(1);
+                }
+            }
         }
         //===========================================================================
-        SameBedpeFile = new CustomFile(OutPath + "/" + Prefix + ".same.bedpe");
-        DiffBedpeFile = new CustomFile(OutPath + "/" + Prefix + ".diff.bedpe");
-        SelfLigationFile = new CustomFile(OutPath + "/" + LigationDir + "/" + Prefix + ".self.bedpe");
-        ReLigationFile = new CustomFile(OutPath + "/" + LigationDir + "/" + Prefix + ".rel.bedpe");
-        ValidBedpeFile = new CustomFile(OutPath + "/" + LigationDir + "/" + Prefix + ".valid.bedpe");
-        FinalBedpeFile = new CustomFile(OutPath + "/" + Prefix + "." + "final.bedpe");
-        EnzyFragment = new CustomFile(OutPath + "/" + EnzyDir + "/" + Prefix + ".enzy.bedpe");
-        LigationChrFile = new CustomFile[Chromosome.length][3];
-        SameBedpeChrFile = new CustomFile[Chromosome.length];
-        DiffBedpeChrFile = new CustomFile[Chromosome.length];
-        ChrFragLocation = new CustomFile[Chromosome.length];
-        for (int j = 0; j < Chromosome.length; j++) {
-//            SameBedpeChrFile[j] = new CustomFile(SameBedpeFile.getPath().replace(".bedpe", "." + Chromosome[j] + ".bedpe"));
-//            DiffBedpeChrFile[j] = new CustomFile(DiffBedpeFile.getPath().replace(".bedpe", "." + Chromosome[j] + ".bedpe"));
-            ChrFragLocation[j] = new CustomFile(OutPath + "/" + EnzyDir + "/" + Prefix + "." + Chromosome[j] + ".enzy.bedpe");
-            LigationChrFile[j][0] = new CustomFile(OutPath + "/" + LigationDir + "/" + Prefix + "." + Chromosome[j] + ".self");
-            LigationChrFile[j][1] = new CustomFile(OutPath + "/" + LigationDir + "/" + Prefix + "." + Chromosome[j] + ".rel");
-            LigationChrFile[j][2] = new CustomFile(OutPath + "/" + LigationDir + "/" + Prefix + "." + Chromosome[j] + ".valid");
-
+        SameFile = new CustomFile(OutPath + "/" + Prefix + ".same.bedpe");
+        DiffFile = new CustomFile(OutPath + "/" + Prefix + ".diff.bedpe");
+        SelfLigationFile = new CustomFile(LigationDir + "/" + Prefix + ".self.bedpe");
+        ReLigationFile = new CustomFile(LigationDir + "/" + Prefix + ".rel.bedpe");
+        ValidFile = new CustomFile(LigationDir + "/" + Prefix + ".valid.bedpe");
+        FragmentLocationFile = new CustomFile(LigationDir + "/" + Prefix + ".enzy.bedpe");
+        ChrSameFile = new CustomFile[Chromosomes.length];
+        ChrFragLocationFile = new CustomFile[Chromosomes.length];
+        ChrLigationFile = new CustomFile[Chromosomes.length][3];
+        ChrSameNoDumpFile = new CustomFile[Chromosomes.length];
+//        ChrDiffFile = new CustomFile[Chromosomes.length];
+        for (int j = 0; j < Chromosomes.length; j++) {
+//            ChrSameFile[j] = new CustomFile(SameFile.getPath().replace(".bedpe", "." + Chromosomes[j] + ".bedpe"));
+//            ChrDiffFile[j] = new CustomFile(DiffFile.getPath().replace(".bedpe", "." + Chromosomes[j] + ".bedpe"));
+            ChrFragLocationFile[j] = new CustomFile(MiddleDir + "/" + Prefix + "." + Chromosomes[j].Name + ".enzy.bedpe");
+            ChrLigationFile[j][0] = new CustomFile(MiddleDir + "/" + Prefix + "." + Chromosomes[j].Name + ".self.bedpe");
+            ChrLigationFile[j][1] = new CustomFile(MiddleDir + "/" + Prefix + "." + Chromosomes[j].Name + ".rel.bedpe");
+            ChrLigationFile[j][2] = new CustomFile(MiddleDir + "/" + Prefix + "." + Chromosomes[j].Name + ".valid.bedpe");
+            ChrSameNoDumpFile[j] = new CustomFile(FinalDir + "/" + Prefix + "." + Chromosomes[j].Name + ".same.clean.bedpe");
         }
+        SameNoDumpFile = new CustomFile(FinalDir + "/" + Prefix + ".same.clean.bedpe");
+        DiffNoDumpFile = new CustomFile(FinalDir + "/" + Prefix + ".diff.clean.bedpe");
+        FinalFile = new CustomFile(FinalDir + "/" + Prefix + "." + "final.bedpe");
     }
 
     private void GetOption(String ConfigFile) throws IOException {
@@ -253,50 +294,50 @@ public class BedpeProcess {
         }
     }
 
-    private CustomFile[] SeparateChromosome(File InFile, int Row, String[] Chromosome, File OutPrefix) throws IOException, InterruptedException {
-        System.out.println(new Date() + "\tStart to Separate Chromosome\t" + String.join(" ", Chromosome) + "\t" + InFile.getName());
-        BufferedReader reader = new BufferedReader(new FileReader(InFile));
-        BufferedWriter[] writers = new BufferedWriter[Chromosome.length];
-        CustomFile[] OutFile = new CustomFile[Chromosome.length];
-        for (int i = 0; i < writers.length; i++) {
-            OutFile[i] = new CustomFile(OutPrefix + "." + Chromosome[i]);
-            writers[i] = new BufferedWriter(new FileWriter(OutFile[i]));
-        }
-        Thread[] Process = new Thread[Threads * 3];
-        for (int i = 0; i < Process.length; i++) {
-            Process[i] = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            String chr = line.split("\\s+")[0];
-                            for (int i = 0; i < Chromosome.length; i++) {
-                                if (chr.equals(Chromosome[i])) {
-                                    synchronized (writers[i]) {
-                                        writers[i].write(line + "\n");
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            Process[i].start();
-        }
-        for (int i = 0; i < Threads; i++) {
-            Process[i].join();
-        }
-        reader.close();
-        for (int i = 0; i < writers.length; i++) {
-            writers[i].close();
-        }
-        System.out.println(new Date() + "\tEnd to Separate Chromosome\t" + String.join(" ", Chromosome) + "\t" + InFile.getName());
-        return OutFile;
-    }
+//    private CustomFile[] SeparateChromosome(File InFile, int Row, String[] Chromosome, File OutPrefix) throws IOException, InterruptedException {
+//        System.out.println(new Date() + "\tStart to Separate Chromosomes\t" + String.join(" ", Chromosome) + "\t" + InFile.getName());
+//        BufferedReader reader = new BufferedReader(new FileReader(InFile));
+//        BufferedWriter[] writers = new BufferedWriter[Chromosome.length];
+//        CustomFile[] OutFile = new CustomFile[Chromosome.length];
+//        for (int i = 0; i < writers.length; i++) {
+//            OutFile[i] = new CustomFile(OutPrefix + "." + Chromosome[i]);
+//            writers[i] = new BufferedWriter(new FileWriter(OutFile[i]));
+//        }
+//        Thread[] Process = new Thread[Threads * 3];
+//        for (int i = 0; i < Process.length; i++) {
+//            Process[i] = new Thread(new Runnable() {
+//                @Override
+//                public void run() {
+//                    try {
+//                        String line;
+//                        while ((line = reader.readLine()) != null) {
+//                            String chr = line.split("\\s+")[0];
+//                            for (int i = 0; i < Chromosome.length; i++) {
+//                                if (chr.equals(Chromosome[i])) {
+//                                    synchronized (writers[i]) {
+//                                        writers[i].write(line + "\n");
+//                                    }
+//                                    break;
+//                                }
+//                            }
+//                        }
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+//            });
+//            Process[i].start();
+//        }
+//        for (int i = 0; i < Threads; i++) {
+//            Process[i].join();
+//        }
+//        reader.close();
+//        for (int i = 0; i < writers.length; i++) {
+//            writers[i].close();
+//        }
+//        System.out.println(new Date() + "\tEnd to Separate Chromosomes\t" + String.join(" ", Chromosome) + "\t" + InFile.getName());
+//        return OutFile;
+//    }
 
     private void FragmentLocation(File BedpeFile, File EnySiteFile, File OutFile) throws IOException, InterruptedException {
         ArrayList<Integer> EnySiteList = new ArrayList<>();
@@ -313,9 +354,9 @@ public class BedpeProcess {
         }
         EnySiteRead.close();
         //---------------------多线程-------------------------
-//        Thread[] Process = new Thread[Threads];
+//        Threads[] Process = new Threads[Threads];
 //        for (int i = 0; i < Process.length; i++) {
-//            Process[i] = new Thread(new Runnable() {
+//            Process[i] = new Threads(new Runnable() {
 //
 //                @Override
 //                public void run() {
@@ -366,7 +407,7 @@ public class BedpeProcess {
     }//OK
 
     private void SeparateLigationType(File InFile, File SelfFile, File ReligFile, File ValidFile) throws IOException {
-//        Thread[] process = new Thread[Threads];
+//        Threads[] process = new Threads[Threads];
         BufferedReader infile = new BufferedReader(new FileReader(InFile));
         BufferedWriter selffile = new BufferedWriter(new FileWriter(SelfFile));
         BufferedWriter religfile = new BufferedWriter(new FileWriter(ReligFile));
@@ -374,7 +415,7 @@ public class BedpeProcess {
 //        String[] OutLock = new String[]{"sel", "rel", "val"};
         System.out.println(new Date() + "\tBegin to seperate ligation\t" + InFile.getName());
 //        for (int i = 0; i < Threads; i++) {
-//            process[i] = new Thread(new Runnable() {
+//            process[i] = new Threads(new Runnable() {
 //                @Override
 //                public void run() {
         String line;
@@ -504,4 +545,16 @@ public class BedpeProcess {
         SameBedpeWrite.close();
         DiffBedpeWrite.close();
     }//OK
+
+    public CustomFile[] getChrSameNoDumpFile() {
+        return ChrSameNoDumpFile;
+    }
+
+    public CustomFile getSameNoDumpFile() {
+        return SameNoDumpFile;
+    }
+
+    public CustomFile getDiffNoDumpFile() {
+        return DiffNoDumpFile;
+    }
 }

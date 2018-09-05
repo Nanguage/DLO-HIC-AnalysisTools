@@ -15,7 +15,6 @@ public class CustomFile extends File {
         this(file.getPath());
     }
 
-
     public long CalculatorLineNumber() throws IOException {
         if (!isFile()) {
             return 0;
@@ -48,7 +47,7 @@ public class CustomFile extends File {
         writer.close();
     }
 
-    public int FastqPhred() throws IOException {
+    public Opts.FileFormat FastqPhred() throws IOException {
         BufferedReader infile = new BufferedReader(new FileReader(getPath()));
         int[] FormatEdge = new int[]{(int) '9', (int) 'K'};
         int[] Count = new int[2];
@@ -66,7 +65,7 @@ public class CustomFile extends File {
                 }
             }
         }
-        return Count[0] >= Count[1] ? Opts.Phred33 : Opts.Phred64;
+        return Count[0] >= Count[1] ? Opts.FileFormat.Phred33 : Opts.FileFormat.Phred64;
     }
 
     public void SortFile(int[] Col, String Model, String Regex, File OutFile) throws IOException {
@@ -326,14 +325,90 @@ public class CustomFile extends File {
         return Outfile;
     }
 
-    public int BedpeDetect() throws IOException {
+    /**
+     * 此方法将染色体内的交互文件分成每条染色体一个文件
+     * @param Chromosome
+     * @param Prefix
+     * @param Threads
+     * @return 不同染色体的bedpe文件名
+     * @throws IOException
+     * @throws InterruptedException
+     */
+
+    public CustomFile[] SeparateBedpe(Chromosome[] Chromosome, String Prefix, int Threads) throws IOException, InterruptedException {
+        System.out.println(new Date() + "\tSeparate Bedpe file" + getName());
+        BufferedReader infile = new BufferedReader(new FileReader(this));
+        CustomFile[] ChrSameFile = new CustomFile[Chromosome.length];
+        BufferedWriter[] chrwrite = new BufferedWriter[Chromosome.length];
+//        String DiffFile = Prefix + ".diff.bedpe";
+//        BufferedWriter diffwrite = new BufferedWriter(new FileWriter(DiffFile));
+        String Regex = "\\s+";
+        //------------------------------------------------------------
+//        Hashtable<String, Integer> ChrIndex = new Hashtable<>();
+        for (int i = 0; i < Chromosome.length; i++) {
+//            ChrIndex.put(Chromosome[i].Name, i);
+            ChrSameFile[i] = new CustomFile(Prefix + "." + Chromosome[i].Name + ".same.bedpe");
+            chrwrite[i] = new BufferedWriter(new FileWriter(ChrSameFile[i]));
+        }
+//        if (Regex.isEmpty()) {
+//        }
+        //================================================================
+//        Integer ColIndex = 0;
+//        if (BedpeDetect() == Opts.FileFormat.BedpePointFormat) {
+//            ColIndex = 2;
+//        } else if (BedpeDetect() == Opts.FileFormat.BedpeRegionFormat) {
+//            ColIndex = 3;
+//        } else {
+//            System.out.println(getName() + ":\tERROR !\tIncorrect format!");
+//            System.exit(1);
+//        }
+        Thread[] Process = new Thread[Threads];
+        for (int i = 0; i < Threads; i++) {
+//            Integer finalColIndex = ColIndex;
+            Process[i] = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    String line;
+                    String[] str;
+                    try {
+                        while ((line = infile.readLine()) != null) {
+                            str = line.split(Regex);
+                            for (int j = 0; j < Chromosome.length; j++) {
+                                if (str[0].equals(Chromosome[j].Name)) {
+                                    synchronized (Chromosome[j]) {
+                                        chrwrite[j].write(line + "\n");
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            Process[i].start();
+        }
+        for (int i = 0; i < Threads; i++) {
+            Process[i].join();
+        }
+        infile.close();
+        for (int i = 0; i < Chromosome.length; i++) {
+            chrwrite[i].close();
+        }
+//        diffwrite.close();
+        System.out.println(new Date() + "\tEnd separate Bedpe file " + getName());
+        return ChrSameFile;
+    }
+
+    public Opts.FileFormat BedpeDetect() throws IOException {
         BufferedReader infile = new BufferedReader(new FileReader(getPath()));
         String line;
         String[] str;
         line = infile.readLine();
         if (line == null) {
             infile.close();
-            return Opts.EmptyFile;
+            return Opts.FileFormat.EmptyFile;
         }
         str = line.split("\\s+");
         try {
@@ -348,13 +423,13 @@ public class CustomFile extends File {
             } catch (IndexOutOfBoundsException | NumberFormatException e) {
                 e.printStackTrace();
                 infile.close();
-                return Opts.ErrorFormat;
+                return Opts.FileFormat.ErrorFormat;
             }
             infile.close();
-            return Opts.BedpePointFormat;
+            return Opts.FileFormat.BedpePointFormat;
         }
         infile.close();
-        return Opts.BedpeRegionFormat;
+        return Opts.FileFormat.BedpeRegionFormat;
     }
 
     public String AdapterDetect(File Prefix, int SubIndex) throws IOException, InterruptedException {
@@ -379,7 +454,7 @@ public class CustomFile extends File {
         writer.close();
         String ComLine = "mafft " + HeadFile.getPath();
         Opts.CommandOutFile.Append(ComLine + "\n");
-        Tools.ExecuteCommandStr(ComLine, MsaFile.getPath());
+        Tools.ExecuteCommandStr(ComLine, MsaFile, null);
         HeadFile.delete();
         reader = new BufferedReader(new FileReader(MsaFile));
         reader.readLine();
@@ -426,6 +501,21 @@ public class CustomFile extends File {
             }
         }
         return Adapter.toString();
+    }
+
+    public Opts.FileFormat MatrixDetect() throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(this));
+        String Line = reader.readLine();
+        if (Line == null) {
+            return Opts.FileFormat.EmptyFile;
+        }
+        if (Line.split("\\s+").length == 3) {
+            return Opts.FileFormat.SpareMatrixFormat;
+        }
+        if (Line.split("\\s+").length > 3) {
+            return Opts.FileFormat.TwoDMatrixFormat;
+        }
+        return Opts.FileFormat.ErrorFormat;
     }
 
 

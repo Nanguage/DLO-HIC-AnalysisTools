@@ -53,17 +53,20 @@ public class Statistic {
         return Count;
     }
 
-    public static long RangeCount(CustomFile Bedpe, double Min, double Max, int Threads) throws IOException, InterruptedException {
-        if (!Bedpe.isFile()) {
+    public static long RangeCount(CustomFile BedpeFile, double Min, double Max, int Threads) throws IOException, InterruptedException {
+        if (!BedpeFile.isFile()) {
             return 0;
         }
-        BufferedReader bedpe = new BufferedReader(new FileReader(Bedpe));
+        BufferedReader bedpe = new BufferedReader(new FileReader(BedpeFile));
         final long[] Count = {0};
         int[] Index = new int[4];
-        if (Bedpe.BedpeDetect() == Opts.BedpePointFormat) {
-            Index = new int[]{3, 3, 1, 1};
-        } else if (Bedpe.BedpeDetect() == Opts.BedpeRegionFormat) {
-            Index = new int[]{5, 4, 2, 1};
+        switch (BedpeFile.BedpeDetect()) {
+            case BedpePointFormat:
+                Index = new int[]{3, 3, 1, 1};
+                break;
+            case BedpeRegionFormat:
+                Index = new int[]{5, 4, 2, 1};
+                break;
         }
         Thread[] Process = new Thread[Threads];
         for (int i = 0; i < Threads; i++) {
@@ -212,13 +215,16 @@ public class Statistic {
         String[] str;
         int distant;
         byte[] index = null;
-        if (BedpeFile.BedpeDetect() == Opts.BedpePointFormat) {
-            index = new byte[]{1, 1, 3, 3};
-        } else if (BedpeFile.BedpeDetect() == Opts.BedpeRegionFormat) {
-            index = new byte[]{5, 4, 2, 1};
-        } else {
-            System.err.println("Error format!");
-            return List;
+        switch (BedpeFile.BedpeDetect()) {
+            case BedpePointFormat:
+                index = new byte[]{1, 1, 3, 3};
+                break;
+            case BedpeRegionFormat:
+                index = new byte[]{5, 4, 2, 1};
+                break;
+            default:
+                System.err.println("Error format!");
+                return List;
         }
         while ((line = infile.readLine()) != null) {
             str = line.split("\\s+");

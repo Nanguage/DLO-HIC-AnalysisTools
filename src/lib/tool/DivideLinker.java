@@ -17,7 +17,7 @@ public class DivideLinker {
     private int MaxReadsLength;
     private int MinScore;
     private String Restriction;
-    private int Phred;
+    private Opts.FileFormat Phred;
     private int Type;
     private String[] MatchSeq = new String[2];
     private String[] AppendSeq = new String[2];
@@ -28,10 +28,10 @@ public class DivideLinker {
     public static final int All = 3;
 
     public DivideLinker(File past_file, String prefix, String[] linker_list, String restriction, int min_score, int type) {
-        this(past_file, prefix, linker_list, restriction, type, Default.MinReadsLen, Default.MaxReadsLen, min_score, Opts.Phred33);
+        this(past_file, prefix, linker_list, restriction, type, Default.MinReadsLen, Default.MaxReadsLen, min_score, Opts.FileFormat.Phred33);
     }
 
-    public DivideLinker(File past_file, String prefix, String[] linker_list, String restriction, int type, int min_reads_length, int max_reads_length, int min_score, int phred) {
+    public DivideLinker(File past_file, String prefix, String[] linker_list, String restriction, int type, int min_reads_length, int max_reads_length, int min_score, Opts.FileFormat phred) {
         PastFile = past_file;
         Prefix = prefix;
         LinkerList = linker_list;
@@ -41,6 +41,7 @@ public class DivideLinker {
         MaxReadsLength = max_reads_length;
         MinScore = min_score;
         Phred = phred;
+
         Init();
     }
 
@@ -60,10 +61,10 @@ public class DivideLinker {
         MatchSeq[1] = Restriction.replace("^", "").substring(Math.min(length[0], length[1]), Restriction.replace("^", "").length());
         AppendSeq[0] = Restriction.replace("^", "").substring(Math.max(length[0], length[1]), Restriction.replace("^", "").length());
         AppendSeq[1] = Restriction.replace("^", "").substring(0, Math.min(length[0], length[1]));
-        if (Phred == Opts.Phred33) {
+        if (Phred == Opts.FileFormat.Phred33) {
             AppendQuality[0] = AppendSeq[0].replaceAll(".", "I");
             AppendQuality[1] = AppendSeq[1].replaceAll(".", "I");
-        } else if (Phred == Opts.Phred64) {
+        } else if (Phred == Opts.FileFormat.Phred64) {
             AppendQuality[0] = AppendSeq[0].replaceAll(".", "h");
             AppendQuality[1] = AppendSeq[1].replaceAll(".", "h");
         } else {

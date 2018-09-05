@@ -49,7 +49,7 @@ public class Report {
     public int MinAlignQuality;
     public int MinReadsLength;
     public int MaxReadsLength;
-    public int Resolution;
+    public int[] Resolution;
     public int Thread;
 
     public void Run() {
