@@ -29,7 +29,7 @@ GenomeFile = Hg19.clean.fna
 Prefix = DLO-HiC
 Index = Hg19
 OutPath = /home/hjiang/HiC-test/
-AdapterFile = adapter.txt
+AdapterFile = Auto
 UseLinker = AA
 MatchScore = 1
 MisMatchScore = -1
@@ -38,7 +38,8 @@ ReadsType = Short
 MaxMisMatchLength = 3
 AlignThread = 2
 Iteration = true
-Resolution = 1000000
+Resolution = 1000000 2000000
+DrawRes = 1000000
 AlignMisMatch = 0
 MinReadsLength = 16
 MaxReadsLength = 20
@@ -48,8 +49,8 @@ Step = -
 =================================================================================
 
 FastqFile           String      Input File with Fastq Format
-Chromosome          String      Chromosome name must same as Chromosome name in reference genome
-LinkersType         String      The linker's type in raw data
+Chromosome          String[]    Chromosome name must same as Chromosome name in reference genome
+LinkersType         String[]    The linker's type in raw data
 Restriction         String      Sequence of restriction, enzyme cutting site expressed by "^"
 LinkerFile          String      A file include linker sequence
 AlignMinQuality     Int         Min quality allowed in alignment
@@ -58,8 +59,9 @@ GenomeFile          String      Reference genome file
 Prefix              String      prefix of output    (default    "out")
 Index               String      Index prefix of reference genome
 OutPath             String      Path of output  (default    "./")
-AdapterFile         String      File include adapter sequence    (default    "")
-UseLinker           String      linker's type used  (default    =LinkersType)
+AdapterFile         String      File include adapter sequence, null means don't remove adapter   (default    "")
+                                If you want to remove adapter but you don't know the adapter seq, you can set "Auto"
+UseLinker           String[]    linker's type used  (default    =LinkersType)
 MatchScore          Int         Match score in linker filter    (default    "1")
 MisMatchScore       Int         MisMatch Score in linker filter (default    "-1")
 IndelScore          Int         Indel Score in linker filter    (default    "-1")
@@ -67,16 +69,17 @@ ReadsType           String      Reads type include ["Short","Long"] (default    
 MaxMisMatchLength   Int         Max misMatch length in linker filter    (default    "3")
 AlignThread         Int         Threads in alignment (default    "2")
 Iteration           boolen      "true" or "false" represent whether do iteration alignment
-Resolution          Int         Bin size when creat interaction matrix  (default    "1000000" byte)
+Resolution          Int[]       Bin size when create interaction matrix  (default    "1000000" byte)
+DrawRes             Int[]       Resolution for you draw heat-map    (default    "The first item of Resolution")
 AlignMisMatch       Int         MisMatch number in alignment    (default    "0")
 MinReadsLength      Int         Min reads length when extract interaction reads (default    "16")
 MaxReadsLength      Int         Max reads length when extract interaction reads (default    "20")
 Threads             Int         Number of threads    (default    "4")
-Step                String      assign  where start and end (default    "-")
+Step                String[]      assign  where start and end (default    "-")
 
 //if we set ReadsType "Short", we will align with "bwa aln",and if set "Long",we will align with "bwa mem"
 
-//Step include "LinkerFilter" "DivideLinker" "SeProcess" "Bed2BedPe" "BedPeProcess" "BedPe2Inter" "MakeMatrix"
+//Step include "LinkerFilter" "DivideLinker" "SeProcess" "Bed2BedPe" "BedPeProcess" "BedPe2Inter" "MakeMatrix" "TransLocationDetection"
 //If we want to run from "Bed2BedPe" to "MakeMatrix", we can set "Bed2BedPe - MakeMatrix"
 //If we only want to run from "SeProcess" to end, we can set "SeProcess -"
 //If we want to run all, we can set "-"

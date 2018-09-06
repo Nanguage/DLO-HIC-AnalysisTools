@@ -7,7 +7,6 @@ import lib.unit.Opts;
 import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Hashtable;
 
@@ -71,11 +70,13 @@ public class PreProcess {
     }
 
     public void Run() throws IOException, InterruptedException {
-        if (AdapterFile == null || !AdapterFile.isFile()) {
-            String AdapterSeq = FastqFile[0].AdapterDetect(new File(OutPath + "/" + Prefix), 70);
-            FileUtils.write(new File(OutPath + "/adapter.txt"), AdapterSeq, Charsets.UTF_8);
-            System.out.println(new Date() + "\tDetected adapter seq:\t" + AdapterSeq);
-            AdapterFile = new File(OutPath + "/adapter.txt");
+        if (AdapterFile != null) {
+            if (AdapterFile.getName().equals("Auto") || !AdapterFile.isFile()) {
+                String AdapterSeq = FastqFile[0].AdapterDetect(new File(OutPath + "/" + Prefix), 70);
+                FileUtils.write(new File(OutPath + "/adapter.txt"), AdapterSeq, Charsets.UTF_8);
+                System.out.println(new Date() + "\tDetected adapter seq:\t" + AdapterSeq);
+                AdapterFile = new File(OutPath + "/adapter.txt");
+            }
         }
         System.out.println(new Date() + "\tStart to linkerfilter");
         if (Type == Opts.Single) {

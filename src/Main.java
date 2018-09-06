@@ -8,7 +8,6 @@ import lib.tool.*;
 import lib.tool.FindRestrictionSite;
 import lib.unit.*;
 import org.apache.commons.cli.*;
-import org.apache.commons.io.FileUtils;
 import script.CreateMatrix;
 
 public class Main {
@@ -95,6 +94,7 @@ public class Main {
         Argument.addOption(Option.builder("p").hasArg().argName("string").desc("Prefix").build());//输出前缀(不需要包括路径)
         Argument.addOption(Option.builder("adv").hasArg().argName("file").desc("Advanced configure file").build());//高级配置文件(一般不用修改)
         Argument.addOption(Option.builder("o").longOpt("out").hasArg().argName("dir").desc("Out put directory").build());//输出路径
+        Argument.addOption(Option.builder("s").longOpt("step").hasArgs().argName("string").desc("same as \"Step\" in configure file").build());
         final String helpHeader = "Version: " + Opts.Version + "\nAuthor: " + Opts.Author + "\nContact: " + Opts.Email;
         final String helpFooter = "Note: Have a good day!\n      JVM can get " + String.format("%.2f", Opts.MaxMemory / Math.pow(10, 9)) + "G memory";
         if (args.length == 0) {
@@ -125,6 +125,9 @@ public class Main {
         }
         if (ComLine.hasOption("o")) {
             ArgumentList.put(OptOutPath, ComLine.getOptionValue("o"));
+        }
+        if (ComLine.hasOption("s")) {
+            ArgumentList.put(OptStep, String.join(" ", ComLine.getOptionValues("s")));
         }
         Init();//变量初始化
     }
@@ -381,10 +384,11 @@ public class Main {
                         long renum = Temp.getReLigationFile().CalculatorLineNumber();
                         long validnum = Temp.getValidFile().CalculatorLineNumber();
                         long nodupnum = Temp.getFinalFile().CalculatorLineNumber();
+                        long diffnum = Temp.getDiffFile().CalculatorLineNumber();
                         synchronized (STS) {
-                            Stat.LigationFile.add(new String[]{Temp.getSelfLigationFile().getPath(), Temp.getReLigationFile().getPath(), Temp.getValidFile().getPath()});
+                            Stat.LigationFile.add(new String[]{Temp.getSelfLigationFile().getPath(), Temp.getReLigationFile().getPath(), Temp.getValidFile().getPath(), Temp.getDiffFile().getPath()});
+                            Stat.LigationNum.add(new Long[]{selfnum, renum, validnum, diffnum});
                             Stat.NoRmdupName.add(Temp.getFinalFile().getPath());
-                            Stat.LigationNum.add(new Long[]{selfnum, renum, validnum});
                             Stat.NoRmdupNum.add(nodupnum);
                         }
                     } catch (IOException e) {
@@ -464,10 +468,6 @@ public class Main {
             new BedpeToInter(FinalBedpeFile.getPath(), InterBedpeFile.getPath());//将交互区间转换成交互点
         }
         //=================================================Make Matrix==================================================
-//        for (int i = 0; i < ChrBedpeFile.length; i++) {
-//            System.out.println(ChrBedpeFile[i] + "\n");
-//        }
-        //-------------------------------------
         MatrixTime = new Date();
         for (Chromosome s : Chromosomes) {
             if (s.Size == 0) {
@@ -475,18 +475,6 @@ public class Main {
                 findenzy.join();
             }
         }
-//        int i = 0;
-//        if (ChrSize.keySet().size() == 0) {
-//            findenzy.start();
-//            findenzy.join();
-//        }
-//        int[] chrSize = new int[ChrSize.size()];
-//        for (String chr : Chromosomes) {
-//            if (ChrSize.containsKey(chr)) {
-//                chrSize[i++] = ChrSize.get(chr);
-//            }
-//        }
-//        System.out.println(Resolution.length + "\n");
         if (StepCheck("MakeMatrix")) {
             Thread[] mmt = new Thread[Resolution.length];
             for (int i = 0; i < Resolution.length; i++) {
@@ -495,10 +483,9 @@ public class Main {
                     @Override
                     public void run() {
                         try {
-                            MakeMatrix matrix = new MakeMatrix(new File(MakeMatrixDir + "/" + Resolution[finalI]), Prefix, InterBedpeFile, ChrBedpeFile, Chromosomes, Resolution[finalI],Threads);//生成交互矩阵类
-//                            matrix.Threads = Threads;
+                            MakeMatrix matrix = new MakeMatrix(new File(MakeMatrixDir + "/" + Resolution[finalI]), Prefix, InterBedpeFile, ChrBedpeFile, Chromosomes, Resolution[finalI], Threads);//生成交互矩阵类
                             matrix.Run();//运行
-                        } catch (InterruptedException | IOException e) {
+                        } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
@@ -514,25 +501,16 @@ public class Main {
                 if (!OutDir.isDirectory() && !OutDir.mkdir()) {
                     System.err.println(new Date() + "\tWarning! Can't Create " + OutDir);
                 }
-                if (new File(MakeMatrixDir + "/" + DrawResolution[i]).isDirectory()) {
-                    MakeMatrix matrix = new MakeMatrix(new File(MakeMatrixDir + "/" + DrawResolution[i]), Prefix, InterBedpeFile, ChrBedpeFile, Chromosomes, DrawResolution[i],Threads);//生成交互矩阵类
-                    File[] TwoDMatrixFile = matrix.getChrTwoDMatrixFile();
-                    for (int j = 0; j < Chromosomes.length; j++) {
-                        new PlotMatrix(TwoDMatrixFile[j], new File(OutDir + "/" + Prefix + "." + Chromosomes[j].Name + "." + Tools.UnitTrans(DrawResolution[i], "B", "M") + "M.png"), DrawResolution[i]).Run(new String[]{Chromosomes[j].Name + ":0", Chromosomes[j].Name + ":0"});
-                    }
-
-                } else {
-                    MakeMatrix matrix = new MakeMatrix(new File(MakeMatrixDir + "/" + DrawResolution[i]), Prefix, InterBedpeFile, ChrBedpeFile, Chromosomes, DrawResolution[i],Threads);//生成交互矩阵类
+                MakeMatrix matrix = new MakeMatrix(new File(MakeMatrixDir + "/" + DrawResolution[i]), Prefix, InterBedpeFile, ChrBedpeFile, Chromosomes, DrawResolution[i], Threads);//生成交互矩阵类
+                if (!new File(MakeMatrixDir + "/" + DrawResolution[i]).isDirectory()) {
                     matrix.Run();
-                    File[] TwoDMatrixFile = matrix.getChrTwoDMatrixFile();
-                    for (int j = 0; j < Chromosomes.length; j++) {
-                        new PlotMatrix(TwoDMatrixFile[j], new File(OutDir + "/" + Prefix + "." + Chromosomes[j].Name + "." + Tools.UnitTrans(DrawResolution[i], "B", "M") + "M.png"), DrawResolution[i]).Run(new String[]{Chromosomes[j].Name + ":0", Chromosomes[j].Name + ":0"});
-                    }
+                }
+                File[] TwoDMatrixFile = matrix.getChrTwoDMatrixFile();
+                for (int j = 0; j < Chromosomes.length; j++) {
+                    new PlotMatrix(TwoDMatrixFile[j], new File(OutDir + "/" + Prefix + "." + Chromosomes[j].Name + "." + Tools.UnitTrans(DrawResolution[i], "B", "M") + "M.png"), DrawResolution[i]).Run(new String[]{Chromosomes[j].Name + ":0", Chromosomes[j].Name + ":0"});
                 }
             }
         }
-
-//        CustomFile[] IntraActionFile = matrix.getChrBedpeFile();
         //==============================================================================================================
         ST = new Thread(new Runnable() {
             @Override
@@ -777,7 +755,6 @@ public class Main {
      * @throws IOException
      */
     private void TransLocationDetection(Chromosome[] Chromosomes, CustomFile BedPeFile, int Resolution, int Threads) throws InterruptedException, IOException {
-//        String[] ChrSet = Chromosomes.toArray(new String[0]);
         //创建列表
         ArrayList<String> Prefix = new ArrayList<>();
         ArrayList<Chromosome> Chr1 = new ArrayList<>();
@@ -809,10 +786,10 @@ public class Main {
                         try {
                             //如果存在矩阵文件就不创建，节省时间
                             if (!new File(prefix + ".2d.matrix").exists()) {
-                                new CreateMatrix(BedPeFile, null, Resolution, prefix, 1).Run(new ChrRegion(chr1, 0, chr1.Size), new ChrRegion(chr2, 0, chr2.Size));
+                                new CreateMatrix(BedPeFile, Chromosomes, Default.Resolution / 2, prefix, 1).Run(new ChrRegion(chr1, 0, chr1.Size), new ChrRegion(chr2, 0, chr2.Size));
                             }
                             //开始识别
-                            TranslocationDetection Trans = new TranslocationDetection(new ChrRegion(chr1, 0, chr1.Size), new ChrRegion(chr2, 0, chr2.Size), new File(prefix + ".2d.matrix"), BedPeFile, Resolution, prefix);
+                            TranslocationDetection Trans = new TranslocationDetection(new ChrRegion(chr1, 0, chr1.Size), new ChrRegion(chr2, 0, chr2.Size), new File(prefix + ".2d.matrix"), BedPeFile, Default.Resolution / 2, prefix);
                             Trans.Run();
                         } catch (IOException | InterruptedException e) {
                             e.printStackTrace();
@@ -895,7 +872,7 @@ public class Main {
         Chrs.addAll(Arrays.asList(ArgumentList.get(OptChromosome).split("\\s+")));
         Restriction = ArgumentList.get(OptRestriction);
         LinkerFile = new CustomFile(ArgumentList.get(OptLinkerFile));
-        AdapterFile = new CustomFile(ArgumentList.get(OptAdapterFile));
+        AdapterFile = !ArgumentList.get(OptAdapterFile).equals("") ? new CustomFile(ArgumentList.get(OptAdapterFile)) : null;
         LinkersType.addAll(Arrays.asList(ArgumentList.get(OptLinkersType).split("\\s+")));
         UseLinker.addAll(Arrays.asList(ArgumentList.get(OptUseLinker).split("\\s+")));
         MatchScore = Integer.parseInt(ArgumentList.get(OptMatchScore));

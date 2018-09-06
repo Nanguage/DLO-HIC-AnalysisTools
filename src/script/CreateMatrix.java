@@ -98,10 +98,6 @@ public class CreateMatrix {
     }
 
     private void Init() {
-        if (Chromosomes == null) {
-            System.err.println("Error! no -chr  argument");
-            System.exit(1);
-        }
         TwoDMatrixFile = new File(Prefix + ".2d.matrix");
         SpareMatrixFile = new File(Prefix + ".spare.matrix");
         RegionFile = new File(Prefix + ".matrix.Region");
@@ -117,6 +113,10 @@ public class CreateMatrix {
     public Integer[][] Run() throws IOException {
         if (Region1 != null) {
             return Run(Region1, Region2);
+        }
+        if (Chromosomes == null) {
+            System.err.println("Error! no -chr  argument");
+            System.exit(1);
         }
         int[] ChrSize = new int[Chromosomes.length];
         System.out.println(new Date() + "\tBegin to creat interaction matrix " + BedpeFile.getName() + " Resolution=" + Resolution + " Threads=" + Threads);

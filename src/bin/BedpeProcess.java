@@ -18,8 +18,8 @@ public class BedpeProcess {
     public final String OptThreads = "Threads";
     //======================================================
     private File OutPath;
-    private File FinalDir;//存放最终结果的目录
-    private File MiddleDir;//存放中间文件的目录
+    private File FinalDir;
+    private File MiddleDir;
     private File LigationDir;
     private String Prefix;
     private CustomFile BedpeFile;
@@ -92,8 +92,6 @@ public class BedpeProcess {
         //将bedpe分成染色体内的交互和染色体间的交互
         BedpeToSameAndDiff(BedpeFile, SameFile, DiffFile);
         ChrSameFile = SameFile.SeparateBedpe(Chromosomes, OutPath + "/" + Prefix, Threads);
-//        ChrDiffFile = SeparateChromosome(DiffFile, 1, Chromosomes, DiffFile);
-        //==================================same=========================================
         //=====================================染色体内的交互处理=========================================
         Thread[] Process = new Thread[Chromosomes.length];
         for (int i = 0; i < Chromosomes.length; i++) {
@@ -126,7 +124,6 @@ public class BedpeProcess {
         for (int j = 0; j < Chromosomes.length; j++) {
             Process[j].join();
         }
-        //========================diff===================================
         //==========================================染色体间的交互处理==================================================
         File SortDiffFile = new File(DiffFile + ".sort");
         DiffFile.SortFile(new int[]{2, 3, 5, 6}, "n", "", SortDiffFile);//排序
@@ -150,13 +147,10 @@ public class BedpeProcess {
                     ChrLigationFile[j][i].delete();//删除（自连接，再连接，有效数据）
                 }
 //                ChrSameFile[j].delete();
-                ChrFragLocationFile[j].delete();
+                ChrFragLocationFile[j].delete();//删除每条染色体的交互片段定位的文件（只保留包含全部染色体的一个文件）
 //                ChrSameNoDumpFile[j].delete();
             }
 
-//            new File(ChrLigationFile[j][2] + ".sort").delete();
-//            new File(ChrLigationFile[j][2] + ".clean.sort").delete();
-//            ChrDiffFile[j].delete();
         }
         FinalFile.Merge(new File[]{SameNoDumpFile, DiffNoDumpFile});
     }
@@ -209,8 +203,8 @@ public class BedpeProcess {
 //            LigationDir = "Ligation";
 //        }
         File LigationDir = new File(OutPath + "/Ligation");
-        File MiddleDir = new File(OutPath + "/Temp");
-        File FinalDir = new File(OutPath + "/Clean");
+        File MiddleDir = new File(OutPath + "/Temp");//存放中间文件的目录
+        File FinalDir = new File(OutPath + "/Clean");//存放最终结果的目录
         File[] CheckDir = new File[]{OutPath, LigationDir, MiddleDir, FinalDir};
         for (File f : CheckDir) {
             synchronized (BedpeProcess.class) {
@@ -293,51 +287,6 @@ public class BedpeProcess {
             System.out.println(opt + ":\t" + ParameterList.get(opt));
         }
     }
-
-//    private CustomFile[] SeparateChromosome(File InFile, int Row, String[] Chromosome, File OutPrefix) throws IOException, InterruptedException {
-//        System.out.println(new Date() + "\tStart to Separate Chromosomes\t" + String.join(" ", Chromosome) + "\t" + InFile.getName());
-//        BufferedReader reader = new BufferedReader(new FileReader(InFile));
-//        BufferedWriter[] writers = new BufferedWriter[Chromosome.length];
-//        CustomFile[] OutFile = new CustomFile[Chromosome.length];
-//        for (int i = 0; i < writers.length; i++) {
-//            OutFile[i] = new CustomFile(OutPrefix + "." + Chromosome[i]);
-//            writers[i] = new BufferedWriter(new FileWriter(OutFile[i]));
-//        }
-//        Thread[] Process = new Thread[Threads * 3];
-//        for (int i = 0; i < Process.length; i++) {
-//            Process[i] = new Thread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    try {
-//                        String line;
-//                        while ((line = reader.readLine()) != null) {
-//                            String chr = line.split("\\s+")[0];
-//                            for (int i = 0; i < Chromosome.length; i++) {
-//                                if (chr.equals(Chromosome[i])) {
-//                                    synchronized (writers[i]) {
-//                                        writers[i].write(line + "\n");
-//                                    }
-//                                    break;
-//                                }
-//                            }
-//                        }
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-//            });
-//            Process[i].start();
-//        }
-//        for (int i = 0; i < Threads; i++) {
-//            Process[i].join();
-//        }
-//        reader.close();
-//        for (int i = 0; i < writers.length; i++) {
-//            writers[i].close();
-//        }
-//        System.out.println(new Date() + "\tEnd to Separate Chromosomes\t" + String.join(" ", Chromosome) + "\t" + InFile.getName());
-//        return OutFile;
-//    }
 
     private void FragmentLocation(File BedpeFile, File EnySiteFile, File OutFile) throws IOException, InterruptedException {
         ArrayList<Integer> EnySiteList = new ArrayList<>();
@@ -556,5 +505,9 @@ public class BedpeProcess {
 
     public CustomFile getDiffNoDumpFile() {
         return DiffNoDumpFile;
+    }
+
+    public CustomFile getDiffFile() {
+        return DiffFile;
     }
 }
