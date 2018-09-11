@@ -85,7 +85,7 @@ public class Tools {
         return Num * UnitMap.get(PrimaryUint) / UnitMap.get(TransedUint);
     }
 
-    public static int ExecuteCommandStr(String CommandStr, File OutFile,File ErrorFile) throws IOException, InterruptedException {
+    public static int ExecuteCommandStr(String CommandStr, File OutFile, File ErrorFile) throws IOException, InterruptedException {
         Process P;
         int ExitValue;
         System.out.println(new Date() + "\t" + CommandStr);
@@ -218,5 +218,28 @@ public class Tools {
         return Kmer;
     }
 
+    public static String ReverseComple(String str) {
+        char[] RevComStr = new StringBuffer(str).reverse().toString().toCharArray();
+        for (int k = 0; k < RevComStr.length; k++) {
+            switch (RevComStr[k]) {
+                case 'A':
+                case 'a':
+                    RevComStr[k] = 'T';
+                    break;
+                case 'T':
+                case 't':
+                    RevComStr[k] = 'A';
+                    break;
+                case 'C':
+                case 'c':
+                    RevComStr[k] = 'G';
+                    break;
+                case 'G':
+                case 'g':
+                    RevComStr[k] = 'C';
+            }
+        }
+        return new String(RevComStr);
+    }
 
 }

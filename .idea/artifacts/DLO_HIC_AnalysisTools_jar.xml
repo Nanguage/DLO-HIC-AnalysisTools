@@ -17,9 +17,9 @@
       <element id="extracted-dir" path="$KOTLIN_BUNDLED$/lib/kotlin-stdlib-jdk7.jar" path-in-jar="/" />
       <element id="extracted-dir" path="$KOTLIN_BUNDLED$/lib/kotlin-stdlib-jdk8.jar" path-in-jar="/" />
       <element id="directory" name="resource">
-        <element id="file-copy" path="$PROJECT_DIR$/resource/Adapter.txt" />
         <element id="file-copy" path="$PROJECT_DIR$/resource/Template.html" />
-        <element id="file-copy" path="$PROJECT_DIR$/resource/DLO-linker_TP.txt" />
+        <element id="file-copy" path="$PROJECT_DIR$/resource/index.html" />
+        <element id="file-copy" path="$PROJECT_DIR$/resource/Report.html" />
       </element>
       <element id="directory" name="config">
         <element id="file-copy" path="$PROJECT_DIR$/config/DLO-Config.txt" />

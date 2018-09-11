@@ -2,79 +2,81 @@ import java.io.*;
 import java.util.*;
 
 import bin.*;
+import kotlin.text.Charsets;
 import lib.File.*;
 import lib.Image.PlotMatrix;
 import lib.tool.*;
 import lib.tool.FindRestrictionSite;
 import lib.unit.*;
 import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 import script.CreateMatrix;
 
 public class Main {
-    private final String OptFastqFile = "FastqFile";//fastq文件
-    private final String OptGenomeFile = "GenomeFile";//基因组文件
-    private final String OptPrefix = "Prefix";//输出前缀
-    private final String OptOutPath = "OutPath";//输出路径
-    private final String OptChromosome = "Chromosomes";//染色体名
-    private final String OptRestriction = "Restriction";//酶切位点序列
-    private final String OptLinkerFile = "LinkerFile";//linker文件
-    private final String OptAdapterFile = "AdapterFile";//Adapter文件
-    private final String OptLinkersType = "LinkersType";//linker类型
-    private final String OptUseLinker = "UseLinker";//可用的linker类型
-    private final String OptMatchScore = "MatchScore";//linker过滤匹配分数
-    private final String OptMisMatchScore = "MisMatchScore";//linker过滤错配分数
-    private final String OptIndelScore = "IndelScore";//linker过滤插入缺失分数
-    private final String OptMaxMisMatchLength = "MaxMisMatchLength";//linker过滤最大错配数
-    private final String OptIndexFile = "Index";//比对索引
-    private final String OptReadsType = "ReadsType";// Long or Short
-    private final String OptAlignMisMatch = "AlignMisMatch";//bwa等比对最小错配数
-    private final String OptAlignThread = "AlignThread";//bwa等比对线程数
-    private final String OptAlignMinQuality = "AlignMinQuality";//bwa等比对最小质量
-    private final String OptMinReadsLength = "MinReadsLength";//最小reads长度
-    private final String OptMaxReadsLength = "MaxReadsLength";//最大reads长度
-    private final String OptResolution = "Resolution";//分辨率
-    private final String OptDrawResolution = "DrawRes";
-    private final String OptThreads = "Threads";//线程数
-    private final String OptIteration = "Iteration";//是否迭代
-    private final String OptStep = "Step";
+    //    private final String OptFastqFile = "InputFile";//fastq文件
+//    private final String OptGenomeFile = "GenomeFile";//基因组文件
+//    private final String OptPrefix = "Prefix";//输出前缀
+//    private final String OptOutPath = "OutPath";//输出路径
+//    private final String OptChromosome = "Chromosomes";//染色体名
+//    private final String OptRestriction = "Restriction";//酶切位点序列
+//    private final String OptHalfLinker = "HalfLinker";//半linker序列
+//    private final String OptLinkerFile = "LinkerFile";//linker文件
+//    private final String OptAdapterFile = "AdapterFile";//Adapter文件
+//    private final String OptLinkersType = "LinkersType";//linker类型
+//    private final String OptUseLinker = "UseLinker";//可用的linker类型
+//    private final String OptMatchScore = "MatchScore";//linker过滤匹配分数
+//    private final String OptMisMatchScore = "MisMatchScore";//linker过滤错配分数
+//    private final String OptIndelScore = "InDelScore";//linker过滤插入缺失分数
+//    private final String OptMaxMisMatchLength = "MaxMisMatchLength";//linker过滤最大错配数
+//    private final String OptIndexFile = "Index";//比对索引
+//    private final String OptReadsType = "ReadsType";// Long or Short
+//    private final String OptAlignMisMatch = "AlignMisMatch";//bwa等比对最小错配数
+//    private final String OptAlignThread = "AlignThread";//bwa等比对线程数
+//    private final String OptAlignMinQuality = "AlignMinQuality";//bwa等比对最小质量
+//    private final String OptMinReadsLength = "MinReadsLength";//最小reads长度
+//    private final String OptMaxReadsLength = "MaxReadsLength";//最大reads长度
+//    private final String OptResolution = "Resolution";//分辨率
+//    private final String OptDrawResolution = "DrawRes";
+//    private final String OptThreads = "Threads";//线程数
+//    private final String OptIteration = "Iteration";//是否迭代
+//    private final String OptStep = "Step";
 
     //===================================================================
-    private CustomFile[] FastqFile;
+    private CustomFile InputFile;
     private CustomFile GenomeFile;
     private File OutPath;
     private String Prefix;
     private Chromosome[] Chromosomes;
-    //    private ArrayList<String> Chrs = new ArrayList<>();
+    private String[] HalfLinker, LinkerSeq;
+    private String LinkerA, LinkerB;
     private String Restriction;
     private File LinkerFile;
     private File AdapterFile;
+    private String[] AdapterSeq;
     private ArrayList<String> LinkersType = new ArrayList<>();
     private ArrayList<String> UseLinker = new ArrayList<>();
     private File IndexPrefix;
-    private int FileType = Opts.Single;
-    private int MatchScore;
-    private int MisMatchScore;
-    private int IndelScore;
+    private int MatchScore, MisMatchScore, InDelScore;
     private int ReadsType;
     private int AlignMisMatch;
     private int AlignThread;
     private int AlignMinQuality;
-    private int MinReadsLength;
-    private int MaxReadsLength;
+    private int MinReadsLength, MaxReadsLength;
     private int[] Resolution;
     private int[] DrawResolution;
     private int DetectResolution;
+    private int LinkerLength, MinLinkerLength;
     private boolean Iteration = true;
     private int Threads;
     private Date PreTime, SeTime, BedpeTime, MatrixTime, TransTime, EndTime;
     private ArrayList<String> Step = new ArrayList<>();
     private ArrayList<Thread> SThread = new ArrayList<>();
-
+    private Properties Config = new Properties();
     //===================================================================
-    private String[] RequiredParameter = new String[]{OptFastqFile, OptGenomeFile, OptLinkerFile, OptChromosome, OptRestriction, OptLinkersType, OptAlignMinQuality};
-    private String[] OptionalParameter = new String[]{OptOutPath, OptIndexFile, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptReadsType, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptIteration, OptThreads};
-    private Hashtable<String, String> ArgumentList = new Hashtable<>();//参数列表
-    private Hashtable<String, Integer> ChrSize = new Hashtable<>();//染色体大小
+//    private String[] RequiredParameter = new String[]{OptFastqFile, OptGenomeFile, OptLinkerFile, OptChromosome, OptRestriction, OptLinkersType, OptAlignMinQuality};
+//    private String[] OptionalParameter = new String[]{OptOutPath, OptIndexFile, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptReadsType, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptIteration, OptThreads};
+//    private Hashtable<String, String> ArgumentList = new Hashtable<>();//参数列表
+//    private Hashtable<String, Integer> ChrSize = new Hashtable<>();//染色体大小
     private int MinLinkerFilterQuality;
     private File EnzyPath;//酶切位点文件目录
     private String EnzyFilePrefix;//酶切位点文件前缀
@@ -111,23 +113,26 @@ public class Main {
             new HelpFormatter().printHelp("java -jar Path/" + Opts.JarFile.getName(), helpHeader, Argument, helpFooter, true);
             System.exit(1);
         }
-        OptionListInit();
         //获取配置文件和高级配置文件
         CustomFile ConfigureFile = ComLine.hasOption("conf") ? new CustomFile(ComLine.getOptionValue("conf")) : Opts.ConfigFile;
         CustomFile AdvConfigFile = ComLine.hasOption("adv") ? new CustomFile(ComLine.getOptionValue("adv")) : Opts.AdvConfigFile;
         GetOption(ConfigureFile, AdvConfigFile);//读取配置信息
         //获取命令行参数信息
         if (ComLine.hasOption("i")) {
-            ArgumentList.put(OptFastqFile, String.join(" ", ComLine.getOptionValues("i")));
+            Config.setProperty(Require.InputFile.toString(), String.join(" ", ComLine.getOptionValues("i")));
+//            ArgumentList.put(OptFastqFile, String.join(" ", ComLine.getOptionValues("i")));
         }
         if (ComLine.hasOption("p")) {
-            ArgumentList.put(OptPrefix, ComLine.getOptionValue("p"));
+            Config.setProperty(Optional.Prefix.toString(), ComLine.getOptionValue("p"));
+//            ArgumentList.put(OptPrefix, ComLine.getOptionValue("p"));
         }
         if (ComLine.hasOption("o")) {
-            ArgumentList.put(OptOutPath, ComLine.getOptionValue("o"));
+            Config.setProperty(Optional.OutPath.toString(), ComLine.getOptionValue("o"));
+//            ArgumentList.put(OptOutPath, ComLine.getOptionValue("o"));
         }
         if (ComLine.hasOption("s")) {
-            ArgumentList.put(OptStep, String.join(" ", ComLine.getOptionValues("s")));
+            Config.setProperty(Optional.Step.toString(), ComLine.getOptionValue("s"));
+//            ArgumentList.put(OptStep, String.join(" ", ComLine.getOptionValues("s")));
         }
         Init();//变量初始化
     }
@@ -167,6 +172,12 @@ public class Main {
         CustomFile[] UseLinkerFasqFileR1 = new CustomFile[UseLinker.size()];
         CustomFile[] UseLinkerFasqFileR2 = new CustomFile[UseLinker.size()];
         //==============================================================================================================
+        Stat.OutPath = OutPath;
+        Stat.HalfLinkerA = LinkerA;
+        Stat.HalfLinkerB = LinkerB;
+        Stat.MatchScore = MatchScore;
+        Stat.MisMatchScore = MisMatchScore;
+        Stat.InDelScore = InDelScore;
         Stat.RestrictionSeq = Restriction;
         Stat.LinkerFile = LinkerFile;
         Stat.AdapterFile = AdapterFile;
@@ -180,11 +191,15 @@ public class Main {
         Stat.Thread = Threads;
         Stat.LinkersType = LinkersType;
         Stat.UseLinker = UseLinker;
-        for (int i = 0; i < Chromosomes.length; i++) {
-            Stat.Chromosome.add(Chromosomes[i].Name);
+        Stat.PreDir=PreProcessDir;
+        Stat.SeDir=SeProcessDir;
+        Stat.BedpeDir=BedpeProcessDir;
+        Stat.MatrixDir=MakeMatrixDir;
+        for (lib.unit.Chromosome Chromosome : Chromosomes) {
+            Stat.Chromosome.add(Chromosome.Name);
         }
-        Stat.RawDataFile = FastqFile;
-        Stat.RawDataReadsNum = new Long[FastqFile.length];
+        Stat.RawDataFile = InputFile;
+//        Stat.RawDataReadsNum = new Long[InputFile.length];
         //==============================================================================================================
         Opts.CommandOutFile.delete();
         Thread ST;
@@ -197,22 +212,40 @@ public class Main {
         }
         //=========================================linker filter==linker 过滤===========================================
         PreTime = new Date();
+        //-----------------------------------Adapter序列处理------------------------------
+        AdapterFile.delete();//删除原来的Adapter文件
+        FileUtils.touch(AdapterFile);//创建新的Adapter文件
+        if (AdapterSeq != null) {
+            //若Adapter序列不为空
+            if (AdapterSeq[0].equals("Auto")) {
+                //标记为自动识别Adapter
+                AdapterSeq = new String[1];
+                AdapterSeq[0] = InputFile.AdapterDetect(new File(PreProcessDir + "/" + Prefix), MinLinkerLength + LinkerLength);
+                System.out.println(new Date() + "\tDetected adapter seq:\t" + AdapterSeq[0]);
+            }
+            //将Adapter序列输出到文件中
+            FileUtils.write(AdapterFile, String.join("\n", AdapterSeq), Charsets.UTF_8);
+            Stat.AdapterSequence = String.join(" ", AdapterSeq);
+        }
+        //---------------------------------保存linker序列--------------------------------
+        LinkerFile.delete();
+        FileUtils.touch(LinkerFile);
+        FileUtils.write(LinkerFile, String.join("\n", LinkerSeq), Charsets.UTF_8);
+        //-----------------------------------------------------------------------------
         PreProcess preprocess;
-        preprocess = new PreProcess(PreProcessDir, Prefix, FastqFile, LinkerFile, AdapterFile, MatchScore, MisMatchScore, IndelScore, FileType, Threads * 4);
+        preprocess = new PreProcess(PreProcessDir, Prefix, InputFile, LinkerFile, AdapterFile, MatchScore, MisMatchScore, InDelScore, Threads * 4);
         if (StepCheck("LinkerFilter")) {
             preprocess.Run();
         }
         //==============================================================================================================
-        File[] PastFile = preprocess.getPastFile();//获取past文件位置
+        File PastFile = preprocess.getPastFile();//获取past文件位置
         ST = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    for (int i = 0; i < FastqFile.length; i++) {
-                        Stat.RawDataReadsNum[i] = FastqFile[i].CalculatorLineNumber() / 4;
-                    }
+                    Stat.RawDataReadsNum = InputFile.CalculatorLineNumber() / 4;
                     //calculate linker count
-                    Stat.LinkersNum.addAll(Arrays.asList(Statistic.CalculateLinkerCount(PastFile[0], LinkersType.toArray(new String[0]), MinLinkerFilterQuality, Threads)));
+                    Stat.LinkersNum.addAll(Arrays.asList(Statistic.CalculateLinkerCount(PastFile, LinkersType.toArray(new String[0]), MinLinkerFilterQuality, Threads)));
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -222,48 +255,15 @@ public class Main {
         SThread.add(ST);
         preprocess = null;
         //==========================================Divide Linker=======================================================
-        if (PastFile.length > 1) {
-            DivideLinker divideLinker1 = new DivideLinker(PastFile[0], SeProcessDir + "/" + Prefix, LinkersType.toArray(new String[0]), Restriction, DivideLinker.First, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, FastqFile[0].FastqPhred());
-            divideLinker1.setThreads(Threads);
-            LinkerFastqFileR1 = divideLinker1.getR1FastqFile();
-            DivideLinker divideLinker2 = new DivideLinker(PastFile[1], SeProcessDir + "/" + Prefix, LinkersType.toArray(new String[0]), Restriction, DivideLinker.First, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, FastqFile[0].FastqPhred());
-            divideLinker2.setThreads(Threads);
-            LinkerFastqFileR2 = divideLinker2.getR1FastqFile();
-            if (StepCheck("DivideLinker")) {
-                Thread r1 = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            divideLinker1.Run();
-                        } catch (IOException | InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                Thread r2 = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            divideLinker2.Run();
-                        } catch (IOException | InterruptedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                r1.start();
-                r2.start();
-                r1.join();
-                r2.join();
-            }
-        } else {
-            DivideLinker divideLinker = new DivideLinker(PastFile[0], SeProcessDir + "/" + Prefix, LinkersType.toArray(new String[0]), Restriction, DivideLinker.All, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, FastqFile[0].FastqPhred());
-            divideLinker.setThreads(Threads);
-            LinkerFastqFileR1 = divideLinker.getR1FastqFile();
-            LinkerFastqFileR2 = divideLinker.getR2FastqFile();
-            if (StepCheck("DivideLinker")) {
-                divideLinker.Run();
-            }
+
+        DivideLinker divideLinker = new DivideLinker(PastFile, SeProcessDir + "/" + Prefix, LinkersType.toArray(new String[0]), Restriction, DivideLinker.All, MinReadsLength, MaxReadsLength, MinLinkerFilterQuality, InputFile.FastqPhred());
+        divideLinker.setThreads(Threads);
+        LinkerFastqFileR1 = divideLinker.getR1FastqFile();
+        LinkerFastqFileR2 = divideLinker.getR2FastqFile();
+        if (StepCheck("DivideLinker")) {
+            divideLinker.Run();
         }
+
         for (int i = 0; i < UseLinker.size(); i++) {
             UseLinkerFasqFileR1[i] = new CustomFile(LinkerFastqFileR1[LinkersType.indexOf(UseLinker.get(i))]);
             UseLinkerFasqFileR2[i] = new CustomFile(LinkerFastqFileR2[LinkersType.indexOf(UseLinker.get(i))]);
@@ -536,7 +536,7 @@ public class Main {
         //=============================================TransLocation Detection==========================================
         TransTime = new Date();
         if (StepCheck("TransLocationDetection")) {
-            TransLocationDetection(Chromosomes, FinalBedpeFile, DetectResolution, Threads);
+//            TransLocationDetection(Chromosomes, FinalBedpeFile, DetectResolution, Threads);
         }
         EndTime = new Date();
         System.out.println("\n-------------------------------Time----------------------------------------");
@@ -552,27 +552,29 @@ public class Main {
             t.join();
         }
         Stat.Show();
-//        Stat.ReportHtml(ArgumentList.get(OptOutPath) + "/result.html");
+        new File(OutPath + "/Report").mkdir();
+        Stat.ReportHtml(OutPath + "/Report/Test.index.html");
     }
 
     /**
      * Create reference genome index
      *
-     * @param fastfile genome file
+     * @param genomefile genome file
      * @return process thread
      */
-    private Thread CreateIndex(File fastfile) {
+    private Thread CreateIndex(File genomefile) {
         File IndexDir = new File(OutPath + "/" + Opts.IndexDir);
-        if (!IndexDir.isDirectory() && !IndexDir.mkdirs()) {
+        if (!IndexDir.isDirectory() && !IndexDir.mkdir()) {
             System.out.println("Create " + IndexDir + " false");
             System.exit(1);
         }
-        IndexPrefix = new File(IndexDir + "/" + fastfile.getName());
+        IndexPrefix = new File(IndexDir + "/" + genomefile.getName());
+        Stat.GenomeIndex = IndexPrefix;
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
-                    String ComLine = "bwa index -p " + IndexPrefix + " " + fastfile;
+                    String ComLine = "bwa index -p " + IndexPrefix + " " + genomefile;
                     Opts.CommandOutFile.Append(ComLine + "\n");
                     Tools.ExecuteCommandStr(ComLine, null, null);
                 } catch (IOException | InterruptedException e) {
@@ -594,7 +596,6 @@ public class Main {
             public void run() {
                 try {
                     System.out.println(new Date() + "\tStart to find restriction fragment");
-//                    Routine step = new Routine();
                     ArrayList<String> list = new ArrayList<>();
                     if (!EnzyPath.isDirectory() && !EnzyPath.mkdir()) {
                         System.err.println(new Date() + "\tCreate " + EnzyPath + " false !");
@@ -602,7 +603,6 @@ public class Main {
                     FindRestrictionSite fr = new FindRestrictionSite(GenomeFile, EnzyPath, Restriction, EnzyFilePrefix);
                     ArrayList<Chromosome> TempChrs = fr.Run();
                     File[] TempChrEnzyFile = fr.getChrFragmentFile();
-//                     = Statistic.FindRestrictionSite(GenomeFile.getPath(), Restriction, EnzyFilePrefix);
                     for (int i = 0; i < Chromosomes.length; i++) {
                         boolean flag = false;
                         for (int j = 0; j < TempChrs.size(); j++) {
@@ -616,14 +616,8 @@ public class Main {
                         if (!flag) {
                             System.err.println(new Date() + "\tWarning! No " + Chromosomes[i].Name + " in genomic file");
                         }
-//                        if (temphash.containsKey(chr.Name)) {
-//                            Chromosomes
-////                            ChrSize.put(chr.Name, temphash.get(chr.Name));
-//                        }
-//                        list.add(chr + "\t" + temphash.get(chr));
                     }
                     System.out.println(new Date() + "\tEnd find restriction fragment");
-//                    Tools.PrintList(list, new File(EnzyPath + "/" + Prefix + ".ChrSize"));//打印染色体大小信息
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -806,159 +800,137 @@ public class Main {
 
     //==============================
     private void GetOption(File ConfFile, File AdvConfFile) throws IOException {
-        ReadConfFile(ConfFile);
-        ReadConfFile(AdvConfFile);
+        Config.setProperty(Optional.OutPath.toString(), Default.OutPath);
+        Config.setProperty(Optional.Prefix.toString(), Default.Prefix);
+        Config.setProperty(Optional.Resolutions.toString(), String.valueOf(Default.Resolution));
+        Config.setProperty(Optional.DrawResolution.toString(), String.valueOf(Default.Resolution));
+        Config.setProperty(Optional.Thread.toString(), String.valueOf(Default.Thread));
+        Config.setProperty(Optional.Step.toString(), Default.Step);
+        Config.setProperty(Advance.MatchScore.toString(), String.valueOf(Default.MatchScore));
+        Config.setProperty(Advance.MisMatchScore.toString(), String.valueOf(Default.MisMatchScore));
+        Config.setProperty(Advance.InDelScore.toString(), String.valueOf(Default.InDelScore));
+        Config.setProperty(Advance.MinReadsLength.toString(), String.valueOf(Default.MinReadsLen));
+        Config.setProperty(Advance.MaxReadsLength.toString(), String.valueOf(Default.MaxReadsLen));
+        Config.setProperty(Advance.AlignThread.toString(), String.valueOf(Default.AlignThread));
+        Config.setProperty(Advance.AlignMisMatch.toString(), String.valueOf(Default.AlignMisMatchNum));
+        Config.setProperty(Advance.Iteration.toString(), Default.Iteration);
+        Config.setProperty(Advance.AlignType.toString(), String.valueOf(Default.AlignType));
+        Config.load(new FileReader(AdvConfFile));
+        Config.load(new FileReader(ConfFile));
     }
 
-    private void ReadConfFile(File file) throws IOException {
-        String line;
-        String[] str;
-        BufferedReader infile = new BufferedReader(new FileReader(file));
-        while ((line = infile.readLine()) != null) {
-            line = line.trim();
-            if (line.equals("") || line.matches("^/.*|^#.*")) {
-                continue;
-            }
-            str = line.split("\\s*=\\s*", 2);
-            if (ArgumentList.containsKey(str[0]) && str.length >= 2) {
-                ArgumentList.put(str[0], str[1]);
-            }
-        }
-        infile.close();
-    }
 
-    private void OptionListInit() {
-        for (String opt : RequiredParameter) {
-            ArgumentList.put(opt, "");
-        }
-        for (String opt : OptionalParameter) {
-            ArgumentList.put(opt, "");
-        }
-        ArgumentList.put(OptOutPath, Default.OutPath);
-        ArgumentList.put(OptMaxMisMatchLength, "3");
-        ArgumentList.put(OptMinReadsLength, "16");
-        ArgumentList.put(OptMaxReadsLength, "20");
-        ArgumentList.put(OptMatchScore, "1");
-        ArgumentList.put(OptMisMatchScore, "-2");
-        ArgumentList.put(OptIndelScore, "-2");
-        ArgumentList.put(OptReadsType, "Short");
-        ArgumentList.put(OptAlignMisMatch, "0");
-        ArgumentList.put(OptAlignThread, "8");
-        ArgumentList.put(OptResolution, String.valueOf(Default.Resolution));
-        ArgumentList.put(OptDrawResolution, String.valueOf(Default.Resolution));
-        ArgumentList.put(OptThreads, "4");
-        ArgumentList.put(OptStep, "-");
-    }
-
-    private void Init() throws IOException {
-        for (String opt : RequiredParameter) {
-            if (ArgumentList.get(opt).equals("")) {
+    private void Init() {
+        for (Require opt : Require.values()) {
+            if (Config.getProperty(opt.toString()) == null) {
+                System.err.println("Error ! no " + opt);
+                System.exit(1);
+            } else if (Config.getProperty(opt.toString()).equals("")) {
                 System.err.println("Error ! no " + opt);
                 System.exit(1);
             }
         }
-        //================================================
-        FastqFile = new CustomFile[ArgumentList.get(OptFastqFile).split("\\s+").length];
-        for (int i = 0; i < FastqFile.length; i++) {
-            FastqFile[i] = new CustomFile(ArgumentList.get(OptFastqFile).split("\\s+")[i]);
-        }
-        if (FastqFile.length >= 2) {
-            FileType = Opts.PairEnd;
-        }
-        GenomeFile = new CustomFile(ArgumentList.get(OptGenomeFile));
-        Prefix = ArgumentList.get(OptPrefix);
-        OutPath = new File(ArgumentList.get(OptOutPath));
-        ArrayList<String> Chrs = new ArrayList<>();
-        Chrs.addAll(Arrays.asList(ArgumentList.get(OptChromosome).split("\\s+")));
-        Restriction = ArgumentList.get(OptRestriction);
-        LinkerFile = new CustomFile(ArgumentList.get(OptLinkerFile));
-        AdapterFile = !ArgumentList.get(OptAdapterFile).equals("") ? new CustomFile(ArgumentList.get(OptAdapterFile)) : null;
-        LinkersType.addAll(Arrays.asList(ArgumentList.get(OptLinkersType).split("\\s+")));
-        UseLinker.addAll(Arrays.asList(ArgumentList.get(OptUseLinker).split("\\s+")));
-        MatchScore = Integer.parseInt(ArgumentList.get(OptMatchScore));
-        MisMatchScore = Integer.parseInt(ArgumentList.get(OptMisMatchScore));
-        IndelScore = Integer.parseInt(ArgumentList.get(OptIndelScore));
-        int MaxMisMatchLength = Integer.parseInt(ArgumentList.get(OptMaxMisMatchLength));
-        IndexPrefix = new File(ArgumentList.get(OptIndexFile));
-        ReadsType = ArgumentList.get(OptReadsType).equals("Short") ? Opts.ShortReads : ArgumentList.get(OptReadsType).equals("Long") ? Opts.LongReads : Opts.ErrorFormat;
-        AlignMisMatch = Integer.parseInt(ArgumentList.get(OptAlignMisMatch));
-        AlignThread = Integer.parseInt(ArgumentList.get(OptAlignThread));
-        AlignMinQuality = Integer.parseInt(ArgumentList.get(OptAlignMinQuality));
-        MinReadsLength = Integer.parseInt(ArgumentList.get(OptMinReadsLength));
-        MaxReadsLength = Integer.parseInt(ArgumentList.get(OptMaxReadsLength));
-        Resolution = StringArrays.toInteger(ArgumentList.get(OptResolution).split("\\s+"));
-        DrawResolution = StringArrays.toInteger(ArgumentList.get(OptDrawResolution).split("\\s+"));
-        Threads = Integer.parseInt(ArgumentList.get(OptThreads));
-        Iteration = Boolean.valueOf(ArgumentList.get(OptIteration));
-        Step.addAll(Arrays.asList(ArgumentList.get(OptStep).split("\\s+")));
-        Chromosomes = new Chromosome[Chrs.size()];
-        ChrEnzyFile = new File[Chrs.size()];
-        for (int i = 0; i < Chromosomes.length; i++) {
-            Chromosomes[i] = new Chromosome(Chrs.get(i));
+        //----------------------------------------必要参数赋值-----------------------------------------------------------
+        String[] tempstrs;
+        InputFile = new CustomFile(Config.getProperty(Require.InputFile.toString()));
+        GenomeFile = new CustomFile(Config.getProperty(Require.GenomeFile.toString()));
+        Restriction = Config.getProperty(Require.Restriction.toString());
+        HalfLinker = Config.getProperty(Require.HalfLinker.toString()).split("\\s+");
+        LinkerA = HalfLinker[0];
+        LinkerLength = LinkerA.length();
+        if (HalfLinker.length > 1) {
+            LinkerB = HalfLinker[1];
+            LinkerLength += LinkerB.length();
+        } else {
+            LinkerLength += LinkerA.length();
         }
 
+        //-----------------------------------------可选参数赋值----------------------------------------------------------
+        OutPath = new File(Config.getProperty(Optional.OutPath.toString()));
+        Prefix = Config.getProperty(Optional.Prefix.toString());
+        Resolution = StringArrays.toInteger(Config.getProperty(Optional.Resolutions.toString()).split("\\s+"));
+        Threads = Integer.parseInt(Config.getProperty(Optional.Thread.toString()));
+        DrawResolution = StringArrays.toInteger(Config.getProperty(Optional.DrawResolution.toString()).split("\\s+"));
+        Step.addAll(Arrays.asList(Config.getProperty(Optional.Step.toString()).split("\\s+")));
+        if (Config.getProperty(Optional.AdapterSeq.toString()) != null && !Config.getProperty(Optional.AdapterSeq.toString()).equals("")) {
+            AdapterSeq = Config.getProperty(Optional.AdapterSeq.toString()).split("\\s+");
+        }
+        if (Config.getProperty(Optional.Index.toString()) != null && !Config.getProperty(Optional.Index.toString()).equals("")) {
+            IndexPrefix = new File(Config.getProperty(Optional.Index.toString()));
+        }
+        if (Config.getProperty(Optional.Chromosomes.toString()) != null && !Config.getProperty(Optional.Chromosomes.toString()).equals("")) {
+            tempstrs = Config.getProperty(Optional.Chromosomes.toString()).split("\\s+");
+            Chromosomes = new Chromosome[tempstrs.length];
+            for (int i = 0; i < Chromosomes.length; i++) {
+                Chromosomes[i] = new Chromosome(tempstrs[i]);
+            }
+            ChrEnzyFile = new File[Chromosomes.length];
+        }
+
+        //-------------------------------------------高级参数赋值--------------------------------------------------------
+        MatchScore = Integer.parseInt(Config.getProperty(Advance.MatchScore.toString(), String.valueOf(Default.MatchScore)));
+        MisMatchScore = Integer.parseInt(Config.getProperty(Advance.MisMatchScore.toString(), String.valueOf(Default.MisMatchScore)));
+        InDelScore = Integer.parseInt(Config.getProperty(Advance.InDelScore.toString(), String.valueOf(Default.InDelScore)));
+        MinReadsLength = Integer.parseInt(Config.getProperty(Advance.MinReadsLength.toString(), String.valueOf(Default.MinReadsLen)));
+        MaxReadsLength = Integer.parseInt(Config.getProperty(Advance.MaxReadsLength.toString(), String.valueOf(Default.MaxReadsLen)));
+        AlignThread = Integer.parseInt(Config.getProperty(Advance.AlignThread.toString(), String.valueOf(Default.AlignThread)));
+        AlignMisMatch = Integer.parseInt(Config.getProperty(Advance.AlignMisMatch.toString(), String.valueOf(Default.AlignMisMatchNum)));
+        Iteration = Boolean.valueOf(Config.getProperty(Advance.Iteration.toString(), Default.Iteration));
+        ReadsType = Config.getProperty(Advance.AlignType.toString()).equals("Short") ? Opts.ShortReads : Config.getProperty(Advance.AlignType.toString()).equals("Long") ? Opts.LongReads : Opts.ErrorFormat;
+        //设置唯一比对分数
+        if (ReadsType == Opts.ShortReads) {
+            AlignMinQuality = 20;
+        } else if (ReadsType == Opts.LongReads) {
+            AlignMinQuality = 30;
+        }
+        Config.setProperty(Advance.MinUniqueScore.toString(), String.valueOf(AlignMinQuality));
+        if (Config.getProperty(Advance.MinLinkerLen.toString()) == null) {
+            Config.setProperty(Advance.MinLinkerLen.toString(), String.valueOf((int) (LinkerLength * 0.9)));
+        }
+        MinLinkerLength = Integer.parseInt(Config.getProperty(Advance.MinLinkerLen.toString()));
         //================================================
-        if (Prefix.equals("")) {
-            ArgumentList.put(OptPrefix, Default.Prefix);
-        }
-        if (UseLinker.size() == 0) {
-            UseLinker = LinkersType;
-        }
         if (!OutPath.isDirectory()) {
             System.err.println("Error, " + OutPath + " is not a directory");
-            System.exit(0);
+            System.exit(1);
         }
         if (!GenomeFile.isFile()) {
             System.err.println("Error, " + GenomeFile + " is not a file");
-            System.exit(0);
+            System.exit(1);
         }
-        for (int i = 0; i < FastqFile.length; i++) {
-            if (!FastqFile[i].isFile()) {
-                System.err.println("Error, " + FastqFile[i] + " is not a file");
-                System.exit(0);
-            }
+        if (!InputFile.isFile()) {
+            System.err.println("Error, " + InputFile + " is not a file");
+            System.exit(1);
         }
-        if (!LinkerFile.isFile()) {
-            System.err.println("Error, " + LinkerFile + " is not a file");
-            System.exit(0);
-        }
-        //=======================================================================
-        BufferedReader infile = new BufferedReader(new FileReader(LinkerFile));
-        int linkerLength = infile.readLine().length();
-        infile.close();
-        MinLinkerFilterQuality = (linkerLength - MaxMisMatchLength) * MatchScore + MaxMisMatchLength * MisMatchScore;//设置linkerfilter最小分数
+        //=======================================================================;
         PreProcessDir = new File(OutPath + "/" + Opts.PreDir);
         SeProcessDir = new File(OutPath + "/" + Opts.SeDir);
         BedpeProcessDir = new File(OutPath + "/" + Opts.BedpeDir);
         MakeMatrixDir = new File(OutPath + "/" + Opts.MatrixDir);
         TransLocationDir = new File(OutPath + "/" + Opts.TransDir);
         EnzyPath = new File(OutPath + "/" + Opts.EnzyFragDir);
-        if (!PreProcessDir.isDirectory() && !PreProcessDir.mkdirs()) {
-            System.err.println("Can't create " + PreProcessDir);
-            System.exit(1);
+        File[] CheckDir = new File[]{PreProcessDir, SeProcessDir, BedpeProcessDir, MakeMatrixDir, TransLocationDir, EnzyPath};
+        for (File s : CheckDir) {
+            if (!s.isDirectory() && !s.mkdir()) {
+                System.err.println("Can't create " + s);
+                System.exit(1);
+            }
         }
-        if (!SeProcessDir.isDirectory() && !SeProcessDir.mkdirs()) {
-            System.err.println("Can't create " + SeProcessDir);
-            System.exit(1);
+        tempstrs = new String[]{"A", "B"};
+        //构建Linker序列
+        LinkerSeq = new String[HalfLinker.length * HalfLinker.length];
+        for (int i = 0; i < HalfLinker.length; i++) {
+            for (int j = 0; j < HalfLinker.length; j++) {
+                LinkerSeq[i * HalfLinker.length + j] = HalfLinker[i] + Tools.ReverseComple(HalfLinker[j]);
+                LinkersType.add(tempstrs[i] + tempstrs[j]);
+                if (i == j) {
+                    UseLinker.add(tempstrs[i] + tempstrs[j]);
+                }
+            }
         }
-        if (!BedpeProcessDir.isDirectory() && !BedpeProcessDir.mkdirs()) {
-            System.err.println("Can't create " + BedpeProcessDir);
-            System.exit(1);
-        }
-        if (!MakeMatrixDir.isDirectory() && !MakeMatrixDir.mkdirs()) {
-            System.err.println("Can't create " + MakeMatrixDir);
-            System.exit(1);
-        }
-        if (!TransLocationDir.isDirectory() && !TransLocationDir.mkdirs()) {
-            System.err.println("Can't create " + TransLocationDir);
-            System.exit(1);
-        }
-        if (!EnzyPath.isDirectory() && !EnzyPath.mkdirs()) {
-            System.err.println("Can't create " + EnzyPath);
-            System.exit(1);
-        }
+        MinLinkerFilterQuality = MinLinkerLength * MatchScore + (LinkerLength - MinLinkerLength) * MisMatchScore;//设置linkerfilter最小分数
         EnzyFilePrefix = Prefix + "." + Restriction.replace("^", "");
-        Stat.OutPath = OutPath;
+        LinkerFile = new File(PreProcessDir + "/" + Prefix + ".linker");
+        AdapterFile = new File(PreProcessDir + "/" + Prefix + ".adapter");
     }
 
     private boolean StepCheck(String step) {
@@ -978,24 +950,59 @@ public class Main {
     }
 
     private void ShowParameter() {
-        for (String opt : RequiredParameter) {
-            System.out.println(opt + ":\t" + ArgumentList.get(opt));
+        for (Require opt : Require.values()) {
+            System.out.println(opt + ":\t" + Config.getProperty(opt.toString()));
         }
         System.out.println("======================================================================================");
-        for (String opt : OptionalParameter) {
-            System.out.println(opt + ":\t" + ArgumentList.get(opt));
+        for (Optional opt : Optional.values()) {
+            System.out.println(opt + ":\t" + Config.getProperty(opt.toString()));
+        }
+        System.out.println("======================================================================================");
+        for (Advance opt : Advance.values()) {
+            System.out.println(opt + ":\t" + Config.getProperty(opt.toString()));
         }
     }
 
-    public Hashtable<String, String> getArgumentList() {
-        return ArgumentList;
+}
+
+enum Require {
+    InputFile("InputFile"), Restriction("Restriction"), HalfLinker("HalfLinker"), GenomeFile("GenomeFile");
+    private String Str;
+
+    Require(String s) {
+        this.Str = s;
     }
 
-    public String[] getRequiredParameter() {
-        return RequiredParameter;
+    @Override
+    public String toString() {
+        return Str;
+    }
+}
+
+enum Optional {
+    OutPath("OutPath"), Prefix("Prefix"), Index("Index"), Chromosomes("Chromosomes"), AdapterSeq("AdapterSeq"), Resolutions("Resolutions"), Thread("Thread"), DrawResolution("DrawResolution"), Step("Step");
+    private String Str;
+
+    Optional(String s) {
+        this.Str = s;
     }
 
-    public String[] getOptionalParameter() {
-        return OptionalParameter;
+    @Override
+    public String toString() {
+        return Str;
+    }
+}
+
+enum Advance {
+    MatchScore("MatchScore"), MisMatchScore("MisMatchScore"), InDelScore("InDelScore"), MinLinkerLen("MinLinkerLen"), MinReadsLength("MinReadsLength"), MaxReadsLength("MaxReadsLength"), AlignThread("AlignThread"), AlignType("AlignType"), AlignMisMatch("AlignMisMatch"), MinUniqueScore("MinUniqueScore"), Iteration("Iteration");
+    private String Str;
+
+    Advance(String s) {
+        this.Str = s;
+    }
+
+    @Override
+    public String toString() {
+        return Str;
     }
 }

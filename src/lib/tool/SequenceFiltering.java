@@ -116,7 +116,7 @@ public class SequenceFiltering {
         if (AdapterFile != null && AdapterFile.isFile()) {
             ReadAdapter();
         }
-        if (Adapters != null) {
+        if (Adapters != null && Adapters.length != 0) {
             AdapterAlignment = new String[Adapters.length];
             for (int i = 0; i < Adapters.length; i++) {
                 try {

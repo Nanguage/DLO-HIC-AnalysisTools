@@ -35,7 +35,7 @@ public class LocalAlignment {
     public LocalAlignment() {
         MatchScore = Default.MatchScore;
         MismatchScore = Default.MisMatchScore;
-        IndelScore = Default.IndelScore;
+        IndelScore = Default.InDelScore;
         Init();
     }
 
