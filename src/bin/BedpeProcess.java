@@ -159,17 +159,6 @@ public class BedpeProcess {
         return FinalFile;
     }
 
-    public CustomFile getSelfLigationFile() {
-        return SelfLigationFile;
-    }
-
-    public CustomFile getReLigationFile() {
-        return ReLigationFile;
-    }
-
-    public CustomFile getValidFile() {
-        return ValidFile;
-    }
 
     private void Init() {
 //        try {
@@ -509,5 +498,16 @@ public class BedpeProcess {
 
     public CustomFile getDiffFile() {
         return DiffFile;
+    }
+    public CustomFile getSelfLigationFile() {
+        return SelfLigationFile;
+    }
+
+    public CustomFile getReLigationFile() {
+        return ReLigationFile;
+    }
+
+    public CustomFile getValidFile() {
+        return ValidFile;
     }
 }

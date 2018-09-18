@@ -26,7 +26,6 @@ public class PreProcess {
     private CustomFile FastqFile;//Fastq文件
     private File LinkerFile;//linker文件
     private File AdapterFile;//Adapter文件
-    private int Type = Opts.Single;
     private int MatchScore = 1;//匹配分数
     private int MisMatchScore = -2;//错配分数
     private int IndelScore = -2;//插入缺失分数
@@ -121,6 +120,8 @@ public class PreProcess {
     public Hashtable<String, String> getOptionList() {
         return OptionList;
     }
+
+
 
 
 }

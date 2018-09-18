@@ -1,6 +1,7 @@
 <!DOCTYPE HTML>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!--<html xmlns="http://www.w3.org/1999/xhtml">-->
 <html lang="en-Us" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+
 </html>
 
 <head>
@@ -93,358 +94,273 @@
 
     </div>
     <!-- End Sidebar -->
-<div id="content_head"><p align="right" th:text="${Date}">2018-09-09</p></div>
-<!-- Begin Content -->
+    <div id="content_head">
+      <p align="right" th:text="${Date}">2018-09-09</p>
+    </div>
+    <!-- Begin Content -->
     <div id="content">
 
-<h1 class="title" id="Running_info">Running information</h1>
+      <h1 class="title" id="Running_info">Running information</h1>
       <div class="line"></div>
       <h2 id="RI_ConfigureInformation"><strong>Configure information</strong></h2>
       <h2>
-<!--        <iframe width=8 00 height=1 90 src="images/Rplot25.html"></iframe>-->
-		  <table width="200"  border="1" style="table-layout: fixed" >
-        <tbody>
-          <tr>
-            <td width="133" nowrap="nowrap">Input file:</td>
-            <td width="264" th:text="${InputFile}">&nbsp;</td>
-            <td width="112" nowrap="nowrap">Min reads length:</td>
-            <td width="163" th:text="${MinReadsLen}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">Output folder:</td>
-            <td th:text="${OutPutDir}">&nbsp;</td>
-            <td nowrap="nowrap">Max reads length:</td>
-            <td th:text="${MaxReadsLen}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">Output prefix:</td>
-            <td th:text="${OutPutPrefix}">&nbsp;</td>
-            <td nowrap="nowrap">Match score:</td>
-            <td th:text="${MatchScore}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td height="28" nowrap="nowrap">Genome file:</td>
-            <td th:text="${GenomeFile}">&nbsp;</td>
-            <td nowrap="nowrap">MisMatch score:</td>
-            <td th:text="${MisMatchScore}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td height="28" nowrap="nowrap">Genome index prefix:</td>
-            <td th:text="${IndexPrefix}">&nbsp;</td>
-            <td nowrap="nowrap">InDel score:</td>
-            <td th:text="${InDelScore}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td width="133" nowrap="nowrap">LinkerA:</td>
-            <td th:text="${LinkerA}">&nbsp;</td>
-            <td nowrap="nowrap">Resolution:</td>
-            <td th:text="${Resolution}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">LinkerB:</td>
-            <td th:text="${LinkerB}">&nbsp;</td>
-            <td nowrap="nowrap">Thread:</td>
-            <td th:text="${Thread}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">Restriction:</td>
-            <td th:text="${Restriction}">&nbsp;</td>
-            <td nowrap="nowrap">&nbsp;</td>
-            <td>&nbsp;</td>
-          </tr>
-        </tbody>
-      </table>
+        <!--        <iframe width=8 00 height=1 90 src="images/Rplot25.html"></iframe>-->
+        <table width="200" border="1" style="table-layout: fixed">
+          <tbody>
+            <tr>
+              <td width="133" nowrap="nowrap">Input file:</td>
+              <td width="264" th:text="${InputFile}">&nbsp;</td>
+              <td width="112" nowrap="nowrap">Min reads length:</td>
+              <td width="163" th:text="${MinReadsLen}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Output folder:</td>
+              <td th:text="${OutPutDir}">&nbsp;</td>
+              <td nowrap="nowrap">Max reads length:</td>
+              <td th:text="${MaxReadsLen}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Output prefix:</td>
+              <td th:text="${OutPutPrefix}">&nbsp;</td>
+              <td nowrap="nowrap">Match score:</td>
+              <td th:text="${MatchScore}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td height="28" nowrap="nowrap">Genome file:</td>
+              <td th:text="${GenomeFile}">&nbsp;</td>
+              <td nowrap="nowrap">MisMatch score:</td>
+              <td th:text="${MisMatchScore}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td height="28" nowrap="nowrap">Genome index prefix:</td>
+              <td th:text="${IndexPrefix}">&nbsp;</td>
+              <td nowrap="nowrap">InDel score:</td>
+              <td th:text="${InDelScore}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td width="133" nowrap="nowrap">LinkerA:</td>
+              <td th:text="${LinkerA}">&nbsp;</td>
+              <td nowrap="nowrap">Resolution:</td>
+              <td th:text="${Resolution}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">LinkerB:</td>
+              <td th:text="${LinkerB}">&nbsp;</td>
+              <td nowrap="nowrap">Thread:</td>
+              <td th:text="${Thread}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Restriction:</td>
+              <td th:text="${Restriction}">&nbsp;</td>
+              <td nowrap="nowrap">&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+          </tbody>
+        </table>
       </h2>
       <hr>
       <h2 id="RI_LinkerFilter"><strong>Linker filtering</strong></h2>
       <h2>
-<!--        <iframe width=8 00 height=4 40 src="images/Rplot1.html"></iframe>-->
-		  <table width="200" border="1" style="table-layout: fixed" >
-  <tbody>
-    <tr>
-      <td width="122" nowrap="nowrap">Adapter Sequence:</td>
-      <td colspan="2" th:text="${AdapterSeq}">&nbsp;</td>
-      </tr>
-    <tr>
-      <td nowrap="nowrap">Total reads:</td>
-      <td th:text="${TotalReads}">&nbsp;</td>
-      <td>100%</td>
-    </tr>
-    <tr>
-      <td nowrap="nowrap">AA:</td>
-      <td width="271" th:text="${AALinkerNum}">&nbsp;</td>
-      <td width="285" th:text="${AALinkerPercent}">&nbsp;</td>
-      </tr>
-    <tr>
-      <td nowrap="nowrap">BB:</td>
-      <td th:text="${BBLinkerNum}">&nbsp;</td>
-      <td th:text="${BBLinkerPercent}">&nbsp;</td>
-      </tr>
-    <tr>
-      <td nowrap="nowrap">AB:</td>
-      <td th:text="${ABLinkerNum}">&nbsp;</td>
-      <td th:text="${ABLinkerPercent}">&nbsp;</td>
-      </tr>
-    <tr>
-      <td nowrap="nowrap">BA:</td>
-      <td th:text="${BALinkerNum}">&nbsp;</td>
-      <td th:text="${BALinkerPercent}">&nbsp;</td>
-    </tr>
-    <tr>
-      <td nowrap="nowrap">Ambiguous:</td>
-      <td th:text="${AmbiguousLinkerNum}">&nbsp;</td>
-      <td th:text="${AmbiguousLinkerPercent}">&nbsp;</td>
-    </tr>
-    <tr>
-      <td nowrap="nowrap">Output folder:</td>
-      <td colspan="2" th:text="${PreDir}">&nbsp;</td>
-      </tr>
-  </tbody>
-</table>
+        <!--        <iframe width=8 00 height=4 40 src="images/Rplot1.html"></iframe>-->
+        <table width="200" border="1" style="table-layout: fixed">
+          <tbody>
+            <tr>
+              <td width="122" nowrap="nowrap">Adapter Sequence:</td>
+              <td colspan="2" th:utext="${AdapterSeq}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Total reads:</td>
+              <td th:text="${#numbers.formatInteger(TotalReads,1,'COMMA')}">&nbsp;</td>
+              <td>100%</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">AA:</td>
+              <td width="271" th:text="${#numbers.formatInteger(AALinkerNum,1,'COMMA')}">&nbsp;</td>
+              <td width="285" th:text="${#numbers.formatDecimal(AALinkerNum*100/TotalReads,1,2)}+'%'">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">BB:</td>
+              <td th:text="${BBLinkerNum}">&nbsp;</td>
+              <td th:text="${BBLinkerPercent}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">AB:</td>
+              <td th:text="${ABLinkerNum}">&nbsp;</td>
+              <td th:text="${ABLinkerPercent}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">BA:</td>
+              <td th:text="${BALinkerNum}">&nbsp;</td>
+              <td th:text="${BALinkerPercent}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Ambiguous:</td>
+              <td th:text="${AmbiguousLinkerNum}">&nbsp;</td>
+              <td th:text="${AmbiguousLinkerPercent}">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Output folder:</td>
+              <td colspan="2" th:text="${PreDir}">&nbsp;</td>
+            </tr>
+          </tbody>
+        </table>
       </h2>
       <hr>
       <h2 id="RI_Mapping"><strong>Mapping</strong></h2>
-      <h3>AA</h3>
+		<li style="list-style: none" th:each="Linker : ${LinkerClass}">
+      <h3 th:text="${Linker.LinkerType}">AA</h3>
       <h2>
-  <!--        <iframe width=8 00 height=1 00 src="images/Rplot18.html"></iframe>-->
         <table width="200" border="1">
-  <tbody>
-    <tr>
-      <td align="center" nowrap="nowrap">Item</td>
-      <td align="center">File path</td>
-      <td align="center" nowrap="nowrap">Number</td>
-      <td align="center" nowrap="nowrap">Percentage</td>
-    </tr>
-    <tr>
-      <td width="101" nowrap="nowrap">Fastq file R1:</td>
-      <td width="418" th:text="${AAFastqFileR1}">&nbsp;</td>
-      <td width="80" nowrap="nowrap" th:text="${AAFastqFileR1Num}">&nbsp;</td>
-      <td width="73" nowrap="nowrap" th:text="${AAFastqFileR1Percent}">&nbsp;</td>
-      </tr>
-    <tr>
-      <td nowrap="nowrap">Fastq file R2:</td>
-      <td th:text="${AAFastqFileR2}">&nbsp;</td>
-      <td nowrap="nowrap" th:text="${AAFastqFileR2Num}">&nbsp;</td>
-      <td nowrap="nowrap" th:text="${AAFastqFileR2Percent}">&nbsp;</td>
-      </tr>
-    <tr>
-      <td nowrap="nowrap">Unique map R1:</td>
-      <td th:text="${AAUniqMapFileR1}">&nbsp;</td>
-      <td nowrap="nowrap" th:text="${AAUniqMapFileR1Num}">&nbsp;</td>
-      <td nowrap="nowrap" th:text="${AAUniqMapFileR1Percent}">&nbsp;</td>
-      </tr>
-    <tr>
-      <td nowrap="nowrap">Unique map R2:</td>
-      <td th:text="${AAUniqMapFileR2}">&nbsp;</td>
-      <td nowrap="nowrap" th:text="${AAUniqMapFileR2Num}">&nbsp;</td>
-      <td nowrap="nowrap" th:text="${AAUniqMapFileR2Percent}">&nbsp;</td>
-      </tr>
-    <tr>
-      <td nowrap="nowrap">Merge:</td>
-      <td th:text="${AAMergeBedFile}">&nbsp;</td>
-      <td nowrap="nowrap" th:text="${AAMergeBedFileNum}">&nbsp;</td>
-      <td nowrap="nowrap" th:text="${AAMergeBedFilePercent}">&nbsp;</td>
-    </tr>
-    <tr>
-      <td nowrap="nowrap">Output folder:</td>
-      <td colspan="3" th:text="${AAMappingOutDir}">&nbsp;</td>
-      </tr>
-  </tbody>
-</table>
-    </h2>
-      <h3>BB </h3>
-		<h2>
-      <table width="200" border="1" >
-        <tbody>
-          <tr>
-            <td align="center" nowrap="nowrap">Item</td>
-            <td align="center">File path</td>
-            <td align="center" nowrap="nowrap">Number</td>
-            <td align="center" nowrap="nowrap">Percentage</td>
-          </tr>
-          <tr>
-            <td width="101" nowrap="nowrap">Fastq file R1:</td>
-            <td width="418" th:text="${BBFastqFileR1}">&nbsp;</td>
-            <td width="80" nowrap="nowrap" th:text="${BBFastqFileR1Num}">&nbsp;</td>
-            <td width="73" nowrap="nowrap" th:text="${BBFastqFileR1Percent}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">Fastq file R2:</td>
-            <td th:text="${BBFastqFileR2}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${BBFastqFileR2Num}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${BBFastqFileR2Percent}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">Unique map R1:</td>
-            <td th:text="${BBUniqMapFileR1}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${BBUniqMapFileR1Num}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${BBUniqMapFileR1Percent}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">Unique map R2:</td>
-            <td th:text="${BBUniqMapFileR2}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${BBUniqMapFileR2Num}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${BBUniqMapFileR2Percent}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">Merge:</td>
-            <td th:text="${BBMergeBedFile}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${BBMergeBedFileNum}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${BBMergeBedFilePercent}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">Output folder:</td>
-            <td colspan="3" th:text="${BBMappingOutDir}">&nbsp;</td>
-          </tr>
-        </tbody>
-      </table>
-	  </h2>
+          <tbody>
+            <tr>
+              <td align="center" nowrap="nowrap">Item</td>
+              <td align="center">File path</td>
+              <td align="center" nowrap="nowrap">Number</td>
+              <td align="center" nowrap="nowrap">Percentage</td>
+            </tr>
+            <tr>
+              <td width="101" nowrap="nowrap">Fastq file R1:</td>
+              <td width="418" th:text="${Linker.FastqFileR1}">&nbsp;</td>
+              <td width="80" nowrap="nowrap" th:text="${#numbers.formatInteger(Linker.FastqNumR1,1,'COMMA')}">&nbsp;</td>
+              <td width="73" nowrap="nowrap" th:text="${#numbers.formatDecimal(Linker.FastqNumR1*100/Linker.FastqNumR1,1,2)}+'%'">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Fastq file R2:</td>
+              <td th:text="${Linker.FastqFileR2}">&nbsp;</td>
+              <td nowrap="nowrap" th:text="${#numbers.formatInteger(Linker.FastqNumR2,1,'COMMA')}">&nbsp;</td>
+              <td nowrap="nowrap" th:text="${#numbers.formatDecimal(Linker.FastqNumR2*100/Linker.FastqNumR2,1,2)}+'%'">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Unique map R1:</td>
+              <td th:text="${Linker.UniqMapFileR1}">&nbsp;</td>
+              <td nowrap="nowrap" th:text="${#numbers.formatInteger(Linker.UniqMapNumR1,1,'COMMA')}">&nbsp;</td>
+              <td nowrap="nowrap" th:text="${#numbers.formatDecimal(Linker.UniqMapNumR1*100/Linker.FastqNumR1,1,2)}+'%'">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Unique map R2:</td>
+              <td th:text="${Linker.UniqMapFileR2}">&nbsp;</td>
+              <td nowrap="nowrap" th:text="${#numbers.formatInteger(Linker.UniqMapNumR2,1,'COMMA')}">&nbsp;</td>
+              <td nowrap="nowrap" th:text="${#numbers.formatDecimal(Linker.UniqMapNumR2*100/Linker.FastqNumR2,1,2)}+'%'">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Merge:</td>
+              <td th:text="${Linker.RawBedpeFile}">&nbsp;</td>
+              <td nowrap="nowrap" th:text="${#numbers.formatInteger(Linker.RawBedpeNum,1,'COMMA')}">&nbsp;</td>
+              <td nowrap="nowrap" th:text="${#numbers.formatDecimal(Linker.RawBedpeNum*100/Linker.FastqNumR1,1,2)}+'%'">&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">Output folder:</td>
+              <td colspan="3" th:text="${Linker.SeProcessOutDir}">&nbsp;</td>
+            </tr>
+          </tbody>
+        </table>
+      </h2>
+		</li>
       <h2>
         <hr>
-        
+      </h2>
+      <h2 id="RI_LigationFilter"><strong>Ligation filtering</strong></h2>
+      <li style="list-style: none" th:each="Ligation : ${LinkerClass}">
+        <h3 th:text="${Ligation.LinkerType}">AA</h3>
+        <h2>
+          <table width="200" border="1" style="table-layout: fixed">
+            <tbody>
+              <tr>
+                <td width="87" align="center" nowrap="nowrap">Item</td>
+                <td width="432" align="center">File path</td>
+                <td width="80" align="center" nowrap="nowrap">Number</td>
+                <td width="73" align="center" nowrap="nowrap">Percentage</td>
+              </tr>
+              <tr>
+                <td nowrap="nowrap">SelfLigation:</td>
+                <td th:text="${Ligation.SelfLigationFile}">&nbsp;</td>
+                <td nowrap="nowrap" th:text="${#numbers.formatInteger(Ligation.SelfLigationNum,1,'COMMA')}">&nbsp;</td>
+                <td nowrap="nowrap" th:text="${#numbers.formatDecimal(Ligation.SelfLigationNum*100/Ligation.RawBedpeNum,1,2)}+'%'">&nbsp;</td>
+              </tr>
+              <tr>
+                <td nowrap="nowrap">RelLigation:</td>
+                <td th:text="${Ligation.RelLigationFile}">&nbsp;</td>
+                <td nowrap="nowrap" th:text="${#numbers.formatInteger(Ligation.RelLigationNum,1,'COMMA')}">&nbsp;</td>
+                <td nowrap="nowrap" th:text="${#numbers.formatDecimal(Ligation.RelLigationNum*100/Ligation.RawBedpeNum,1,2)}+'%'">&nbsp;</td>
+              </tr>
+              <tr>
+                <td nowrap="nowrap">Valid data:</td>
+                <td th:text="'test'">&nbsp;</td>
+                <td nowrap="nowrap" th:text="'test'">&nbsp;</td>
+                <td nowrap="nowrap" th:text="'test'">&nbsp;</td>
+              </tr>
+              <tr>
+                <td nowrap="nowrap">No-dump:</td>
+                <td th:text="'test'">&nbsp;</td>
+                <td nowrap="nowrap" th:text="'test'">&nbsp;</td>
+                <td nowrap="nowrap" th:text="'test'">&nbsp;</td>
+              </tr>
+              <tr>
+                <td nowrap="nowrap">Output folder:</td>
+                <td colspan="3" th:text="'test'">&nbsp;</td>
+              </tr>
+            </tbody>
+          </table>
+        </h2>
+      </li>
+      <h3>Merge </h3>
+      <h2>
+        <table width="200" border="1" style="table-layout: fixed">
+          <tr>
+            <td width="78" align="center" nowrap="nowrap">Item</td>
+            <td width="403" align="center" nowrap="nowrap">Number</td>
+            <td width="197" align="center" nowrap="nowrap">Percentage</td>
+          </tr>
+          <tbody>
+            <tr>
+              <td nowrap="nowrap">SelfLigation:</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">RelLigation:</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+            <tr>
+              <td nowrap="nowrap">&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+          </tbody>
+        </table>
       </h2>
 
-      <h2 id="RI_LigationFilter"><strong>Ligation filtering</strong></h2>
-      <h3>AA</h3>
-		<h2>
-			<table width="200" border="1" style="table-layout: fixed" >
-        <tbody>
-          <tr>
-            <td width="87" align="center" nowrap="nowrap">Item</td>
-            <td width="432" align="center">File path</td>
-            <td width="80" align="center" nowrap="nowrap">Number</td>
-            <td width="73" align="center" nowrap="nowrap">Percentage</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">SelfLigation:</td>
-            <td th:text="${AASelfLigationFile}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${AASelfLigationNum}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${AASelfLigationPercent}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">RelLigation:</td>
-            <td th:text="${AARelLigationFile}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${AARelLigationNum}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${AARelLigationPercent}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">Valid data:</td>
-            <td th:text="${AAValidDataFile}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${AAValidDataNum}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${AAValidDataPercent}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">No-dump:</td>
-            <td th:text="${AANoDumpFile}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${AANoDumpNum}">&nbsp;</td>
-            <td nowrap="nowrap" th:text="${AANoDumpPercent}">&nbsp;</td>
-          </tr>
-          <tr>
-            <td nowrap="nowrap">Output folder:</td>
-            <td colspan="3" th:text="${AABedpeOutDir}">&nbsp;</td>
-          </tr>
-        </tbody>
-      </table>
-	  </h2>
-		<h3>BB </h3>
-		<h2>
-		<table width="700" border="1" style="table-layout: fixed" >
-		  <tbody>
-		    <tr>
-		      <td width="87" align="center" nowrap="nowrap">Item</td>
-		      <td width="432" align="center">File path</td>
-		      <td width="80" align="center" nowrap="nowrap">Number</td>
-		      <td width="73" align="center" nowrap="nowrap">Percentage</td>
-	        </tr>
-		    <tr>
-		      <td nowrap="nowrap">SelfLigation:</td>
-		      <td th:text="${BBSelfLigationFile}">&nbsp;</td>
-		      <td nowrap="nowrap" th:text="${BBSelfLigationNum}">&nbsp;</td>
-		      <td nowrap="nowrap" th:text="${BBSelfLigationPercent}">&nbsp;</td>
-	        </tr>
-		    <tr>
-		      <td nowrap="nowrap">RelLigation:</td>
-		      <td th:text="${BBRelLigationFile}">&nbsp;</td>
-		      <td nowrap="nowrap" th:text="${BBRelLigationNum}">&nbsp;</td>
-		      <td nowrap="nowrap" th:text="${BBRelLigationPercent}">&nbsp;</td>
-	        </tr>
-		    <tr>
-		      <td nowrap="nowrap">Valid data:</td>
-				<td th:text="${BBValidDataFile}">&nbsp;</td>
-            	<td nowrap="nowrap" th:text="${BBValidDataNum}">&nbsp;</td>
-            	<td nowrap="nowrap" th:text="${BBValidDataPercent}">&nbsp;</td>
-	        </tr>
-		    <tr>
-		      <td nowrap="nowrap">No-dump:</td>
-		      <td th:text="${BBNoDumpFile}">&nbsp;</td>
-		      <td nowrap="nowrap" th:text="${AANoDumpNum}">&nbsp;</td>
-		      <td nowrap="nowrap" th:text="${AANoDumpPercent}">&nbsp;</td>
-	        </tr>
-		    <tr>
-		      <td nowrap="nowrap">Output folder:</td>
-		      <td colspan="3" th:text="${BBBedpeOutDir}">&nbsp;</td>
-	        </tr>
-	      </tbody>
-	  </table>
-		</h2>
-		<h3>Merge </h3>
-		<h2>
-		<table width="200" border="1" style="table-layout: fixed" >
-		  <tr>
-		    <td width="78" align="center" nowrap="nowrap">Item</td>
-		    <td width="403" align="center" nowrap="nowrap">Number</td>
-		    <td width="197" align="center" nowrap="nowrap">Percentage</td>
-	      </tr>
-		  <tbody>
-		    <tr>
-		      <td nowrap="nowrap">SelfLigation:</td>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td>
-	        </tr>
-		    <tr>
-		      <td nowrap="nowrap">RelLigation:</td>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td>
-	        </tr>
-		    <tr>
-		      <td nowrap="nowrap">&nbsp;</td>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td>
-	        </tr>
-		    <tr>
-		      <td nowrap="nowrap">&nbsp;</td>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td>
-	        </tr>
-		    <tr>
-		      <td nowrap="nowrap">&nbsp;</td>
-		      <td>&nbsp;</td>
-		      <td>&nbsp;</td>
-	        </tr>
-	      </tbody>
-	  </table>
-		</h2>
-		
-      
+
 
       <h3 id="Rplot20">Category</h3>
       <h2>
-<!--        <iframe width=8 00 height=7 0 src="images/Rplot20.html"></iframe>-->
+        <!--        <iframe width=8 00 height=7 0 src="images/Rplot20.html"></iframe>-->
       </h2>
 
       <h3 id="Rplot21">Peak calling</h3>
       <h2>
-<!--        <iframe width=8 00 height=2 80 src="images/Rplot21.html"></iframe>-->
+        <!--        <iframe width=8 00 height=2 80 src="images/Rplot21.html"></iframe>-->
       </h2>
 
       <h3 id="Rplot22">Clustering</h3>
       <h2>
-<!--        <iframe width=8 00 height=1 60 src="images/Rplot22.html"></iframe>-->
+        <!--        <iframe width=8 00 height=1 60 src="images/Rplot22.html"></iframe>-->
       </h2>
 
       <h3 id="Rplot23">Extra Info</h3>
       <h2>
-<!--        <iframe width=8 00 height=1 00 src="images/Rplot23.html"></iframe>-->
+        <!--        <iframe width=8 00 height=1 00 src="images/Rplot23.html"></iframe>-->
       </h2>
 
 
@@ -454,32 +370,32 @@
       <h3 id="Rplot2">Basic statistics</h3>
       <!-- <h3><img src="images/Rplot2.png" alt=""/></h3> -->
       <h2>
-<!--        <iframe width=8 00 height=3 50 src="images/Rplot2.html"></iframe>-->
+        <!--        <iframe width=8 00 height=3 50 src="images/Rplot2.html"></iframe>-->
       </h2>
 
 
       <h3 id="Rplot3">Mapping statistics of read1 (horizental) and read2 (vertical)</h3>
       <h4>A_A</h4>
       <h2>
-<!--        <iframe width=8 00 height=1 40 src="images/Rplot3_1.html"></iframe>-->
+        <!--        <iframe width=8 00 height=1 40 src="images/Rplot3_1.html"></iframe>-->
       </h2>
       <h4>B_B</h4>
       <h2>
-<!--        <iframe width=8 00 height=1 40 src="images/Rplot3_2.html"></iframe>-->
+        <!--        <iframe width=8 00 height=1 40 src="images/Rplot3_2.html"></iframe>-->
       </h2>
       <h4>A_B</h4>
       <h2>
-<!--        <iframe width=8 00 height=1 40 src="images/Rplot3_3.html"></iframe>-->
+        <!--        <iframe width=8 00 height=1 40 src="images/Rplot3_3.html"></iframe>-->
       </h2>
       <h4>B_A</h4>
       <h2>
-<!--        <iframe width=8 00 height=1 40 src="images/Rplot3_4.html"></iframe>-->
+        <!--        <iframe width=8 00 height=1 40 src="images/Rplot3_4.html"></iframe>-->
       </h2>
 
       <h3 id="Rplot24">Running time</h3>
       <!-- <h3><img src="images/Rplot2.png" alt=""/></h3> -->
       <h2>
-<!--        <iframe width=8 00 height=2 70 src="images/Rplot24.html"></iframe>-->
+        <!--        <iframe width=8 00 height=2 70 src="images/Rplot24.html"></iframe>-->
       </h2>
 
 
@@ -488,13 +404,13 @@
 
       <h3 id="Rplot4">Linker alignment score distribution</h3>
       <h2>
-        <img src="images/Rplot4.png" alt="" />
+        <img src="images/Rplot4.png" th:src="'data:image/png;base64,'+${LinkerAliScoreDis}" alt="" />
       </h2>
 
 
       <h3 id="Rplot5">Linker alignment score difference distribution</h3>
       <h2>
-        <img src="images/Rplot5.png" alt="" />
+        <img src="images/test-jh.png" alt="" />
       </h2>
 
 
@@ -507,7 +423,7 @@
       <h3 id="Rplot7">Linker composition</h3>
       <!-- <h2><img src="images/Rplot7.png" alt=""/></h2> -->
       <h2>
-<!--        <iframe width=8 00 height=1 10 src="images/Rplot7.html"></iframe>-->
+        <!--        <iframe width=8 00 height=1 10 src="images/Rplot7.html"></iframe>-->
       </h2>
 
 
@@ -518,24 +434,24 @@
 
       <h3 id="Rplot8">Mapping quality score distribution from Bedpe file</h3>
       <h2>
-<!--        <img width=5 50 height=4 50 src="images/Rplot8.png" alt="" />-->
+        <!--        <img width=5 50 height=4 50 src="images/Rplot8.png" alt="" />-->
       </h2>
 
 
       <h3 id="Rplot9">Mapping strands distribution from Bedpe file</h3>
       <h2>
-<!--        <img width=5 50 height=4 50 src="images/Rplot9.png" alt="" />-->
+        <!--        <img width=5 50 height=4 50 src="images/Rplot9.png" alt="" />-->
       </h2>
 
 
       <h3 id="Rplot10">Distribution of counts of PETs mapping to the same position in Bedpe file</h3>
       <h3>
-<!--        <img width=5 50 height=4 50 src="images/Rplot10.png" alt="" />-->
+        <!--        <img width=5 50 height=4 50 src="images/Rplot10.png" alt="" />-->
       </h3>
 
       <h3 id="Rplot11">Purified intra-chromosomal reads strands distribution from Bedpe file</h3>
       <h2>
-<!--        <img width=5 50 height=4 50 src="images/Rplot11.png" alt="" />-->
+        <!--        <img width=5 50 height=4 50 src="images/Rplot11.png" alt="" />-->
       </h2>
 
 
@@ -585,7 +501,7 @@
       <h3 id="Rplot15">Circular view</h3>
       <div class="intro">Circular view of inter-chromosomal interactions</div>
       <h2>
-<!--        <img width=7 50 height=7 50 src="images/Rplot15.png" alt="" />-->
+        <!--        <img width=7 50 height=7 50 src="images/Rplot15.png" alt="" />-->
       </h2>
 
       <div id="footer">

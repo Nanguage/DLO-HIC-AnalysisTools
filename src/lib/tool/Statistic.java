@@ -8,6 +8,8 @@ import java.util.Hashtable;
 import lib.unit.CustomFile;
 import lib.unit.Opts;
 import org.apache.commons.math3.distribution.*;
+import org.apache.commons.math3.util.MathArrays;
+import org.apache.commons.math3.util.MathUtils;
 
 public class Statistic {
 
@@ -277,6 +279,35 @@ public class Statistic {
         PoissonDistribution p = new PoissonDistribution(4.56);
         s = p.cumulativeProbability(num);
         System.out.println(s);
+    }
+
+    public static int[] CalculateLinkerScoreDistribution(File PastFile, int MaxScore, File OutFile) throws IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(PastFile));
+        String Line;
+        int[] Distribution = new int[MaxScore + 1];
+        while ((Line = reader.readLine()) != null) {
+            try {
+                Distribution[Integer.parseInt(Line.split("\\s+")[5])]++;
+            } catch (NumberFormatException e) {
+                Distribution[0]++;
+            }
+        }
+        reader.close();
+//        int MaxCount = 0;
+//        for (int i = 0; i < Distribution.length; i++) {
+//            if (Distribution[i] > MaxCount) {
+//                MaxCount = Distribution[i];
+//            }
+//        }
+        if (OutFile != null) {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(OutFile));
+            writer.write("Score\tCount\n");
+            for (int i = 0; i < Distribution.length; i++) {
+                writer.write(i + "\t" + Distribution[i] + "\n");
+            }
+            writer.close();
+        }
+        return Distribution;
     }
 
 }
