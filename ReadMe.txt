@@ -17,20 +17,18 @@ recommend install "AnaConda" and then you can install all of above tools by "con
 
 =====================ConfigFile: Such as follow====================
 
-//------------------------------required parameters----------------------------
-FastqFile = DLO-test.fastq
-Chromosome = chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY
-LinkersType = AA
+#------------------------------required parameters----------------------------
+InputFile = DLO-test.fastq
+Chromosomes = chr1 chr2 chr3 chr4 chr5 chr6 chr7 chr8 chr9 chr10 chr11 chr12 chr13 chr14 chr15 chr16 chr17 chr18 chr19 chr20 chr21 chr22 chrX chrY
+HalfLinker = GTCGGAGAACCAGTAGCT
 Restriction = T^TAA
-LinkerFile = DLO-linker_TP.txt
 AlignMinQuality = 20
 GenomeFile = Hg19.clean.fna
-//------------------------------optional parameters---------------------------
+#------------------------------optional parameters---------------------------
 Prefix = DLO-HiC
 Index = Hg19
 OutPath = /home/hjiang/HiC-test/
-AdapterFile = Auto
-UseLinker = AA
+AdapterSeq = Auto
 MatchScore = 1
 MisMatchScore = -1
 IndelScore = -1
@@ -38,7 +36,7 @@ ReadsType = Short
 MaxMisMatchLength = 3
 AlignThread = 2
 Iteration = true
-Resolution = 1000000 2000000
+Resolutions = 1000000 2000000
 DrawRes = 1000000
 AlignMisMatch = 0
 MinReadsLength = 16
@@ -48,20 +46,18 @@ Step = -
 
 =================================================================================
 
-FastqFile           String      Input File with Fastq Format
-Chromosome          String[]    Chromosome name must same as Chromosome name in reference genome
-LinkersType         String[]    The linker's type in raw data
+InputFile           String      Input File with Fastq Format
+Chromosomes         String[]    Chromosome name must same as Chromosome name in reference genome
 Restriction         String      Sequence of restriction, enzyme cutting site expressed by "^"
-LinkerFile          String      A file include linker sequence
+HalfLinker          String[]    Halflinker sequences (different halflinker separated with a space)
 AlignMinQuality     Int         Min quality allowed in alignment
 GenomeFile          String      Reference genome file
 //=================================================================================
 Prefix              String      prefix of output    (default    "out")
 Index               String      Index prefix of reference genome
 OutPath             String      Path of output  (default    "./")
-AdapterFile         String      File include adapter sequence, null means don't remove adapter   (default    "")
+AdapterSeq          String[]    Adapter sequence, null means don't remove adapter   (default    "Auto")
                                 If you want to remove adapter but you don't know the adapter seq, you can set "Auto"
-UseLinker           String[]    linker's type used  (default    =LinkersType)
 MatchScore          Int         Match score in linker filter    (default    "1")
 MisMatchScore       Int         MisMatch Score in linker filter (default    "-1")
 IndelScore          Int         Indel Score in linker filter    (default    "-1")
@@ -69,7 +65,7 @@ ReadsType           String      Reads type include ["Short","Long"] (default    
 MaxMisMatchLength   Int         Max misMatch length in linker filter    (default    "3")
 AlignThread         Int         Threads in alignment (default    "2")
 Iteration           boolen      "true" or "false" represent whether do iteration alignment
-Resolution          Int[]       Bin size when create interaction matrix  (default    "1000000" byte)
+Resolutions          Int[]       Bin size when create interaction matrix  (default    "1000000" byte)
 DrawRes             Int[]       Resolution for you draw heat-map    (default    "The first item of Resolution")
 AlignMisMatch       Int         MisMatch number in alignment    (default    "0")
 MinReadsLength      Int         Min reads length when extract interaction reads (default    "16")
