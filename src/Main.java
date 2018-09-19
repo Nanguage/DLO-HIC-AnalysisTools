@@ -147,23 +147,18 @@ public class Main {
         CustomFile[] UseLinkerFasqFileR1 = new CustomFile[UseLinker.size()];
         CustomFile[] UseLinkerFasqFileR2 = new CustomFile[UseLinker.size()];
         //==============================================================================================================
-//        Stat.OutPath = Opts.OutPath;
-        Stat.HalfLinkerA = LinkerA;
-        Stat.HalfLinkerB = LinkerB;
-        Stat.MatchScore = MatchScore;
-        Stat.MisMatchScore = MisMatchScore;
-        Stat.InDelScore = InDelScore;
-        Stat.RestrictionSeq = Restriction;
-        Stat.LinkerFile = LinkerFile;
-        Stat.AdapterFile = AdapterFile;
-//        Stat.GenomeFile = Opts.GenomeFile;
-        Stat.GenomeIndex = IndexPrefix;
-//        Stat.OutPrefix = Opts.Prefix;
+        Stat.ComInfor.HalfLinkerA = LinkerA;
+        Stat.ComInfor.HalfLinkerB = LinkerB;
+        Stat.ComInfor.MatchScore = MatchScore;
+        Stat.ComInfor.MisMatchScore = MisMatchScore;
+        Stat.ComInfor.InDelScore = InDelScore;
+        Stat.ComInfor.Restriction = Restriction;
+        Stat.ComInfor.IndexPrefix = IndexPrefix;
         Stat.MinUniqueScore = MinUniqueScore;
-        Stat.MinReadsLength = MinReadsLength;
-        Stat.MaxReadsLength = MaxReadsLength;
-        Stat.Resolution = Resolution;
-        Stat.Thread = Threads;
+        Stat.ComInfor.MinReadsLen = MinReadsLength;
+        Stat.ComInfor.MaxReadsLen = MaxReadsLength;
+        Stat.ComInfor.Resolution = Resolution;
+        Stat.ComInfor.Thread = Threads;
         Stat.LinkersType = LinkersType;
         Stat.LinkerClassInit(UseLinker.size());
         Stat.PreDir = PreProcessDir;
@@ -175,6 +170,7 @@ public class Main {
         }
         for (int i = 0; i < UseLinker.size(); i++) {
             Stat.UseLinker[i].LinkerType = UseLinker.get(i);
+            Stat.UseLinker[i].SeProcessOutDir = SeProcessDir;
         }
 //        Stat.RawDataFile = Opts.InputFile;
 //        Stat.RawDataReadsNum = new Long[InputFile.length];
@@ -373,25 +369,22 @@ public class Main {
                 public void run() {
                     try {
                         BedpeProcess Temp = new BedpeProcess(new File(BedpeProcessDir + "/" + UseLinker.get(finalI)), Opts.Prefix + "." + UseLinker.get(finalI), Chromosomes, ChrEnzyFile, SeBedpeFile[finalI]);
-//                        long selfnum = Temp.getSelfLigationFile().CalculatorLineNumber();
-//                        long renum = Temp.getReLigationFile().CalculatorLineNumber();
-//                        long validnum = Temp.getValidFile().CalculatorLineNumber();
-//                        long nodupnum = Temp.getFinalFile().CalculatorLineNumber();
-//                        long diffnum = Temp.getDiffFile().CalculatorLineNumber();
-                        synchronized (STS) {
-                            Stat.UseLinker[finalI].SelfLigationFile = Temp.getSelfLigationFile();
-                            Stat.UseLinker[finalI].RelLigationFile = Temp.getReLigationFile();
-                            Stat.UseLinker[finalI].SameValidFile = Temp.getValidFile();
-                            Stat.UseLinker[finalI].RawDiffBedpeFile = Temp.getDiffFile();
-                            Stat.UseLinker[finalI].SameCleanFile = Temp.getSameNoDumpFile();
-                            Stat.UseLinker[finalI].DiffCleanFile = Temp.getDiffNoDumpFile();
-                            Stat.UseLinker[finalI].SelfLigationNum = Temp.getSelfLigationFile().CalculatorLineNumber();
-                            Stat.UseLinker[finalI].RelLigationNum = Temp.getReLigationFile().CalculatorLineNumber();
-                            Stat.UseLinker[finalI].SameValidNum = Temp.getValidFile().CalculatorLineNumber();
-                            Stat.UseLinker[finalI].RawDiffBedpeNum = Temp.getDiffFile().CalculatorLineNumber();
-                            Stat.UseLinker[finalI].SameCleanNum = Temp.getSameNoDumpFile().CalculatorLineNumber();
-                            Stat.UseLinker[finalI].DiffCleanNum = Temp.getDiffNoDumpFile().CalculatorLineNumber();
-                        }
+                        Stat.UseLinker[finalI].BedpeProcessOutDir = new File(BedpeProcessDir + "/" + UseLinker.get(finalI));
+                        Stat.UseLinker[finalI].SelfLigationFile = Temp.getSelfLigationFile();
+                        Stat.UseLinker[finalI].RelLigationFile = Temp.getReLigationFile();
+                        Stat.UseLinker[finalI].SameValidFile = Temp.getValidFile();
+                        Stat.UseLinker[finalI].RawSameBedpeFile = Temp.getSameFile();
+                        Stat.UseLinker[finalI].RawDiffBedpeFile = Temp.getDiffFile();
+                        Stat.UseLinker[finalI].SameCleanFile = Temp.getSameNoDumpFile();
+                        Stat.UseLinker[finalI].DiffCleanFile = Temp.getDiffNoDumpFile();
+                        Stat.UseLinker[finalI].MergeCleanFile = Temp.getFinalFile();
+                        Stat.UseLinker[finalI].SelfLigationNum = Temp.getSelfLigationFile().CalculatorLineNumber();
+                        Stat.UseLinker[finalI].RelLigationNum = Temp.getReLigationFile().CalculatorLineNumber();
+                        Stat.UseLinker[finalI].SameValidNum = Temp.getValidFile().CalculatorLineNumber();
+                        Stat.UseLinker[finalI].RawSameBedpeNum = Stat.UseLinker[finalI].SelfLigationNum + Stat.UseLinker[finalI].RelLigationNum + Stat.UseLinker[finalI].SameValidNum;
+                        Stat.UseLinker[finalI].RawDiffBedpeNum = Temp.getDiffFile().CalculatorLineNumber();
+                        Stat.UseLinker[finalI].SameCleanNum = Temp.getSameNoDumpFile().CalculatorLineNumber();
+                        Stat.UseLinker[finalI].DiffCleanNum = Temp.getDiffNoDumpFile().CalculatorLineNumber();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -518,16 +511,16 @@ public class Main {
             @Override
             public void run() {
                 try {
-                    Stat.FinalBedpeName = FinalBedpeFile;
-                    Stat.FinalBedpeNum = Stat.FinalBedpeName.CalculatorLineNumber();
-                    Stat.IntraActionNum = SameBedpeFile.CalculatorLineNumber();
-                    if (Stat.RestrictionSeq.replace("^", "").length() <= 4) {
-                        Stat.ShortRegionNum = Statistic.RangeCount(SameBedpeFile, 0, 5000, 4);
+                    Stat.InterAction.FinalBedpeFile = FinalBedpeFile;
+                    Stat.InterAction.FinalBedpeNum = FinalBedpeFile.CalculatorLineNumber();
+                    Stat.InterAction.IntraActionNum = SameBedpeFile.CalculatorLineNumber();
+                    Stat.InterAction.InterActionNum = Stat.InterAction.FinalBedpeNum - Stat.InterAction.IntraActionNum;
+                    if (Stat.ComInfor.Restriction.replace("^", "").length() <= 4) {
+                        Stat.InterAction.ShortRegionNum = Statistic.RangeCount(SameBedpeFile, 0, 5000, 4);
                     } else {
-                        Stat.ShortRegionNum += Statistic.RangeCount(SameBedpeFile, 0, 20000, 4);
+                        Stat.InterAction.ShortRegionNum += Statistic.RangeCount(SameBedpeFile, 0, 20000, 4);
                     }
-                    Stat.InterActionNum = Stat.FinalBedpeNum - Stat.IntraActionNum;
-                    Stat.LongRegionNum = Stat.IntraActionNum - Stat.ShortRegionNum;
+                    Stat.InterAction.LongRegionNum = Stat.InterAction.IntraActionNum - Stat.InterAction.ShortRegionNum;
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -577,7 +570,7 @@ public class Main {
             System.exit(1);
         }
         IndexPrefix = new File(IndexDir + "/" + genomefile.getName());
-        Stat.GenomeIndex = IndexPrefix;
+        Stat.ComInfor.IndexPrefix = IndexPrefix;
         Thread t = new Thread(new Runnable() {
             @Override
             public void run() {

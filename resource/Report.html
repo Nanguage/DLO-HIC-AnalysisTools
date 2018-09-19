@@ -109,49 +109,49 @@
           <tbody>
             <tr>
               <td width="133" nowrap="nowrap">Input file:</td>
-              <td width="264" th:text="${InputFile}">&nbsp;</td>
+              <td width="264" th:text="${ComInformation.InputFile}">&nbsp;</td>
               <td width="112" nowrap="nowrap">Min reads length:</td>
-              <td width="163" th:text="${MinReadsLen}">&nbsp;</td>
+              <td width="163" th:text="${ComInformation.MinReadsLen}">&nbsp;</td>
             </tr>
             <tr>
               <td nowrap="nowrap">Output folder:</td>
-              <td th:text="${OutPutDir}">&nbsp;</td>
+              <td th:text="${ComInformation.OutPutDir}">&nbsp;</td>
               <td nowrap="nowrap">Max reads length:</td>
-              <td th:text="${MaxReadsLen}">&nbsp;</td>
+              <td th:text="${ComInformation.MaxReadsLen}">&nbsp;</td>
             </tr>
             <tr>
               <td nowrap="nowrap">Output prefix:</td>
-              <td th:text="${OutPutPrefix}">&nbsp;</td>
+              <td th:text="${ComInformation.OutPutPrefix}">&nbsp;</td>
               <td nowrap="nowrap">Match score:</td>
-              <td th:text="${MatchScore}">&nbsp;</td>
+              <td th:text="${ComInformation.MatchScore}">&nbsp;</td>
             </tr>
             <tr>
               <td height="28" nowrap="nowrap">Genome file:</td>
-              <td th:text="${GenomeFile}">&nbsp;</td>
+              <td th:text="${ComInformation.GenomeFile}">&nbsp;</td>
               <td nowrap="nowrap">MisMatch score:</td>
-              <td th:text="${MisMatchScore}">&nbsp;</td>
+              <td th:text="${ComInformation.MisMatchScore}">&nbsp;</td>
             </tr>
             <tr>
               <td height="28" nowrap="nowrap">Genome index prefix:</td>
-              <td th:text="${IndexPrefix}">&nbsp;</td>
+              <td th:text="${ComInformation.IndexPrefix}">&nbsp;</td>
               <td nowrap="nowrap">InDel score:</td>
-              <td th:text="${InDelScore}">&nbsp;</td>
+              <td th:text="${ComInformation.InDelScore}">&nbsp;</td>
             </tr>
             <tr>
-              <td width="133" nowrap="nowrap">LinkerA:</td>
-              <td th:text="${LinkerA}">&nbsp;</td>
+              <td width="133" nowrap="nowrap">HalfLinkerA:</td>
+              <td th:text="${ComInformation.HalfLinkerA}">&nbsp;</td>
               <td nowrap="nowrap">Resolution:</td>
-              <td th:text="${Resolution}">&nbsp;</td>
+              <td th:text="${#strings.arrayJoin(ComInformation.Resolution,' ')}">&nbsp;</td>
             </tr>
             <tr>
-              <td nowrap="nowrap">LinkerB:</td>
-              <td th:text="${LinkerB}">&nbsp;</td>
+              <td nowrap="nowrap">HalfLinkerB:</td>
+              <td th:text="${ComInformation.HalfLinkerB}">&nbsp;</td>
               <td nowrap="nowrap">Thread:</td>
-              <td th:text="${Thread}">&nbsp;</td>
+              <td th:text="${ComInformation.Thread}">&nbsp;</td>
             </tr>
             <tr>
               <td nowrap="nowrap">Restriction:</td>
-              <td th:text="${Restriction}">&nbsp;</td>
+              <td th:text="${ComInformation.Restriction}">&nbsp;</td>
               <td nowrap="nowrap">&nbsp;</td>
               <td>&nbsp;</td>
             </tr>
@@ -285,25 +285,25 @@
               </tr>
               <tr>
                 <td nowrap="nowrap">Valid data:</td>
-                <td th:text="'test'">&nbsp;</td>
-                <td nowrap="nowrap" th:text="'test'">&nbsp;</td>
-                <td nowrap="nowrap" th:text="'test'">&nbsp;</td>
+                <td th:text="${AA}">&nbsp;</td>
+                <td nowrap="nowrap" th:text="${#numbers.formatInteger(Ligation.SameValidNum+Ligation.RawDiffBedpeNum,1,'COMMA')}">&nbsp;</td>
+                <td nowrap="nowrap" th:text="${#numbers.formatDecimal((Ligation.SameValidNum+Ligation.RawDiffBedpeNum)*100/Ligation.RawBedpeNum,1,2)}+'%'">&nbsp;</td>
               </tr>
               <tr>
                 <td nowrap="nowrap">No-dump:</td>
-                <td th:text="'test'">&nbsp;</td>
-                <td nowrap="nowrap" th:text="'test'">&nbsp;</td>
-                <td nowrap="nowrap" th:text="'test'">&nbsp;</td>
+                <td th:text="${Ligation.MergeCleanFile}">&nbsp;</td>
+                <td nowrap="nowrap" th:text="${#numbers.formatInteger(Ligation.SameCleanNum+Ligation.DiffCleanNum,1,'COMMA')}">&nbsp;</td>
+                <td nowrap="nowrap" th:text="${#numbers.formatDecimal((Ligation.SameCleanNum+Ligation.DiffCleanNum)*100/Ligation.RawBedpeNum,1,2)}+'%'">&nbsp;</td>
               </tr>
               <tr>
                 <td nowrap="nowrap">Output folder:</td>
-                <td colspan="3" th:text="'test'">&nbsp;</td>
+                <td colspan="3" th:text="${Ligation.BedpeProcessOutDir}">&nbsp;</td>
               </tr>
             </tbody>
           </table>
         </h2>
       </li>
-      <h3>Merge </h3>
+      <h2 id="RI_InterAction"> <strong>InterAction</strong> </h2>
       <h2>
         <table width="200" border="1" style="table-layout: fixed">
           <tr>
@@ -313,56 +313,33 @@
           </tr>
           <tbody>
             <tr>
-              <td nowrap="nowrap">SelfLigation:</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
+              <td nowrap="nowrap">Total action:</td>
+              <td th:text="${#numbers.formatInteger(Inter.FinalBedpeNum,1,'COMMA')}">&nbsp;</td>
+              <td th:text="${#numbers.formatDecimal(Inter.FinalBedpeNum/TotalReads*100,1,2)}+'%'">&nbsp;</td>
             </tr>
             <tr>
-              <td nowrap="nowrap">RelLigation:</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
+              <td nowrap="nowrap">Inter action:</td>
+              <td th:text="${#numbers.formatInteger(Inter.InterActionNum,1,'COMMA')}">&nbsp;</td>
+              <td th:text="${#numbers.formatDecimal(Inter.InterActionNum/Inter.FinalBedpeNum*100,1,2)}+'%'">&nbsp;</td>
             </tr>
             <tr>
-              <td nowrap="nowrap">&nbsp;</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
+              <td nowrap="nowrap">Intra action:</td>
+              <td th:text="${#numbers.formatInteger(Inter.IntraActionNum,1,'COMMA')}">&nbsp;</td>
+              <td th:text="${#numbers.formatDecimal(Inter.IntraActionNum/Inter.FinalBedpeNum*100,1,2)}+'%'">&nbsp;</td>
             </tr>
             <tr>
-              <td nowrap="nowrap">&nbsp;</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
+              <td nowrap="nowrap">Short region:</td>
+              <td th:text="${#numbers.formatInteger(Inter.ShortRegionNum,1,'COMMA')}">&nbsp;</td>
+              <td th:text="${#numbers.formatDecimal(Inter.ShortRegionNum/Inter.IntraActionNum*100,1,2)}+'%'">&nbsp;</td>
             </tr>
             <tr>
-              <td nowrap="nowrap">&nbsp;</td>
-              <td>&nbsp;</td>
-              <td>&nbsp;</td>
+              <td nowrap="nowrap">Long region:</td>
+              <td th:text="${#numbers.formatInteger(Inter.LongRegionNum,1,'COMMA')}">&nbsp;</td>
+              <td th:text="${#numbers.formatDecimal(Inter.LongRegionNum/Inter.IntraActionNum*100,1,2)}+'%'">&nbsp;</td>
             </tr>
           </tbody>
         </table>
       </h2>
-
-
-
-      <h3 id="Rplot20">Category</h3>
-      <h2>
-        <!--        <iframe width=8 00 height=7 0 src="images/Rplot20.html"></iframe>-->
-      </h2>
-
-      <h3 id="Rplot21">Peak calling</h3>
-      <h2>
-        <!--        <iframe width=8 00 height=2 80 src="images/Rplot21.html"></iframe>-->
-      </h2>
-
-      <h3 id="Rplot22">Clustering</h3>
-      <h2>
-        <!--        <iframe width=8 00 height=1 60 src="images/Rplot22.html"></iframe>-->
-      </h2>
-
-      <h3 id="Rplot23">Extra Info</h3>
-      <h2>
-        <!--        <iframe width=8 00 height=1 00 src="images/Rplot23.html"></iframe>-->
-      </h2>
-
 
       <h1 class="title" id="Running_statistics">Running statistics</h1>
       <div class="line"></div>

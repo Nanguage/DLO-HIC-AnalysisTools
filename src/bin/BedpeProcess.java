@@ -499,6 +499,7 @@ public class BedpeProcess {
     public CustomFile getDiffFile() {
         return DiffFile;
     }
+
     public CustomFile getSelfLigationFile() {
         return SelfLigationFile;
     }
@@ -509,5 +510,9 @@ public class BedpeProcess {
 
     public CustomFile getValidFile() {
         return ValidFile;
+    }
+
+    public CustomFile getSameFile() {
+        return SameFile;
     }
 }

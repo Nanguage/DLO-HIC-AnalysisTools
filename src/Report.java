@@ -4,10 +4,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import javafx.scene.input.DataFormat;
-import lib.tool.Statistic;
 import lib.unit.CustomFile;
-import lib.unit.IntegerArrays;
 import lib.unit.Opts;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
@@ -15,55 +12,24 @@ import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import sun.misc.BASE64Encoder;
 
-import javax.imageio.stream.FileImageInputStream;
-import javax.imageio.stream.ImageInputStream;
-
 
 public class Report {
     private File ReportOutPath;
+    public CommonInfor ComInfor = new CommonInfor();
+    public ActionInfor InterAction = new ActionInfor();
     public LinkerClass[] UseLinker;
-    //    public File RawDataFile = new File("");
     public long RawDataReadsNum;
-    public String HalfLinkerA = "", HalfLinkerB = "";
-    public String RestrictionSeq = "";
     public String AdapterSequence = "";
-    //    public File OutPath = new File("");
-//    public String OutPrefix = "";
-    public int MatchScore, MisMatchScore, InDelScore;
     public File PreDir, SeDir, BedpeDir, MatrixDir, TransDir;
-    public File[] SeLinkerDir, BedpeLinkerDir;
     public File LinkerFile = new File("");
-    //    public File GenomeFile = new File("");
     public File GenomeIndex = new File("");
     public File AdapterFile = new File("");
 
     public ArrayList<String> LinkersType = new ArrayList<>();
-    //    public ArrayList<String> UseLinker = new ArrayList<>();
     public ArrayList<String> Chromosome = new ArrayList<>();
-    public Long[] LinkersNum;
-    public ArrayList<File> FastqR1File = new ArrayList<>();
-    public ArrayList<File> FastqR2File = new ArrayList<>();
-    //    public ArrayList<Long> FastqR1Num = new ArrayList<>();
-//    public ArrayList<Long> FastqR2Num = new ArrayList<>();
-    public ArrayList<File> UseBed1 = new ArrayList<>();
-    public ArrayList<File> UseBed2 = new ArrayList<>();
-    public ArrayList<Long> UniqMapR1Num = new ArrayList<>();
-    public ArrayList<Long> UniqMapR2Num = new ArrayList<>();
-    public ArrayList<File> BedpeFile = new ArrayList<>();
-    public ArrayList<Long> BedpeNum = new ArrayList<>();
-    public ArrayList<String> NoRmdupName = new ArrayList<>();
-    public ArrayList<Long> NoRmdupNum = new ArrayList<>();
-    public ArrayList<String[]> LigationFile = new ArrayList<>();
-    public ArrayList<Long[]> LigationNum = new ArrayList<>();
+    public double[] LinkersNum;
     public CustomFile FinalBedpeName = new CustomFile("");
-    public long FinalBedpeNum;
-    public long IntraActionNum;
-    public long InterActionNum;
-    public long LongRegionNum;
-    public long ShortRegionNum;
     public int MinUniqueScore;
-    public int MinReadsLength;
-    public int MaxReadsLength;
     public int[] Resolution;
     public int Thread;
 
@@ -107,16 +73,16 @@ public class Report {
 //            System.out.println(NoRmdupName.get(i).replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(NoRmdupNum.get(i)) + "\t" + String.format("%.2f", (double) NoRmdupNum.get(i) / BedpeNum.get(i) * 100) + "%");
         }
         System.out.println("\n-------------------------------------------------------------");
-        System.out.println("Total action number:\t" + new DecimalFormat("#,###").format(FinalBedpeNum) + "\t" + String.format("%.2f", (double) FinalBedpeNum / RawDataReadsNum * 100) + "%");
-        System.out.println("Inter action number:\t" + new DecimalFormat("#,###").format(InterActionNum) + "\t" + String.format("%.2f", (double) InterActionNum / FinalBedpeNum * 100) + "%");
-        System.out.println("Intra action number:\t" + new DecimalFormat("#,###").format(IntraActionNum) + "\t" + String.format("%.2f", (double) IntraActionNum / FinalBedpeNum * 100) + "%");
+        System.out.println("Total action number:\t" + new DecimalFormat("#,###").format(InterAction.FinalBedpeNum) + "\t" + String.format("%.2f", InterAction.FinalBedpeNum / RawDataReadsNum * 100) + "%");
+        System.out.println("Inter action number:\t" + new DecimalFormat("#,###").format(InterAction.InterActionNum) + "\t" + String.format("%.2f", InterAction.InterActionNum / InterAction.FinalBedpeNum * 100) + "%");
+        System.out.println("Intra action number:\t" + new DecimalFormat("#,###").format(InterAction.IntraActionNum) + "\t" + String.format("%.2f", InterAction.IntraActionNum / InterAction.FinalBedpeNum * 100) + "%");
         System.out.println("\n-------------------------------------------------------------");
-        if (RestrictionSeq.replace("^", "").length() <= 4) {
-            System.out.println("Short region <= 5k :\t" + new DecimalFormat("#,###").format(ShortRegionNum) + "\t" + String.format("%.2f", (double) ShortRegionNum / IntraActionNum * 100) + "%");
-            System.out.println("Long region > 5k :\t" + new DecimalFormat("#,###").format(LongRegionNum) + "\t" + String.format("%.2f", (double) LongRegionNum / IntraActionNum * 100) + "%");
+        if (ComInfor.Restriction.replace("^", "").length() <= 4) {
+            System.out.println("Short region <= 5k :\t" + new DecimalFormat("#,###").format(InterAction.ShortRegionNum) + "\t" + String.format("%.2f", InterAction.ShortRegionNum / InterAction.IntraActionNum * 100) + "%");
+            System.out.println("Long region > 5k :\t" + new DecimalFormat("#,###").format(InterAction.LongRegionNum) + "\t" + String.format("%.2f", InterAction.LongRegionNum / InterAction.IntraActionNum * 100) + "%");
         } else {
-            System.out.println("Short region <= 20k :\t" + new DecimalFormat("#,###").format(ShortRegionNum) + "\t" + String.format("%.2f", (double) ShortRegionNum / IntraActionNum * 100) + "%");
-            System.out.println("Long region > 20k :\t" + new DecimalFormat("#,###").format(LongRegionNum) + "\t" + String.format("%.2f", (double) LongRegionNum / IntraActionNum * 100) + "%");
+            System.out.println("Short region <= 20k :\t" + new DecimalFormat("#,###").format(InterAction.ShortRegionNum) + "\t" + String.format("%.2f", InterAction.ShortRegionNum / InterAction.IntraActionNum * 100) + "%");
+            System.out.println("Long region > 20k :\t" + new DecimalFormat("#,###").format(InterAction.LongRegionNum) + "\t" + String.format("%.2f", InterAction.LongRegionNum / InterAction.IntraActionNum * 100) + "%");
         }
     }
 
@@ -129,38 +95,23 @@ public class Report {
         templateEngine.setTemplateResolver(resolver);
         Context context = new Context();
         context.setVariable("Date", DateFormat.getDateTimeInstance().format(new Date()));
-        context.setVariable("InputFile", Opts.InputFile.getPath());
-        context.setVariable("IndexPrefix", GenomeIndex.getPath());
-        context.setVariable("OutPutDir", Opts.OutPath.getPath());
-        context.setVariable("OutPutPrefix", Opts.Prefix);
-        context.setVariable("GenomeFile", Opts.GenomeFile.getPath());
-        context.setVariable("LinkerA", HalfLinkerA);
-        context.setVariable("LinkerB", HalfLinkerB);
-        context.setVariable("MatchScore", MatchScore);
-        context.setVariable("MisMatchScore", MisMatchScore);
-        context.setVariable("InDelScore", InDelScore);
-        context.setVariable("Restriction", RestrictionSeq);
-        context.setVariable("MinReadsLen", MinReadsLength);
-        context.setVariable("MaxReadsLen", MaxReadsLength);
-        context.setVariable("Resolution", String.join(" ", IntegerArrays.toString(Resolution)));
-        context.setVariable("Thread", Thread);
+        ComInfor.InputFile = Opts.InputFile;
+        ComInfor.OutPutDir = Opts.OutPath;
+        ComInfor.OutPutPrefix = Opts.Prefix;
+        ComInfor.GenomeFile = Opts.GenomeFile;
         context.setVariable("AdapterSeq", AdapterSequence.replaceAll("\\s+", "<br/>"));
         context.setVariable("TotalReads", RawDataReadsNum);
+        context.setVariable("ComInformation", ComInfor);
         long Ambiguous = RawDataReadsNum;
         for (int i = 0; i < LinkersType.size(); i++) {
             context.setVariable(LinkersType.get(i) + "LinkerNum", LinkersNum[i]);
-//            context.setVariable(LinkersType.get(i) + "LinkerPercent", String.format("%.2f", (double) LinkersNum[i] / RawDataReadsNum * 100) + "%");
             Ambiguous -= LinkersNum[i];
         }
         context.setVariable("AmbiguousLinkerNum", ThousandFormat(Ambiguous));
         context.setVariable("AmbiguousLinkerPercent", PercentFormat((double) Ambiguous / RawDataReadsNum * 100) + "%");
         context.setVariable("PreDir", PreDir.getPath());
-//        AA.LinkerType="AA";AA.FastqFileR1=new File("./Se/AAR1.fastq");AA.FastqNumR1=1000;AA.SeProcessOutDir=new File("./Se");
-//        AA.SelfLigationFile=new File("./Self");AA.SelfLigationNum=200;AA.RelLigationFile=new File("./Rel");AA.RelLigationNum=200;
-//        BB.SelfLigationFile=new File("./Self");BB.SelfLigationNum=200;BB.RelLigationFile=new File("./Rel");BB.RelLigationNum=200;
-//        BB.FastqNumR1=1000;
-//        BB.LinkerType="BB";BB.FastqFileR2=new File("./Se/BBR2.fastq");BB.FastqNumR2=900;BB.SeProcessOutDir=new File("./Se");
         context.setVariable("LinkerClass", UseLinker);
+        context.setVariable("Inter", InterAction);
         context.setVariable("LinkerAliScoreDis", GetBase64(Opts.LinkerScoreDisFile));
 
 
@@ -212,12 +163,13 @@ public class Report {
 
 class LinkerClass {
     public String LinkerType, LinkerSequence;
-    public File SeProcessOutDir, BedpeProcessDir;
+    public File SeProcessOutDir, BedpeProcessOutDir;
     public CustomFile FastqFileR1, FastqFileR2;
     public CustomFile UniqMapFileR1, UniqMapFileR2;
     public CustomFile RawBedpeFile, RawSameBedpeFile, RawDiffBedpeFile;
     public CustomFile SelfLigationFile, RelLigationFile, SameValidFile;
     public CustomFile SameCleanFile, DiffCleanFile;
+    public CustomFile MergeCleanFile;
     public double LinkerNum;
     public double FastqNumR1, FastqNumR2;
     public double UniqMapNumR1, UniqMapNumR2;
@@ -231,5 +183,29 @@ class LinkerClass {
 
     LinkerClass() {
     }
+}
 
+class CommonInfor {
+    public CustomFile InputFile;
+    public CustomFile GenomeFile;
+    public File OutPutDir;
+    public String OutPutPrefix;
+    public int Thread;
+    public String HalfLinkerA = "", HalfLinkerB = "";
+    public int MatchScore, MisMatchScore, InDelScore;
+    public File IndexPrefix = new File("");
+    public String Restriction = "";
+    public int[] Resolution;
+    public int MinReadsLen;
+    public int MaxReadsLen;
+    public ArrayList<String> Chromosome = new ArrayList<>();
+}
+
+class ActionInfor {
+    public CustomFile FinalBedpeFile = new CustomFile("");
+    public double FinalBedpeNum;
+    public double IntraActionNum;
+    public double InterActionNum;
+    public double LongRegionNum;
+    public double ShortRegionNum;
 }

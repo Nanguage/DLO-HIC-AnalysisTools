@@ -13,8 +13,8 @@ import org.apache.commons.math3.util.MathUtils;
 
 public class Statistic {
 
-    public static Long[] CalculateLinkerCount(File InFile, String[] LinkerList, int MinScore, int Threads) throws IOException, InterruptedException {
-        Long[] Count = new Long[LinkerList.length];
+    public static double[] CalculateLinkerCount(File InFile, String[] LinkerList, int MinScore, int Threads) throws IOException, InterruptedException {
+        double[] Count = new double[LinkerList.length];
         for (int i = 0; i < Count.length; i++) {
             Count[i] = 0L;
         }
