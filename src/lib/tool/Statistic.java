@@ -3,6 +3,7 @@ package lib.tool;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Hashtable;
 
 import lib.unit.CustomFile;
@@ -12,6 +13,40 @@ import org.apache.commons.math3.util.MathArrays;
 import org.apache.commons.math3.util.MathUtils;
 
 public class Statistic {
+    public static double[] ReadsLengthDis(File FastqFile, File OutFile) throws IOException {
+        ArrayList<Double> Distribution = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new FileReader(FastqFile));
+        String Line;
+        int LineNum = 0;
+        while ((Line = reader.readLine()) != null) {
+            if (++LineNum % 4 == 2) {
+                int len = Line.length();
+                if (len + 1 > Distribution.size()) {
+                    for (int i = Distribution.size(); i <= len; i++) {
+                        Distribution.add(0D);
+                    }
+                }
+                Distribution.set(len, Distribution.get(len) + 1);
+            }
+        }
+        if (OutFile != null) {
+            if (OutFile.isFile()) {
+                BufferedWriter writer = new BufferedWriter(new FileWriter(OutFile));
+                writer.write("Length\tCount\n");
+                for (int i = 0; i < Distribution.size(); i++) {
+                    writer.write(i + "\t" + Distribution.get(i) + "\n");
+                }
+                writer.close();
+            } else {
+                System.err.println(new Date() + ":\tCan't Create " + OutFile.getPath());
+            }
+        }
+        double[] dis = new double[Distribution.size()];
+        for (int i = 0; i < dis.length; i++) {
+            dis[i] = Distribution.get(i);
+        }
+        return dis;
+    }
 
     public static double[] CalculateLinkerCount(File InFile, String[] LinkerList, int MinScore, int Threads) throws IOException, InterruptedException {
         double[] Count = new double[LinkerList.length];

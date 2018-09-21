@@ -17,7 +17,9 @@ public class Report {
     private File ReportOutPath;
     public CommonInfor ComInfor = new CommonInfor();
     public ActionInfor InterAction = new ActionInfor();
+    public RunTime RunTime = new RunTime();
     public LinkerClass[] UseLinker;
+    public String[] ReadsLengthDisBase64;
     public long RawDataReadsNum;
     public String AdapterSequence = "";
     public File PreDir, SeDir, BedpeDir, MatrixDir, TransDir;
@@ -32,10 +34,14 @@ public class Report {
     public int MinUniqueScore;
     public int[] Resolution;
     public int Thread;
+    private File DataDir;
+    private File ImageDir;
 
     public Report(File OutPath) {
         ReportOutPath = OutPath;
-        File[] CheckFile = new File[]{ReportOutPath, new File(ReportOutPath + "/data"), new File(ReportOutPath + "/image")};
+        DataDir = new File(ReportOutPath + "/data");
+        ImageDir = new File(ReportOutPath + "/image");
+        File[] CheckFile = new File[]{ReportOutPath, DataDir, ImageDir};
         for (File f : CheckFile) {
             if (!f.isDirectory() && !f.mkdir()) {
                 System.err.println(new Date() + ":\tCan't create " + f);
@@ -70,7 +76,6 @@ public class Report {
             System.out.println(UseLinker[i].RelLigationFile.getName() + "\t" + new DecimalFormat("#,###").format(UseLinker[i].RelLigationNum) + "\t" + String.format("%.2f", UseLinker[i].RelLigationNum / UseLinker[i].RawBedpeNum * 100) + "%");
             System.out.println(UseLinker[i].SameValidFile.getName() + "\t" + new DecimalFormat("#,###").format(UseLinker[i].SameValidNum) + "\t" + String.format("%.2f", UseLinker[i].SameValidNum / UseLinker[i].RawBedpeNum * 100) + "%");
             System.out.println(UseLinker[i].RawDiffBedpeFile.getName() + "\t" + new DecimalFormat("#,###").format(UseLinker[i].RawDiffBedpeNum) + "\t" + String.format("%.2f", UseLinker[i].RawDiffBedpeNum / UseLinker[i].RawBedpeNum * 100) + "%");
-//            System.out.println(NoRmdupName.get(i).replaceAll(".*/", "") + "\t" + new DecimalFormat("#,###").format(NoRmdupNum.get(i)) + "\t" + String.format("%.2f", (double) NoRmdupNum.get(i) / BedpeNum.get(i) * 100) + "%");
         }
         System.out.println("\n-------------------------------------------------------------");
         System.out.println("Total action number:\t" + new DecimalFormat("#,###").format(InterAction.FinalBedpeNum) + "\t" + String.format("%.2f", InterAction.FinalBedpeNum / RawDataReadsNum * 100) + "%");
@@ -112,7 +117,9 @@ public class Report {
         context.setVariable("PreDir", PreDir.getPath());
         context.setVariable("LinkerClass", UseLinker);
         context.setVariable("Inter", InterAction);
+        context.setVariable("RunTime", RunTime);
         context.setVariable("LinkerAliScoreDis", GetBase64(Opts.LinkerScoreDisFile));
+        context.setVariable("ReadsLenDiss", ReadsLengthDisBase64);
 
 
         //========================================test=============================
@@ -152,12 +159,20 @@ public class Report {
         }
     }
 
-    private String GetBase64(File f) throws IOException {
+    public String GetBase64(File f) throws IOException {
         FileInputStream image = new FileInputStream(f);
         byte[] data = new byte[image.available()];
         image.read(data);
         image.close();
         return new BASE64Encoder().encode(data);
+    }
+
+    public File getDataDir() {
+        return DataDir;
+    }
+
+    public File getImageDir() {
+        return ImageDir;
     }
 }
 
@@ -208,4 +223,14 @@ class ActionInfor {
     public double InterActionNum;
     public double LongRegionNum;
     public double ShortRegionNum;
+}
+
+class RunTime {
+    public String StartTime;
+    public String LinkerFilter;
+    public String Mapping;
+    public String LigationFilter;
+    public String MakeMatrix;
+    public String TransLocation;
+    public String Total;
 }

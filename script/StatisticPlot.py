@@ -40,27 +40,42 @@ def PointPlt(ax,x_value, data, legend):
         ax.legend()
 
 
+    
 def BarPlt(ax,x_value, data, legend):
+    if x_value is None:
+        x_value = np.arange(data.shape[0])
+    Width=0.8/data.shape[1]
+    try:
+        np.double(x_value)
+        for i in range(data.shape[1]):
+            #move x-axis
+            ax.bar(np.double(x_value)+(i-0.5*(data.shape[1]-1))*Width, data[:, i],width=Width,label=legend[i])
+    except(ValueError):
+        for i in range(data.shape[1]):
+            ax.bar(np.arange(x_value.size)+(i-0.5*(data.shape[1]-1))*Width,data[:, i],width=Width, label=legend[i])
+        ax.set_xticks(np.arange(x_value.size))
+        ax.set_xticklabels(list(x_value))
+    if len(legend)>1:
+        ax.legend()
+
+    
+def StackBarPlt(ax,x_value, data, legend):
     if x_value is None:
         x_value = range(data.shape[0])
     y_offset = np.zeros(data.shape[0])
     try:
         np.double(x_value)
         for i in range(data.shape[1]):
-            ax.bar(np.double(x_value), data[:, i],
-                    bottom=y_offset, label=legend[i])
+            ax.bar(np.double(x_value), data[:, i],bottom=y_offset, label=legend[i])
             y_offset = y_offset + data[:, i]
-        if len(legend)>1:
-            ax.legend()
-
     except(ValueError):
         for i in range(data.shape[1]):
-            ax.bar(range(x_value.size),
-                    data[:, i], bottom=y_offset, label=legend[i])
+            ax.bar(range(x_value.size),data[:, i], bottom=y_offset, label=legend[i])
             y_offset = y_offset + data[:, i]
-        if len(legend)>1:
-            ax.legend()
-        ax.set_xticks(range(x_value.size), x_value)
+        ax.set_xticks(range(x_value.size))
+        ax.set_xticklabels(x_value)
+    if len(legend)>1:
+        ax.legend()
 
 def millions(x, pos):
     'The two args are the value and tick position'
@@ -75,7 +90,7 @@ Title = Args.title
 PlotType = Args.type
 OutFile = Args.out
 
-#InputFile="LinkerScoreDis.data"
+#InputFile="test.txt"
 #PlotType="bar"
 #================read data======================
 infile = open(InputFile, 'r')
@@ -102,11 +117,12 @@ ax.spines['right'].set_visible(False)
 ax.spines['top'].set_visible(False)
 ax.grid()   
 
-
 if PlotType == "point":
     PointPlt(ax,X_Data,Y_Data,Head[1:])
 elif PlotType == "bar":
     BarPlt(ax,X_Data,Y_Data,Head[1:])
+elif PlotType == "stackbar":
+    StackBarPlt(ax,X_Data,Y_Data,Head[1:])
 ax.set_xlabel(X_lable)
 ax.set_ylabel(Y_lable)
 if Title != None:
@@ -115,4 +131,4 @@ if OutFile is None:
     ax.imshow()
 else:
     Figure.savefig(OutFile, format=OutFile.split(".")[-1], dpi=100)
-    
+

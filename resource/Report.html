@@ -41,7 +41,7 @@
               <li><a href="#RI_LinkerFilter">Linker filtering</a></li>
               <li><a href="#RI_Mapping">Mapping</a></li>
               <li><a href="#RI_LigationFilter">Ligation filtering</a></li>
-              <li><a href="#RI_MakeMatrix">Make Matrix</a></li>
+              <li><a href="#RI_InterAction">Inter Action</a></li>
             </ul>
           </li>
           <li><a href="#Running_statistics" class="active">Running statistics</a>
@@ -51,12 +51,13 @@
               <li><a href="#RS_MappingFilter">Mapping and filtering statistics</a></li>
               <li><a href="#RS_LigationFilter">Ligation filtering statistics</a></li>
               <li><a href="#RS_MakeMatrix">Make Matrix statistics</a></li>
-              <li><a href="#RS_RunTime">Running time</a></li>
+              <li><a href="#RS_Running_Time">Running time</a></li>
             </ul>
           </li>
-          <li><a href="#Sequence_filtering_report">Sequence filtering report</a>
+          <li><a href="#Linker_filtering_report">Linker filtering report</a>
             <ul>
-              <li><a href="#SFR_Basic">Basic</a></li>
+              <li><a href="#LFR_LinkerAlignScoreDis">Linker alignment score distribution</a></li>
+				<li><a href="#LFR_Tag_Len_Dis">Tag length distribution</a></li>
               <li><a href="#SFR_Adapter">Adapter</a></li>
               <li><a href="#SFR_Linker">Linker</a></li>
             </ul>
@@ -303,6 +304,7 @@
           </table>
         </h2>
       </li>
+		<hr>
       <h2 id="RI_InterAction"> <strong>InterAction</strong> </h2>
       <h2>
         <table width="200" border="1" style="table-layout: fixed">
@@ -369,41 +371,60 @@
         <!--        <iframe width=8 00 height=1 40 src="images/Rplot3_4.html"></iframe>-->
       </h2>
 
-      <h3 id="Rplot24">Running time</h3>
-      <!-- <h3><img src="images/Rplot2.png" alt=""/></h3> -->
-      <h2>
-        <!--        <iframe width=8 00 height=2 70 src="images/Rplot24.html"></iframe>-->
+      <h3 id="RS_Running_Time">Running time</h3>
+		<h2>
+      <table width="200" border="1">
+        <tbody>
+          <tr>
+            <td align="center" nowrap="nowrap">Item</td>
+            <td align="center">Value(h/m/s)</td>
+          </tr>
+          <tr>
+            <td nowrap="nowrap">Start time:</td>
+            <td th:text="${RunTime.StartTime}">&nbsp;</td>
+          </tr>
+          <tr>
+            <td nowrap="nowrap">Linker filtering:</td>
+            <td th:text="${RunTime.LinkerFilter}">&nbsp;</td>
+          </tr>
+          <tr>
+            <td nowrap="nowrap">Mapping:</td>
+            <td th:text="${RunTime.Mapping}">&nbsp;</td>
+          </tr>
+          <tr>
+            <td height="20" nowrap="nowrap">Ligation filtering:</td>
+            <td th:text="${RunTime.LigationFilter}">&nbsp;</td>
+          </tr>
+          <tr>
+            <td height="20" nowrap="nowrap">Make matrix:</td>
+            <td th:text="${RunTime.MakeMatrix}">&nbsp;</td>
+          </tr>
+          <tr>
+            <td height="20" nowrap="nowrap">Translocation detection:</td>
+            <td th:text="${RunTime.TransLocation}">&nbsp;</td>
+          </tr>
+          <tr>
+            <td height="20" nowrap="nowrap">Total:</td>
+            <td th:text="${RunTime.Total}">&nbsp;</td>
+          </tr>
+        </tbody>
+      </table>
       </h2>
+      
 
 
       <h1 id="Linker_filtering_report">Linker filtering report</h1>
       <div class="line"></div>
 
-      <h3 id="Rplot4">Linker alignment score distribution</h3>
+      <h2 id="LFR_LinkerAlignScoreDis">Linker alignment score distribution</h2>
       <h2>
-        <img src="images/Rplot4.png" th:src="'data:image/png;base64,'+${LinkerAliScoreDis}" alt="" />
+        <img src="images/test-jh.png" th:src="'data:image/png;base64,'+${LinkerAliScoreDis}" alt="" />
       </h2>
-
-
-      <h3 id="Rplot5">Linker alignment score difference distribution</h3>
-      <h2>
-        <img src="images/test-jh.png" alt="" />
+		<hr>
+      <h2 id="LFR_Tag_Len_Dis">Tag length distribution</h2>
+      <h2 th:each="ReadsLenDis : ${ReadsLenDiss}">
+        <img src="images/Test.AA.reads_length_distribution.png" th:src="'data:image/png;base64,'+${ReadsLenDis}"  alt="" />
       </h2>
-
-
-      <h3 id="Rplot6">Tag length distribution</h3>
-      <h2>
-        <img src="images/Rplot6.png" alt="" />
-      </h2>
-
-
-      <h3 id="Rplot7">Linker composition</h3>
-      <!-- <h2><img src="images/Rplot7.png" alt=""/></h2> -->
-      <h2>
-        <!--        <iframe width=8 00 height=1 10 src="images/Rplot7.html"></iframe>-->
-      </h2>
-
-
 
       <h1 id="Mapping_report">Mapping report</h1>
       <!--   <h3>After mapping to genome, .sam format files are converted to .bedpe files.</h3> -->

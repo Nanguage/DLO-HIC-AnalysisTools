@@ -98,7 +98,6 @@ public class Tools {
                     String line;
                     BufferedReader bufferedReaderIn = new BufferedReader(new InputStreamReader(P.getInputStream()));
                     if (OutFile != null) {
-//                        String OutFile = args[0];
                         BufferedWriter bufferedwriter_out = new BufferedWriter(new FileWriter(OutFile));
                         while ((line = bufferedReaderIn.readLine()) != null) {
                             bufferedwriter_out.write(line + "\n");
@@ -122,7 +121,6 @@ public class Tools {
                     String line;
                     BufferedReader bufferedReaderIn = new BufferedReader(new InputStreamReader(P.getErrorStream()));
                     if (ErrorFile != null) {
-//                        String ErrorFile = args[1];
                         BufferedWriter bufferedwriter_err = new BufferedWriter(new FileWriter(ErrorFile));
                         while ((line = bufferedReaderIn.readLine()) != null) {
                             bufferedwriter_err.write(line + "\n");

@@ -1,8 +1,8 @@
 import java.io.*;
+import java.text.DateFormat;
 import java.util.*;
 
 import bin.*;
-import com.sun.xml.internal.bind.v2.runtime.reflect.opt.TransducedAccessor_method_Boolean;
 import kotlin.text.Charsets;
 import lib.File.*;
 import lib.Image.PlotMatrix;
@@ -16,10 +16,6 @@ import script.CreateMatrix;
 public class Main {
 
     //===================================================================
-//    private CustomFile InputFile;
-//    private CustomFile GenomeFile;
-//    private File OutPath;
-//    private String Prefix;
     private Chromosome[] Chromosomes;
     private String[] HalfLinker, LinkerSeq;
     private String LinkerA, LinkerB;
@@ -47,10 +43,6 @@ public class Main {
     private ArrayList<Thread> SThread = new ArrayList<>();
     private Properties Config = new Properties();
     //===================================================================
-//    private String[] RequiredParameter = new String[]{OptFastqFile, OptGenomeFile, OptLinkerFile, OptChromosome, OptRestriction, OptLinkersType, OptAlignMinQuality};
-//    private String[] OptionalParameter = new String[]{OptOutPath, OptIndexFile, OptPrefix, OptAdapterFile, OptMaxMisMatchLength, OptMinReadsLength, OptMaxReadsLength, OptUseLinker, OptMatchScore, OptMisMatchScore, OptIndelScore, OptReadsType, OptAlignMisMatch, OptAlignThread, OptResolution, OptStep, OptIteration, OptThreads};
-//    private Hashtable<String, String> ArgumentList = new Hashtable<>();//参数列表
-//    private Hashtable<String, Integer> ChrSize = new Hashtable<>();//染色体大小
     private int MinLinkerFilterQuality;
     private File EnzyPath;//酶切位点文件目录
     private String EnzyFilePrefix;//酶切位点文件前缀
@@ -61,7 +53,6 @@ public class Main {
     private File MakeMatrixDir;//建立矩阵输出目录
     private File TransLocationDir;//染色体易位输出目录
     private File ReportDir;//生成报告目录
-    //    private CustomFile[] ChrBedpeFile;
     private Report Stat;
 
     private Main(String[] args) throws IOException {
@@ -95,25 +86,22 @@ public class Main {
         //获取命令行参数信息
         if (ComLine.hasOption("i")) {
             Config.setProperty(Require.InputFile.toString(), String.join(" ", ComLine.getOptionValues("i")));
-//            ArgumentList.put(OptFastqFile, String.join(" ", ComLine.getOptionValues("i")));
         }
         if (ComLine.hasOption("p")) {
             Config.setProperty(Optional.Prefix.toString(), ComLine.getOptionValue("p"));
-//            ArgumentList.put(OptPrefix, ComLine.getOptionValue("p"));
         }
         if (ComLine.hasOption("o")) {
             Config.setProperty(Optional.OutPath.toString(), ComLine.getOptionValue("o"));
-//            ArgumentList.put(OptOutPath, ComLine.getOptionValue("o"));
         }
         if (ComLine.hasOption("s")) {
             Config.setProperty(Optional.Step.toString(), ComLine.getOptionValue("s"));
-//            ArgumentList.put(OptStep, String.join(" ", ComLine.getOptionValues("s")));
         }
         Init();//变量初始化
     }
 
     public static void main(String[] args) throws IOException, InterruptedException {
         //==============================================测试区==========================================================
+
 //        int i =0;
 //        switch (new CustomFile("chr3-chr9-500k.2d.matrix").MatrixDetect()){
 //            case TwoDMatrixFormat:
@@ -147,6 +135,7 @@ public class Main {
         CustomFile[] UseLinkerFasqFileR1 = new CustomFile[UseLinker.size()];
         CustomFile[] UseLinkerFasqFileR2 = new CustomFile[UseLinker.size()];
         //==============================================================================================================
+        Stat.RunTime.StartTime = DateFormat.getDateTimeInstance().format(new Date());
         Stat.ComInfor.HalfLinkerA = LinkerA;
         Stat.ComInfor.HalfLinkerB = LinkerB;
         Stat.ComInfor.MatchScore = MatchScore;
@@ -220,9 +209,9 @@ public class Main {
                     Stat.RawDataReadsNum = Opts.InputFile.CalculatorLineNumber() / 4;
                     //calculate linker count
                     Stat.LinkersNum = Statistic.CalculateLinkerCount(PastFile, LinkersType.toArray(new String[0]), MinLinkerFilterQuality, Threads);
-                    File LinkerDisFile = new File(ReportDir + "/data/LinkerScoreDis.data");
+                    File LinkerDisFile = new File(Stat.getDataDir() + "/LinkerScoreDis.data");
                     Statistic.CalculateLinkerScoreDistribution(PastFile, LinkerLength * MatchScore, LinkerDisFile);
-                    Opts.LinkerScoreDisFile = new File(ReportDir + "/image/" + LinkerDisFile.getName().replace(".data", ".png"));
+                    Opts.LinkerScoreDisFile = new File(Stat.getImageDir() + "/" + LinkerDisFile.getName().replace(".data", ".png"));
                     String ComLine = "python " + Opts.StatisticPlotFile + " -i " + LinkerDisFile + " -t bar -o " + Opts.LinkerScoreDisFile;
                     Tools.ExecuteCommandStr(ComLine, null, null);
                 } catch (IOException | InterruptedException e) {
@@ -239,18 +228,55 @@ public class Main {
         divideLinker.setThreads(Threads);
         LinkerFastqFileR1 = divideLinker.getR1FastqFile();
         LinkerFastqFileR2 = divideLinker.getR2FastqFile();
+        Stat.ReadsLengthDisBase64 = new String[LinkersType.size()];
         if (StepCheck("DivideLinker")) {
             divideLinker.Run();
         }
-
+        //=========================================calculate reads length===============================================
+        ST = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    for (int i = 0; i < LinkersType.size(); i++) {
+                        double[][] dis = new double[2][];
+                        dis[0] = Statistic.ReadsLengthDis(LinkerFastqFileR1[i], null);
+                        dis[1] = Statistic.ReadsLengthDis(LinkerFastqFileR2[i], null);
+                        File OutFile = new File(Stat.getDataDir() + "/" + Opts.Prefix + "." + LinkersType.get(i) + ".reads_length_distribution.data");
+                        BufferedWriter writer = new BufferedWriter(new FileWriter(OutFile));
+                        writer.write("Length\tR1\tR2\n");
+                        for (int j = 0; j < Math.max(dis[0].length, dis[1].length); j++) {
+                            writer.write(j + "\t");
+                            if (j > dis[0].length - 1) {
+                                writer.write("0\t");
+                            } else {
+                                writer.write(dis[0][j] + "\t");
+                            }
+                            if (j > dis[1].length - 1) {
+                                writer.write("0\n");
+                            } else {
+                                writer.write(dis[1][j] + "\n");
+                            }
+                        }
+                        writer.close();
+                        File PngFile = new File(Stat.getImageDir() + "/" + OutFile.getName().replace(".data", ".png"));
+                        String ComLine = Opts.Python + " " + Opts.StatisticPlotFile + " -t bar -y Count --title " + LinkersType.get(i) + " -i " + OutFile + " -o " + PngFile;
+                        Tools.ExecuteCommandStr(ComLine, null, null);
+                        Stat.ReadsLengthDisBase64[i] = Stat.GetBase64(PngFile);
+                    }
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        ST.start();
+        SThread.add(ST);
+        //==============================================================================================================
         for (int i = 0; i < UseLinker.size(); i++) {
             UseLinkerFasqFileR1[i] = new CustomFile(LinkerFastqFileR1[LinkersType.indexOf(UseLinker.get(i))]);
             UseLinkerFasqFileR2[i] = new CustomFile(LinkerFastqFileR2[LinkersType.indexOf(UseLinker.get(i))]);
             Stat.UseLinker[i].FastqFileR1 = UseLinkerFasqFileR1[i];
             Stat.UseLinker[i].FastqFileR2 = UseLinkerFasqFileR2[i];
         }
-//        Stat.FastqR1File.addAll(Arrays.asList(LinkerFastqFileR1));
-//        Stat.FastqR2File.addAll(Arrays.asList(LinkerFastqFileR2));
         createindex.join();
         //=======================================Se Process===单端处理==================================================
         SeTime = new Date();
@@ -540,13 +566,19 @@ public class Main {
 //            TransLocationDetection(Chromosomes, FinalBedpeFile, DetectResolution, Threads);
         }
         EndTime = new Date();
+        Stat.RunTime.LinkerFilter = Tools.DateFormat((SeTime.getTime() - PreTime.getTime()) / 1000);
+        Stat.RunTime.Mapping = Tools.DateFormat((BedpeTime.getTime() - SeTime.getTime()) / 1000);
+        Stat.RunTime.LigationFilter = Tools.DateFormat((MatrixTime.getTime() - BedpeTime.getTime()) / 1000);
+        Stat.RunTime.MakeMatrix = Tools.DateFormat((TransTime.getTime() - MatrixTime.getTime()) / 1000);
+        Stat.RunTime.TransLocation = Tools.DateFormat((EndTime.getTime() - TransTime.getTime()) / 1000);
+        Stat.RunTime.Total = Tools.DateFormat((EndTime.getTime() - PreTime.getTime()) / 1000);
         System.out.println("\n-------------------------------Time----------------------------------------");
-        System.out.println("PreProcess:\t" + Tools.DateFormat((SeTime.getTime() - PreTime.getTime()) / 1000));
-        System.out.println("SeProcess:\t" + Tools.DateFormat((BedpeTime.getTime() - SeTime.getTime()) / 1000));
-        System.out.println("BedpeProcess:\t" + Tools.DateFormat((MatrixTime.getTime() - BedpeTime.getTime()) / 1000));
-        System.out.println("MakeMatrix:\t" + Tools.DateFormat((TransTime.getTime() - MatrixTime.getTime()) / 1000));
-        System.out.println("Translocation:\t" + Tools.DateFormat((EndTime.getTime() - TransTime.getTime()) / 1000));
-        System.out.println("Total:\t" + Tools.DateFormat((EndTime.getTime() - PreTime.getTime()) / 1000));
+        System.out.println("PreProcess:\t" + Stat.RunTime.LinkerFilter);
+        System.out.println("SeProcess:\t" + Stat.RunTime.Mapping);
+        System.out.println("BedpeProcess:\t" + Stat.RunTime.LigationFilter);
+        System.out.println("MakeMatrix:\t" + Stat.RunTime.MakeMatrix);
+        System.out.println("Translocation:\t" + Stat.RunTime.TransLocation);
+        System.out.println("Total:\t" + Stat.RunTime.Total);
         //===================================Report=====================================================================
 
         for (Thread t : SThread) {
