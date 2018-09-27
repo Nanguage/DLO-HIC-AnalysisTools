@@ -327,6 +327,7 @@ public class CustomFile extends File {
 
     /**
      * 此方法将染色体内的交互文件分成每条染色体一个文件
+     *
      * @param Chromosome
      * @param Prefix
      * @param Threads
@@ -454,7 +455,13 @@ public class CustomFile extends File {
         writer.close();
         String ComLine = "mafft " + HeadFile.getPath();
         Opts.CommandOutFile.Append(ComLine + "\n");
-        Tools.ExecuteCommandStr(ComLine, MsaFile, null);
+        PrintWriter msa = new PrintWriter(MsaFile);
+        if (Opts.DeBugLevel < 1) {
+            Tools.ExecuteCommandStr(ComLine, msa, null);
+        } else {
+            Tools.ExecuteCommandStr(ComLine, msa, new PrintWriter(System.err));
+        }
+        msa.close();
         HeadFile.delete();
         reader = new BufferedReader(new FileReader(MsaFile));
         reader.readLine();

@@ -1,26 +1,14 @@
 package bin;
 
-import kotlin.text.Charsets;
 import lib.tool.SequenceFiltering;
 import lib.unit.CustomFile;
-import lib.unit.Opts;
-import org.apache.commons.io.FileUtils;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.util.Date;
 import java.util.Hashtable;
 
 public class PreProcess {
-    //    private final String OptOutPath = "OutPath";//输出路径
-//    private final String OptOutPrefix = "OutPrefix";//输出前缀
-//    private final String OptFastqFile = "FastqFile";//Fastq文件
-//    private final String OptLinkerFile = "LinkerFile";//linker文件
-//    private final String OptAdapterFile = "AdapterFile";//Adapter文件
-//    private final String OptMatchScore = "MatchScore";//匹配分数
-//    private final String OptMisMatchScore = "MisMatchScore";//错配分数
-//    private final String OptIndelScore = "IndelScore";//插入缺失分数
-//    private final String OptThreads = "Threads";//线程数，默认1
+
     private File OutPath;//输出目录
     private String Prefix;
     private CustomFile FastqFile;//Fastq文件
@@ -30,12 +18,8 @@ public class PreProcess {
     private int MisMatchScore = -2;//错配分数
     private int IndelScore = -2;//插入缺失分数
     private int Threads;//线程数，默认1
-    //    private String AdapterSeq = "";
     private String LinkerFilterOutPrefix;//linker过滤输出前缀
-    //    private int ScoreNum;
     private Hashtable<String, String> OptionList = new Hashtable<>();
-//    private String[] RequiredParameter = new String[]{OptFastqFile, OptLinkerFile};
-//    private String[] OptionalParameter = new String[]{OptOutPath, OptOutPrefix, OptAdapterFile, OptMatchScore, OptMisMatchScore, OptIndelScore, OptThreads};
 
     PreProcess(String ConfigFile) throws IOException {
         GetOption(ConfigFile);
@@ -45,7 +29,7 @@ public class PreProcess {
     public PreProcess() {
     }
 
-    public PreProcess(File outpath, String outprefix, CustomFile fastqfile, File linkerfile, File adapterfile, int matchscore, int mismatchscore, int indelscore,int threads) throws IOException {
+    public PreProcess(File outpath, String outprefix, CustomFile fastqfile, File linkerfile, File adapterfile, int matchscore, int mismatchscore, int indelscore, int threads) throws IOException {
         OutPath = outpath;
         Prefix = outprefix;
         FastqFile = fastqfile;
@@ -120,8 +104,6 @@ public class PreProcess {
     public Hashtable<String, String> getOptionList() {
         return OptionList;
     }
-
-
 
 
 }

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 
+import com.sun.deploy.jardiff.JarDiff;
 import lib.unit.CustomFile;
 import lib.unit.Opts;
 import org.apache.commons.math3.distribution.*;
@@ -13,6 +14,47 @@ import org.apache.commons.math3.util.MathArrays;
 import org.apache.commons.math3.util.MathUtils;
 
 public class Statistic {
+
+    public static double[] InteractionLengthDis(CustomFile BedpeFile, File OutFile) throws IOException {
+        ArrayList<Double> Distribution = new ArrayList<>();
+        BufferedReader reader = new BufferedReader(new FileReader(BedpeFile));
+        int[] Col;
+        if (BedpeFile.BedpeDetect() == Opts.FileFormat.BedpePointFormat) {
+            Col = new int[]{1, 1, 3, 3};
+        } else if (BedpeFile.BedpeDetect() == Opts.FileFormat.BedpeRegionFormat) {
+            Col = new int[]{1, 2, 4, 5};
+        } else {
+            System.err.println(new Date() + ":\tError format " + BedpeFile.getName());
+            return new double[0];
+        }
+        String Line;
+        String[] Str;
+        int length;
+        while ((Line = reader.readLine()) != null) {
+            Str = Line.split("\\s+");
+            length = Math.abs((Integer.parseInt(Str[Col[2]]) + Integer.parseInt(Str[Col[3]])) / 2 - (Integer.parseInt(Str[Col[0]]) + Integer.parseInt(Str[Col[1]])) / 2);
+            if (length > Distribution.size() + 1) {
+                for (int i = Distribution.size(); i <= length; i++) {
+                    Distribution.add(0D);
+                }
+            }
+            Distribution.set(length, Distribution.get(length) + 1);
+        }
+        if (OutFile != null) {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(OutFile));
+            writer.write("Distant\tCount\n");
+            for (int i = 0; i < Distribution.size(); i++) {
+                writer.write(i + "\t" + Distribution.get(i) + "\n");
+            }
+            writer.close();
+        }
+        double[] Dis = new double[Distribution.size()];
+        for (int i = 0; i < Distribution.size(); i++) {
+            Dis[i] = Distribution.get(i);
+        }
+        return Dis;
+    }
+
     public static double[] ReadsLengthDis(File FastqFile, File OutFile) throws IOException {
         ArrayList<Double> Distribution = new ArrayList<>();
         BufferedReader reader = new BufferedReader(new FileReader(FastqFile));
@@ -30,16 +72,12 @@ public class Statistic {
             }
         }
         if (OutFile != null) {
-            if (OutFile.isFile()) {
-                BufferedWriter writer = new BufferedWriter(new FileWriter(OutFile));
-                writer.write("Length\tCount\n");
-                for (int i = 0; i < Distribution.size(); i++) {
-                    writer.write(i + "\t" + Distribution.get(i) + "\n");
-                }
-                writer.close();
-            } else {
-                System.err.println(new Date() + ":\tCan't Create " + OutFile.getPath());
+            BufferedWriter writer = new BufferedWriter(new FileWriter(OutFile));
+            writer.write("Length\tCount\n");
+            for (int i = 0; i < Distribution.size(); i++) {
+                writer.write(i + "\t" + Distribution.get(i) + "\n");
             }
+            writer.close();
         }
         double[] dis = new double[Distribution.size()];
         for (int i = 0; i < dis.length; i++) {
@@ -244,9 +282,9 @@ public class Statistic {
         return ChrSize;
     }
 
-    public static ArrayList<int[]> PowerLaw(CustomFile BedpeFile, int StepLength) throws IOException {
-        ArrayList<int[]> List = new ArrayList<>();
-        List.add(new int[]{0, StepLength, 0});
+    public static ArrayList<long[]> PowerLaw(CustomFile BedpeFile, int StepLength, File OutFile) throws IOException {
+        ArrayList<long[]> List = new ArrayList<>();
+        List.add(new long[]{0, StepLength, 0});
         BufferedReader infile = new BufferedReader(new FileReader(BedpeFile));
         String line;
         String[] str;
@@ -276,13 +314,21 @@ public class Statistic {
                 }
             }
             if (i == List.size()) {
-                List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
+                List.add(new long[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
                 while (List.get(i)[1] < distant) {
                     i++;
-                    List.add(new int[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
+                    List.add(new long[]{List.get(i - 1)[1] + 1, List.get(i - 1)[1] + StepLength, 0});
                 }
                 List.get(i)[2]++;
             }
+        }
+        if (OutFile != null) {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(OutFile));
+            writer.write("Distant/(M)\tCount/(log10)\n");
+            for (int i = 0; i < List.size(); i++) {
+                writer.write((double) List.get(i)[1] / 1000000 + "\t" + Math.log10((double) List.get(i)[2]) + "\n");
+            }
+            writer.close();
         }
         return List;
     }

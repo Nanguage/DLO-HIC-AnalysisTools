@@ -185,7 +185,6 @@ class LinkerClass {
     public CustomFile SelfLigationFile, RelLigationFile, SameValidFile;
     public CustomFile SameCleanFile, DiffCleanFile;
     public CustomFile MergeCleanFile;
-    public double LinkerNum;
     public double FastqNumR1, FastqNumR2;
     public double UniqMapNumR1, UniqMapNumR2;
     public double RawBedpeNum, RawSameBedpeNum, RawDiffBedpeNum;

@@ -85,11 +85,69 @@ public class Tools {
         return Num * UnitMap.get(PrimaryUint) / UnitMap.get(TransedUint);
     }
 
-    public static int ExecuteCommandStr(String CommandStr, File OutFile, File ErrorFile) throws IOException, InterruptedException {
-        Process P;
+//    public static int ExecuteCommandStr(String CommandStr, File OutFile, File ErrorFile) throws IOException, InterruptedException {
+//        Process P;
+//        int ExitValue;
+//        System.out.println(new Date() + "\t" + CommandStr);
+//        P = Runtime.getRuntime().exec(CommandStr);
+//        Thread OutThread = new Thread(new Runnable() {
+//
+//            @Override
+//            public void run() {
+//                try {
+//                    String line;
+//                    BufferedReader bufferedReaderIn = new BufferedReader(new InputStreamReader(P.getInputStream()));
+//                    if (OutFile != null) {
+//                        BufferedWriter bufferedwriter_out = new BufferedWriter(new FileWriter(OutFile));
+//                        while ((line = bufferedReaderIn.readLine()) != null) {
+//                            bufferedwriter_out.write(line + "\n");
+//                        }
+//                        bufferedReaderIn.close();
+//                        bufferedwriter_out.close();
+//                    } else {
+//                        while (bufferedReaderIn.readLine() != null) ;
+//                        bufferedReaderIn.close();
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
+//        Thread ErrThread = new Thread(new Runnable() {
+//
+//            @Override
+//            public void run() {
+//                try {
+//                    String line;
+//                    BufferedReader bufferedReaderIn = new BufferedReader(new InputStreamReader(P.getErrorStream()));
+//                    if (ErrorFile != null) {
+//                        BufferedWriter bufferedwriter_err = new BufferedWriter(new FileWriter(ErrorFile));
+//                        while ((line = bufferedReaderIn.readLine()) != null) {
+//                            bufferedwriter_err.write(line + "\n");
+//                        }
+//                        bufferedReaderIn.close();
+//                        bufferedwriter_err.close();
+//                    } else {
+//                        while (bufferedReaderIn.readLine() != null) ;
+//                        bufferedReaderIn.close();
+//                    }
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
+//        OutThread.start();
+//        ErrThread.start();
+//        OutThread.join();
+//        ErrThread.join();
+//        ExitValue = P.waitFor();
+//        return ExitValue;
+//    }
+
+    public static int ExecuteCommandStr(String CommandStr, PrintWriter Out, PrintWriter Error) throws IOException, InterruptedException {
         int ExitValue;
         System.out.println(new Date() + "\t" + CommandStr);
-        P = Runtime.getRuntime().exec(CommandStr);
+        Process P = Runtime.getRuntime().exec(CommandStr);
         Thread OutThread = new Thread(new Runnable() {
 
             @Override
@@ -97,13 +155,13 @@ public class Tools {
                 try {
                     String line;
                     BufferedReader bufferedReaderIn = new BufferedReader(new InputStreamReader(P.getInputStream()));
-                    if (OutFile != null) {
-                        BufferedWriter bufferedwriter_out = new BufferedWriter(new FileWriter(OutFile));
+                    if (Out != null) {
                         while ((line = bufferedReaderIn.readLine()) != null) {
-                            bufferedwriter_out.write(line + "\n");
+                            Out.print(line + "\n");
+                            Out.flush();
                         }
                         bufferedReaderIn.close();
-                        bufferedwriter_out.close();
+//                        Out.close();
                     } else {
                         while (bufferedReaderIn.readLine() != null) ;
                         bufferedReaderIn.close();
@@ -120,13 +178,13 @@ public class Tools {
                 try {
                     String line;
                     BufferedReader bufferedReaderIn = new BufferedReader(new InputStreamReader(P.getErrorStream()));
-                    if (ErrorFile != null) {
-                        BufferedWriter bufferedwriter_err = new BufferedWriter(new FileWriter(ErrorFile));
+                    if (Error != null) {
                         while ((line = bufferedReaderIn.readLine()) != null) {
-                            bufferedwriter_err.write(line + "\n");
+                            Error.write(line + "\n");
+                            Error.flush();
                         }
                         bufferedReaderIn.close();
-                        bufferedwriter_err.close();
+//                        Error.close();
                     } else {
                         while (bufferedReaderIn.readLine() != null) ;
                         bufferedReaderIn.close();

@@ -101,7 +101,10 @@ public class Main {
 
     public static void main(String[] args) throws IOException, InterruptedException {
         //==============================================测试区==========================================================
-
+//        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(System.out));
+//        writer.write("sssssss\n");
+//        writer.flush();
+//
 //        int i =0;
 //        switch (new CustomFile("chr3-chr9-500k.2d.matrix").MatrixDetect()){
 //            case TwoDMatrixFormat:
@@ -212,8 +215,9 @@ public class Main {
                     File LinkerDisFile = new File(Stat.getDataDir() + "/LinkerScoreDis.data");
                     Statistic.CalculateLinkerScoreDistribution(PastFile, LinkerLength * MatchScore, LinkerDisFile);
                     Opts.LinkerScoreDisFile = new File(Stat.getImageDir() + "/" + LinkerDisFile.getName().replace(".data", ".png"));
-                    String ComLine = "python " + Opts.StatisticPlotFile + " -i " + LinkerDisFile + " -t bar -o " + Opts.LinkerScoreDisFile;
-                    Tools.ExecuteCommandStr(ComLine, null, null);
+                    String ComLine = Opts.Python + " " + Opts.StatisticPlotFile + " -i " + LinkerDisFile + " -t bar -o " + Opts.LinkerScoreDisFile;
+                    Opts.CommandOutFile.Append(ComLine + "\n");
+                    Tools.ExecuteCommandStr(ComLine, null, new PrintWriter(System.err));
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -260,7 +264,8 @@ public class Main {
                         writer.close();
                         File PngFile = new File(Stat.getImageDir() + "/" + OutFile.getName().replace(".data", ".png"));
                         String ComLine = Opts.Python + " " + Opts.StatisticPlotFile + " -t bar -y Count --title " + LinkersType.get(i) + " -i " + OutFile + " -o " + PngFile;
-                        Tools.ExecuteCommandStr(ComLine, null, null);
+                        Opts.CommandOutFile.Append(ComLine + "\n");
+                        Tools.ExecuteCommandStr(ComLine, null, new PrintWriter(System.err));
                         Stat.ReadsLengthDisBase64[i] = Stat.GetBase64(PngFile);
                     }
                 } catch (IOException | InterruptedException e) {
@@ -334,8 +339,6 @@ public class Main {
             Stat.UseLinker[i].UniqMapFileR1 = R1SortBedFile[i];
             Stat.UseLinker[i].UniqMapFileR2 = R2SortBedFile[i];
             Stat.UseLinker[i].RawBedpeFile = SeBedpeFile[i];
-//            Stat.UseBed1.add(R1SortBedFile[i]);
-//            Stat.UseBed2.add(R2SortBedFile[i]);
             int finalI = i;
             ST = new Thread(new Runnable() {
                 @Override
@@ -346,10 +349,6 @@ public class Main {
                         Stat.UseLinker[finalI].UniqMapNumR1 = Stat.UseLinker[finalI].UniqMapFileR1.CalculatorLineNumber();
                         Stat.UseLinker[finalI].UniqMapNumR2 = Stat.UseLinker[finalI].UniqMapFileR2.CalculatorLineNumber();
                         Stat.UseLinker[finalI].RawBedpeNum = Stat.UseLinker[finalI].RawBedpeFile.CalculatorLineNumber();
-//                        Stat.UniqMapR1Num.add(R1SortBedFile[finalI].CalculatorLineNumber());
-//                        Stat.UniqMapR2Num.add(R2SortBedFile[finalI].CalculatorLineNumber());
-//                        Stat.BedpeFile.add(SeBedpeFile[finalI]);
-//                        Stat.BedpeNum.add(SeBedpeFile[finalI].CalculatorLineNumber());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -487,6 +486,35 @@ public class Main {
         if (StepCheck("BedPe2Inter")) {
             new BedpeToInter(FinalBedpeFile.getPath(), InterBedpeFile.getPath());//将交互区间转换成交互点
         }
+        //==============================================================================================================
+        ST = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Stat.InterAction.FinalBedpeFile = FinalBedpeFile;
+                    Stat.InterAction.FinalBedpeNum = Stat.InterAction.FinalBedpeFile.CalculatorLineNumber();
+                    Stat.InterAction.IntraActionNum = SameBedpeFile.CalculatorLineNumber();
+                    Stat.InterAction.InterActionNum = Stat.InterAction.FinalBedpeNum - Stat.InterAction.IntraActionNum;
+                    if (Stat.ComInfor.Restriction.replace("^", "").length() <= 4) {
+                        Stat.InterAction.ShortRegionNum = Statistic.RangeCount(SameBedpeFile, 0, 5000, 4);
+                    } else {
+                        Stat.InterAction.ShortRegionNum += Statistic.RangeCount(SameBedpeFile, 0, 20000, 4);
+                    }
+                    Stat.InterAction.LongRegionNum = Stat.InterAction.IntraActionNum - Stat.InterAction.ShortRegionNum;
+                    File InterActionLengthDisData = new File(Stat.getDataDir() + "/InterActionLengthDistribution.data");
+                    Statistic.PowerLaw(SameBedpeFile, 1000000, InterActionLengthDisData);
+                    File InterActionLengthDisPng = new File(Stat.getImageDir() + "/" + InterActionLengthDisData.getName().replace(".data", ".png"));
+                    String ComLine = Opts.Python + " " + Opts.StatisticPlotFile + " -t point --title \"Interaction distant distribution\" -i " + InterActionLengthDisData + " -o " + InterActionLengthDisPng;
+                    Opts.CommandOutFile.Append(ComLine + "\n");
+                    Tools.ExecuteCommandStr(ComLine, null, new PrintWriter(System.err));
+                    Opts.InterActionLengthDisFile = InterActionLengthDisPng;
+                } catch (IOException | InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        ST.start();
+        SThread.add(ST);
         //=================================================Make Matrix==================================================
         MatrixTime = new Date();
 
@@ -536,20 +564,7 @@ public class Main {
         ST = new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    Stat.InterAction.FinalBedpeFile = FinalBedpeFile;
-                    Stat.InterAction.FinalBedpeNum = FinalBedpeFile.CalculatorLineNumber();
-                    Stat.InterAction.IntraActionNum = SameBedpeFile.CalculatorLineNumber();
-                    Stat.InterAction.InterActionNum = Stat.InterAction.FinalBedpeNum - Stat.InterAction.IntraActionNum;
-                    if (Stat.ComInfor.Restriction.replace("^", "").length() <= 4) {
-                        Stat.InterAction.ShortRegionNum = Statistic.RangeCount(SameBedpeFile, 0, 5000, 4);
-                    } else {
-                        Stat.InterAction.ShortRegionNum += Statistic.RangeCount(SameBedpeFile, 0, 20000, 4);
-                    }
-                    Stat.InterAction.LongRegionNum = Stat.InterAction.IntraActionNum - Stat.InterAction.ShortRegionNum;
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
-                }
+
             }
         });
         ST.start();
@@ -609,7 +624,11 @@ public class Main {
                 try {
                     String ComLine = "bwa index -p " + IndexPrefix + " " + genomefile;
                     Opts.CommandOutFile.Append(ComLine + "\n");
-                    Tools.ExecuteCommandStr(ComLine, null, null);
+                    if (Opts.DeBugLevel < 1) {
+                        Tools.ExecuteCommandStr(ComLine, null, null);
+                    } else {
+                        Tools.ExecuteCommandStr(ComLine, null, new PrintWriter(System.err));
+                    }
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -910,6 +929,7 @@ public class Main {
         AlignMisMatch = Integer.parseInt(Config.getProperty(Advance.AlignMisMatch.toString(), String.valueOf(Default.AlignMisMatchNum)));
         Iteration = Boolean.valueOf(Config.getProperty(Advance.Iteration.toString(), Default.Iteration));
         ReadsType = Config.getProperty(Advance.AlignType.toString()).equals("Short") ? Opts.ShortReads : Config.getProperty(Advance.AlignType.toString()).equals("Long") ? Opts.LongReads : Opts.ErrorFormat;
+        Opts.DeBugLevel = Config.getProperty(Advance.DeBugLevel.toString()) != null ? Integer.parseInt(Config.getProperty(Advance.DeBugLevel.toString())) : Opts.DeBugLevel;
         //设置唯一比对分数
         if (ReadsType == Opts.ShortReads) {
             MinUniqueScore = 20;
@@ -1029,7 +1049,7 @@ enum Optional {
 }
 
 enum Advance {
-    MatchScore("MatchScore"), MisMatchScore("MisMatchScore"), InDelScore("InDelScore"), MinLinkerLen("MinLinkerLen"), MinReadsLength("MinReadsLength"), MaxReadsLength("MaxReadsLength"), AlignThread("AlignThread"), AlignType("AlignType"), AlignMisMatch("AlignMisMatch"), MinUniqueScore("MinUniqueScore"), Iteration("Iteration");
+    MatchScore("MatchScore"), MisMatchScore("MisMatchScore"), InDelScore("InDelScore"), MinLinkerLen("MinLinkerLen"), MinReadsLength("MinReadsLength"), MaxReadsLength("MaxReadsLength"), AlignThread("AlignThread"), AlignType("AlignType"), AlignMisMatch("AlignMisMatch"), MinUniqueScore("MinUniqueScore"), Iteration("Iteration"), DeBugLevel("DeBugLevel");
     private String Str;
 
     Advance(String s) {

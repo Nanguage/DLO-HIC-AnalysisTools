@@ -210,19 +210,33 @@ public class SeProcess {
             File SaiFile = new File(FastqFile + ".sai");
             CommandStr = Opts.Bwa + " aln -t " + AlignThreads + " -n " + MisMatchNum + " -f " + SaiFile + " " + IndexPrefix + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
-            Tools.ExecuteCommandStr(CommandStr,null,null);//执行命令行
+            if (Opts.DeBugLevel < 1) {
+                Tools.ExecuteCommandStr(CommandStr, null, null);//执行命令行
+            } else {
+                Tools.ExecuteCommandStr(CommandStr, new PrintWriter(System.out), new PrintWriter(System.err));//执行命令行
+            }
             System.out.println(new Date() + "\tsai to sam\t" + FastqFile.getName());
             CommandStr = Opts.Bwa + " samse -f " + SamFile + " " + IndexPrefix + " " + SaiFile + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
-            Tools.ExecuteCommandStr(CommandStr,null,null);//执行命令行
-            System.out.println(new Date() + "\tDelete " + SaiFile.getName());
             if (Opts.DeBugLevel < 1) {
+                Tools.ExecuteCommandStr(CommandStr, null, null);//执行命令行
+            } else {
+                Tools.ExecuteCommandStr(CommandStr, new PrintWriter(System.out), new PrintWriter(System.err));//执行命令行
+            }
+            if (Opts.DeBugLevel < 1) {
+                System.out.println(new Date() + "\tDelete " + SaiFile.getName());
                 SaiFile.delete();//删除sai文件
             }
         } else if (ReadsType == Opts.LongReads) {
             CommandStr = Opts.Bwa + " mem -t " + Threads + " " + IndexPrefix + " " + FastqFile;
             Opts.CommandOutFile.Append(CommandStr + "\n");
-            Tools.ExecuteCommandStr(CommandStr, SamFile,null);//执行命令行
+            PrintWriter sam = new PrintWriter(SamFile);
+            if (Opts.DeBugLevel < 1) {
+                Tools.ExecuteCommandStr(CommandStr, sam, null);//执行命令
+            } else {
+                Tools.ExecuteCommandStr(CommandStr, sam, new PrintWriter(System.err));//执行命令
+            }
+            sam.close();
         } else {
             System.err.println("Error reads type:" + ReadsType + " reads type should set Short or Long");
             System.exit(1);

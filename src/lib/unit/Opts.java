@@ -70,9 +70,10 @@ public class Opts {
     public static int Threads = 1;
     public static File IndexPrefix;
     public static String[] HalfLinker;
-    public static int DeBugLevel = 0;//Debug等级，0表示保留主要文件，1表示保留中间文件，3表示保留所有文件
+    public static int DeBugLevel = 0;//Debug等级，0表示保留主要文件，1表示保留中间文件，2表示保留所有文件
     public static final long MaxMemory = Runtime.getRuntime().maxMemory();//java能获取的最大内存
     public static File LinkerScoreDisFile;
+    public static File InterActionLengthDisFile;
 }
 
 class StatFile {

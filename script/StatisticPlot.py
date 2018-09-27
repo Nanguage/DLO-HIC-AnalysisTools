@@ -26,7 +26,7 @@ def getargs():
     return args
 
 
-def PointPlt(ax,x_value, data, legend):
+def ScatterPlot(ax,x_value, data, legend):
     if x_value is None:
         x_value = range(data.shape[0])
     try:
@@ -41,7 +41,7 @@ def PointPlt(ax,x_value, data, legend):
 
 
     
-def BarPlt(ax,x_value, data, legend):
+def BarPlot(ax,x_value, data, legend):
     if x_value is None:
         x_value = np.arange(data.shape[0])
     Width=0.8/data.shape[1]
@@ -118,9 +118,9 @@ ax.spines['top'].set_visible(False)
 ax.grid()   
 
 if PlotType == "point":
-    PointPlt(ax,X_Data,Y_Data,Head[1:])
+    ScatterPlot(ax,X_Data,Y_Data,Head[1:])
 elif PlotType == "bar":
-    BarPlt(ax,X_Data,Y_Data,Head[1:])
+    BarPlot(ax,X_Data,Y_Data,Head[1:])
 elif PlotType == "stackbar":
     StackBarPlt(ax,X_Data,Y_Data,Head[1:])
 ax.set_xlabel(X_lable)
@@ -131,4 +131,3 @@ if OutFile is None:
     ax.imshow()
 else:
     Figure.savefig(OutFile, format=OutFile.split(".")[-1], dpi=100)
-
