@@ -4,8 +4,11 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import kotlin.text.Charsets;
+import lib.File.FileTool;
 import lib.unit.CustomFile;
 import lib.unit.Opts;
+import org.apache.commons.io.FileUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -18,7 +21,9 @@ public class Report {
     public CommonInfor ComInfor = new CommonInfor();
     public ActionInfor InterAction = new ActionInfor();
     public RunTime RunTime = new RunTime();
+    public Linker[] Linkers;
     public LinkerClass[] UseLinker;
+    public HeatMap[] DrawHeatMap;
     public String[] ReadsLengthDisBase64;
     public long RawDataReadsNum;
     public String AdapterSequence = "";
@@ -27,9 +32,7 @@ public class Report {
     public File GenomeIndex = new File("");
     public File AdapterFile = new File("");
 
-    public ArrayList<String> LinkersType = new ArrayList<>();
     public ArrayList<String> Chromosome = new ArrayList<>();
-    public double[] LinkersNum;
     public CustomFile FinalBedpeName = new CustomFile("");
     public int MinUniqueScore;
     public int[] Resolution;
@@ -56,8 +59,8 @@ public class Report {
         System.out.println("Raw reads number:\t" + new DecimalFormat("#,###").format(RawDataReadsNum));
         System.out.println();
         System.out.println("\n-----------------------------------------\nLinkers type\tReads number\tPercent");
-        for (int i = 0; i < LinkersType.size(); i++) {
-            System.out.println(LinkersType.get(i) + "\t" + new DecimalFormat("#,###").format(LinkersNum[i]) + "\t" + String.format("%.2f", (double) LinkersNum[i] / RawDataReadsNum * 100) + "%");
+        for (int i = 0; i < Linkers.length; i++) {
+            System.out.println(Linkers[i].Name + "\t" + new DecimalFormat("#,###").format(Linkers[i].Num) + "\t" + String.format("%.2f", Linkers[i].Num / RawDataReadsNum * 100) + "%");
         }
         System.out.println("\n-----------------------------------------\nFastq file\tReads number\tFastq file\tReads number");
         for (int i = 0; i < UseLinker.length; i++) {
@@ -91,10 +94,22 @@ public class Report {
         }
     }
 
-    public void ReportHtml(String outfile) throws IOException {
+    public void ReportHtml(File outfile) throws IOException {
+        //======================复制相关文件=============================
+        for (File f : new File[]{Opts.JqueryJs, Opts.ScriptJs, Opts.StyleCss}) {
+            BufferedReader reader = new BufferedReader(FileTool.GetFileStream(f.getPath()));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(ReportOutPath + "/" + f.getName()));
+            String Line;
+            while ((Line = reader.readLine()) != null) {
+                writer.write(Line + "\n");
+            }
+            writer.close();
+        }
+        //=====================================================================
         ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
         resolver.setTemplateMode(TemplateMode.HTML);
-        resolver.setPrefix("resource/");
+//        resolver.setPrefix("resource/");
+        resolver.setPrefix(Opts.TemplateReportHtml.getParent() + "/");
         resolver.setSuffix(".html");
         TemplateEngine templateEngine = new TemplateEngine();
         templateEngine.setTemplateResolver(resolver);
@@ -108,18 +123,21 @@ public class Report {
         context.setVariable("TotalReads", RawDataReadsNum);
         context.setVariable("ComInformation", ComInfor);
         long Ambiguous = RawDataReadsNum;
-        for (int i = 0; i < LinkersType.size(); i++) {
-            context.setVariable(LinkersType.get(i) + "LinkerNum", LinkersNum[i]);
-            Ambiguous -= LinkersNum[i];
+        for (int i = 0; i < Linkers.length; i++) {
+//            context.setVariable(LinkersType.get(i) + "LinkerNum", LinkersNum[i]);
+            Ambiguous -= Linkers[i].Num;
         }
+        context.setVariable("Linkers",Linkers);
         context.setVariable("AmbiguousLinkerNum", ThousandFormat(Ambiguous));
         context.setVariable("AmbiguousLinkerPercent", PercentFormat((double) Ambiguous / RawDataReadsNum * 100) + "%");
         context.setVariable("PreDir", PreDir.getPath());
         context.setVariable("LinkerClass", UseLinker);
         context.setVariable("Inter", InterAction);
         context.setVariable("RunTime", RunTime);
-        context.setVariable("LinkerAliScoreDis", GetBase64(Opts.LinkerScoreDisFile));
+        context.setVariable("LinkerAliScoreDis", GetBase64(Opts.LinkerScoreDisPng));
         context.setVariable("ReadsLenDiss", ReadsLengthDisBase64);
+        context.setVariable("InteractionDistanceDis", GetBase64(Opts.InterActionDistanceDisPng));
+        context.setVariable("DrawResolutionHeatMap", DrawHeatMap);
 
 
         //========================================test=============================
@@ -138,10 +156,11 @@ public class Report {
 //        context.setVariable("LinkerLigationData", LinkerLigationData);
 
 //==================================
-        String html = templateEngine.process("Report", context);
-        BufferedWriter out = new BufferedWriter(new FileWriter(outfile));
-        out.write(html);
-        out.close();
+        String html = templateEngine.process(Opts.TemplateReportHtml.getName().replace(".html", ""), context);
+        FileUtils.writeStringToFile(outfile, html, Charsets.UTF_8, false);
+//        BufferedWriter out = new BufferedWriter(new FileWriter(outfile));
+//        out.write(html);
+//        out.close();
     }
 
     private String ThousandFormat(Number n) {
@@ -158,6 +177,21 @@ public class Report {
             UseLinker[j] = new LinkerClass();
         }
     }
+
+    public void HeatMapInit(int i) {
+        DrawHeatMap = new HeatMap[i];
+        for (int j = 0; j < i; j++) {
+            DrawHeatMap[j] = new HeatMap();
+        }
+    }
+
+    public void LinkerInit(int i) {
+        Linkers = new Linker[i];
+        for (int j = 0; j < i; j++) {
+            Linkers[j] = new Linker();
+        }
+    }
+
 
     public String GetBase64(File f) throws IOException {
         FileInputStream image = new FileInputStream(f);
@@ -232,4 +266,14 @@ class RunTime {
     public String MakeMatrix;
     public String TransLocation;
     public String Total;
+}
+
+class HeatMap {
+    public int Resolution;
+    public String Figure;
+}
+
+class Linker {
+    public String Name;
+    public double Num;
 }

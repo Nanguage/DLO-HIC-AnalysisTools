@@ -26,6 +26,7 @@ public class Main {
     private ArrayList<String> LinkersType = new ArrayList<>();
     private ArrayList<String> UseLinker = new ArrayList<>();
     private File IndexPrefix;
+    private File ChrSizeFile;
     private int MatchScore, MisMatchScore, InDelScore;
     private int ReadsType;
     private int AlignMisMatch;
@@ -34,7 +35,6 @@ public class Main {
     private int MinReadsLength, MaxReadsLength;
     private int[] Resolution;
     private int[] DrawResolution;
-    private int DetectResolution;
     private int LinkerLength, MinLinkerLength;
     private boolean Iteration = true;
     private int Threads;
@@ -118,8 +118,19 @@ public class Main {
 //        ConfigFile.load(new FileReader(Opts.ConfigFile));
 //        String Temp = ConfigFile.getProperty("");
 
+        //================================================初始化========================================================
+        if (!Opts.ResourceDir.isDirectory() & !Opts.ResourceDir.mkdir())
+            System.err.println(new Date() + ":\tCan't Create " + Opts.ResourceDir.getName());
+        if (!Opts.ScriptDir.isDirectory() & !Opts.ScriptDir.mkdir())
+            System.err.println(new Date() + ":\tCan't Create " + Opts.ScriptDir.getName());
+        for (String f : Opts.ScriptFile) {
+            FileTool.ExtractFile("/script/" + f, new File(Opts.ScriptDir + "/" + f));
+        }
+        for (String f : Opts.ResourceFile) {
+            FileTool.ExtractFile("/resource/" + f, new File(Opts.ResourceDir + "/" + f));
+        }
+        FileTool.ExtractFile(Opts.ReadMeFile.getPath(), new File(Opts.JarFile.getParent() + "/ReadMe.txt"));
         //==============================================================================================================
-
         Main main = new Main(args);
         main.ShowParameter();//显示参数
         main.Run();
@@ -151,7 +162,7 @@ public class Main {
         Stat.ComInfor.MaxReadsLen = MaxReadsLength;
         Stat.ComInfor.Resolution = Resolution;
         Stat.ComInfor.Thread = Threads;
-        Stat.LinkersType = LinkersType;
+        Stat.LinkerInit(LinkersType.size());
         Stat.LinkerClassInit(UseLinker.size());
         Stat.PreDir = PreProcessDir;
         Stat.SeDir = SeProcessDir;
@@ -211,11 +222,15 @@ public class Main {
                 try {
                     Stat.RawDataReadsNum = Opts.InputFile.CalculatorLineNumber() / 4;
                     //calculate linker count
-                    Stat.LinkersNum = Statistic.CalculateLinkerCount(PastFile, LinkersType.toArray(new String[0]), MinLinkerFilterQuality, Threads);
+                    double[] LinkersNum = Statistic.CalculateLinkerCount(PastFile, LinkersType.toArray(new String[0]), MinLinkerFilterQuality, Threads);
+                    for (int i = 0; i < LinkersNum.length; i++) {
+                        Stat.Linkers[i].Name = LinkersType.get(i);
+                        Stat.Linkers[i].Num = LinkersNum[i];
+                    }
                     File LinkerDisFile = new File(Stat.getDataDir() + "/LinkerScoreDis.data");
                     Statistic.CalculateLinkerScoreDistribution(PastFile, LinkerLength * MatchScore, LinkerDisFile);
-                    Opts.LinkerScoreDisFile = new File(Stat.getImageDir() + "/" + LinkerDisFile.getName().replace(".data", ".png"));
-                    String ComLine = Opts.Python + " " + Opts.StatisticPlotFile + " -i " + LinkerDisFile + " -t bar -o " + Opts.LinkerScoreDisFile;
+                    Opts.LinkerScoreDisPng = new File(Stat.getImageDir() + "/" + LinkerDisFile.getName().replace(".data", ".png"));
+                    String ComLine = Opts.Python + " " + Opts.StatisticPlotFile + " -i " + LinkerDisFile + " -t bar -o " + Opts.LinkerScoreDisPng;
                     Opts.CommandOutFile.Append(ComLine + "\n");
                     Tools.ExecuteCommandStr(ComLine, null, new PrintWriter(System.err));
                 } catch (IOException | InterruptedException e) {
@@ -504,10 +519,10 @@ public class Main {
                     File InterActionLengthDisData = new File(Stat.getDataDir() + "/InterActionLengthDistribution.data");
                     Statistic.PowerLaw(SameBedpeFile, 1000000, InterActionLengthDisData);
                     File InterActionLengthDisPng = new File(Stat.getImageDir() + "/" + InterActionLengthDisData.getName().replace(".data", ".png"));
-                    String ComLine = Opts.Python + " " + Opts.StatisticPlotFile + " -t point --title \"Interaction distant distribution\" -i " + InterActionLengthDisData + " -o " + InterActionLengthDisPng;
+                    String ComLine = Opts.Python + " " + Opts.StatisticPlotFile + " -t point --title Interaction_distance_distribution -i " + InterActionLengthDisData + " -o " + InterActionLengthDisPng;
                     Opts.CommandOutFile.Append(ComLine + "\n");
                     Tools.ExecuteCommandStr(ComLine, null, new PrintWriter(System.err));
-                    Opts.InterActionLengthDisFile = InterActionLengthDisPng;
+                    Opts.InterActionDistanceDisPng = InterActionLengthDisPng;
                 } catch (IOException | InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -554,6 +569,7 @@ public class Main {
                 if (!new File(MakeMatrixDir + "/" + DrawResolution[i]).isDirectory()) {
                     matrix.Run();
                 }
+                new PlotMatrix(matrix.getTwoDMatrixFile(), new File(OutDir + "/" + Opts.Prefix + ".interaction." + Tools.UnitTrans(DrawResolution[i], "B", "M") + "M.png"), DrawResolution[i]).Run(matrix.getBinSizeFile());
                 File[] TwoDMatrixFile = matrix.getChrTwoDMatrixFile();
                 for (int j = 0; j < Chromosomes.length; j++) {
                     new PlotMatrix(TwoDMatrixFile[j], new File(OutDir + "/" + Opts.Prefix + "." + Chromosomes[j].Name + "." + Tools.UnitTrans(DrawResolution[i], "B", "M") + "M.png"), DrawResolution[i]).Run(new String[]{Chromosomes[j].Name + ":0", Chromosomes[j].Name + ":0"});
@@ -564,6 +580,15 @@ public class Main {
         ST = new Thread(new Runnable() {
             @Override
             public void run() {
+                try {
+                    Stat.HeatMapInit(DrawResolution.length);
+                    for (int i = 0; i < DrawResolution.length; i++) {
+                        Stat.DrawHeatMap[i].Resolution = DrawResolution[i];
+                        Stat.DrawHeatMap[i].Figure = Stat.GetBase64(new File(MakeMatrixDir + "/img_" + Tools.UnitTrans(DrawResolution[i], "B", "M") + "M/" + Opts.Prefix + ".interaction." + Tools.UnitTrans(DrawResolution[i], "B", "M") + "M.png"));
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
             }
         });
@@ -600,8 +625,8 @@ public class Main {
             t.join();
         }
         Stat.Show();
-        new File(Opts.OutPath + "/Report").mkdir();
-        Stat.ReportHtml(Opts.OutPath + "/Report/Test.index.html");
+        ReportDir.mkdir();
+        Stat.ReportHtml(new File(ReportDir + "/Test.index.html"));
     }
 
     /**
@@ -655,6 +680,7 @@ public class Main {
                     FindRestrictionSite fr = new FindRestrictionSite(Opts.GenomeFile, EnzyPath, Restriction, EnzyFilePrefix);
                     ArrayList<Chromosome> TempChrs = fr.Run();
                     File[] TempChrEnzyFile = fr.getChrFragmentFile();
+                    ChrSizeFile = fr.getChrSizeFile();
                     for (int i = 0; i < Chromosomes.length; i++) {
                         boolean flag = false;
                         for (int j = 0; j < TempChrs.size(); j++) {
@@ -1017,6 +1043,7 @@ public class Main {
             System.out.println(opt + ":\t" + Config.getProperty(opt.toString()));
         }
     }
+
 
 }
 

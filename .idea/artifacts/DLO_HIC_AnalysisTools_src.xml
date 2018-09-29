@@ -9,9 +9,6 @@
         <element id="file-copy" path="$PROJECT_DIR$/resource/Template.html" />
         <element id="file-copy" path="$PROJECT_DIR$/resource/DLO-linker_TP.txt" />
       </element>
-      <element id="directory" name="config">
-        <element id="file-copy" path="$PROJECT_DIR$/config/DLO-Config.txt" />
-      </element>
       <element id="directory" name="script">
         <element id="dir-copy" path="$PROJECT_DIR$/script" />
       </element>

@@ -11,6 +11,16 @@ public class FileTool {
         return new InputStreamReader(FileTool.class.getResourceAsStream(s));
     }
 
+    public static void ExtractFile(String InternalFile, File OutFile) throws IOException {
+        BufferedReader reader = new BufferedReader(GetFileStream(InternalFile));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(OutFile));
+        String Line;
+        while ((Line = reader.readLine()) != null) {
+            writer.write(Line + "\n");
+        }
+        writer.close();
+    }
+
     public static void MergeSamFile(File[] InFile, File MergeFile) throws IOException {
         BufferedWriter out = new BufferedWriter(new FileWriter(MergeFile));
         String line;

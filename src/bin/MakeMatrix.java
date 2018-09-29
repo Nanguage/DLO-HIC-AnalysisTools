@@ -24,9 +24,7 @@ public class MakeMatrix {
     private String Prefix;//输出前缀
     private CustomFile BedpeFile;
     private Chromosome[] Chromosomes;
-    //    private int[] ChromosomeSize;
     private int Resolution;
-    //    private int[] DrawResolution;
     private int Threads;
     private String InterMatrixPrefix;
     private String NormalizeMatrixPrefix;
@@ -37,6 +35,7 @@ public class MakeMatrix {
     private File TwoDMatrixFile, SpareMAtrixFile;
     private File[] ChrTwoDMatrixFile, ChrSpareMAtrixFile, ChrNormalizeTwoDMatrix, ChrNormalizeSpareMAtrixFile;
     private File ConfigureFile;
+    private File BinSizeFile;
     private Properties Config = new Properties();
 //    private Hashtable<String, String> ParameterList = new Hashtable<>();
 //    private String[] RequiredParameter = new String[]{OptBedpeFile, OptResolution};
@@ -91,85 +90,19 @@ public class MakeMatrix {
         int[] ChrSize = Config.getProperty("ChrSize") != null ? StringArrays.toInteger(Config.getProperty("ChrSize").split("\\s+")) : null;
         Threads = Integer.parseInt(Config.getProperty("Threads", "1"));
         ChrSizeFile = Config.getProperty("ChrSizeFile") != null ? new File(Config.getProperty("ChrSizeFile")) : null;
-
-//        BufferedReader option = new BufferedReader(new FileReader(optionfile));
-//        String line;
-//        String[] str;
-//        while ((line = option.readLine()) != null) {
-//            line = line.trim();
-//            if (line.equals("")) {
-//                continue;
-//            }
-//            str = line.split("\\s*=\\s*|\\s+");
-//            if (ParameterList.containsKey(str[0]) && str.length >= 2) {
-//                ParameterList.put(str[0], str[1]);
-//            }
-//        }
-//        option.close();
-//    }
-//
-//    public void ParameterInit() {
-//        for (String opt : RequiredParameter) {
-//            ParameterList.put(opt, "");
-//        }
-//        for (String opt : OptionalParameter) {
-//            ParameterList.put(opt, "");
-//        }
-//        ParameterList.put(OptOutPath, "./");
-//        ParameterList.put(OptPrefix, "Matrix");
-//        ParameterList.put(OptThread, "1");
     }
 
- /*   public boolean SetParameter(String Key, String Value) {
-        if (ParameterList.containsKey(Key)) {
-            ParameterList.put(Key, Value);
-            return true;
-        } else {
-            return false;
-        }
-    }*/
 
     public void ShowParameter() {
         Config.stringPropertyNames();
-//        for (String opt : RequiredParameter) {
-//            System.out.println(opt + ":\t" + ParameterList.get(opt));
-//        }
-//        System.out.println("===============================================================================");
-//        for (String opt : OptionalParameter) {
-//            System.out.println(opt + ":\t" + ParameterList.get(opt));
-//        }
     }
 
     private void Init() throws IOException {
-//        for (String opt : RequiredParameter) {
-//            if (ParameterList.get(opt).equals("")) {
-//                System.err.println("Error ! No " + opt);
-//                System.exit(0);
-//            }
-//        }
-        //=======================================================
-//        OutPath = new File(ParameterList.get(OptOutPath));
-//        Prefix = ParameterList.get(OptPrefix);
-//        BedpeFile = new CustomFile(ParameterList.get(OptBedpeFile));
-//        ChrSizeFile = new File(ParameterList.get(OptChrSzieFile));
-//        Chromosomes = ParameterList.get(OptChromosome).split("\\s+");
-//        ChromosomeSize = new int[ParameterList.get(OptChromosomeSize).split("\\s+").length];
-//        for (int i = 0; i < ParameterList.get(OptChromosomeSize).split("\\s+").length; i++) {
-//            ChromosomeSize[i] = Integer.parseInt(ParameterList.get(OptChromosomeSize).split("\\s+")[i]);
-//        }
-//        Resolution = Integer.parseInt(ParameterList.get(OptResolution));
-//        Threads = Integer.parseInt(ParameterList.get(OptThread));
-        //=======================================================
-//        synchronized (MakeMatrix.class) {
+
         if (!OutPath.isDirectory() && !OutPath.mkdir()) {
             System.err.println("Can't Create " + OutPath);
             System.exit(1);
         }
-//        }
-
-//        if (ChrSizeFile.equals("") && (Chromosomes.length == 0 || ChromosomeSize.length == 0)) {
-//            System.err.println("Error ! No Chromosomes or ChromosomeSize");
-//            System.exit(0);
         if (Chromosomes.length == 0) {
             if (ChrSizeFile.isFile()) {
                 ExtractChrSize();
@@ -187,6 +120,7 @@ public class MakeMatrix {
         ChrNormalizeSpareMAtrixFile = new File[Chromosomes.length];
         ChrMatrixPrefix = new String[Chromosomes.length];
         cm = new CreateMatrix(BedpeFile, Chromosomes, Resolution, InterMatrixPrefix, Threads);
+        BinSizeFile = cm.getBinSizeFile();
         TwoDMatrixFile = cm.getTwoDMatrixFile();
         SpareMAtrixFile = cm.getSpareMatrixFile();
 //        System.out.println(TwoDMatrixFile+"\t"+SpareMAtrixFile);
@@ -217,13 +151,6 @@ public class MakeMatrix {
 //            ChromosomeSize[i] = Integer.parseInt(list.get(i)[1]);
         }
     }
-
-//    public CustomFile[] getChrBedpeFile() throws IOException {
-//        if (ChrBedpeFile == null) {
-//            ChrBedpeFile = SeparateInterBedpe(BedpeFile, Chromosomes, OutPath + "/" + Prefix, "");
-//        }
-//        return ChrBedpeFile;
-//    }
 
     private Integer[][] CreateInterActionMatrix(CustomFile bedpeFile, Chromosome[] chromosome, int resolution, String prefix) throws IOException {
         CreateMatrix cm = new CreateMatrix(bedpeFile, chromosome, resolution, prefix, Threads);
@@ -273,5 +200,9 @@ public class MakeMatrix {
 
     public void setChrSizeFile(File chrSizeFile) {
         ChrSizeFile = chrSizeFile;
+    }
+
+    public File getBinSizeFile() {
+        return BinSizeFile;
     }
 }

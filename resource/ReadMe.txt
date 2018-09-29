@@ -43,6 +43,7 @@ MinReadsLength = 16
 MaxReadsLength = 20
 Threads = 4
 Step = -
+DeBugLevel = 0
 
 =================================================================================
 
@@ -65,13 +66,14 @@ ReadsType           String      Reads type include ["Short","Long"] (default    
 MaxMisMatchLength   Int         Max misMatch length in linker filter    (default    "3")
 AlignThread         Int         Threads in alignment (default    "2")
 Iteration           boolen      "true" or "false" represent whether do iteration alignment
-Resolutions          Int[]       Bin size when create interaction matrix  (default    "1000000" byte)
+Resolutions          Int[]      Bin size when create interaction matrix  (default    "1000000" byte)
 DrawRes             Int[]       Resolution for you draw heat-map    (default    "The first item of Resolution")
 AlignMisMatch       Int         MisMatch number in alignment    (default    "0")
 MinReadsLength      Int         Min reads length when extract interaction reads (default    "16")
 MaxReadsLength      Int         Max reads length when extract interaction reads (default    "20")
 Threads             Int         Number of threads    (default    "4")
-Step                String[]      assign  where start and end (default    "-")
+Step                String[]    assign  where start and end (default    "-")
+DeBugLevel          Int         0 means remain base output, 1 means more output, 2 means all output (default    "0")
 
 //if we set ReadsType "Short", we will align with "bwa aln",and if set "Long",we will align with "bwa mem"
 
