@@ -1,0 +1,500 @@
+Project:awesome-python
+Owner:vinta
+Star:56754
+Language:Python
+Contributors: vinta
+Project:system-design-primer
+Owner:donnemartin
+Star:50975
+Language:Python
+Contributors: donnemartin, cclauss
+Project:models
+Owner:tensorflow
+Star:43436
+Language:Python
+Contributors: nealwu, MarkDaoust, pkulzc, cshallue, derekjchow, lukaszkaiser, tfboyd, lamberta, robieta, tombstone, asimshankar, martinwicke, qlzh727, jch1, cclauss, karmel, bousmalis, joel-shor, a-dai, panyx0718, YknZhu, sguada, reedwm, shlens, raymond-yuan, itsmeolivia, alexgorban, yhliang2018, korrawat, k-w-w, elibixby, nmjohn, aquariusjay, waterson, aselle, shizhiw, ilyamironov, alanyee, sussillo, calberti
+Project:public-apis
+Owner:toddmotto
+Star:43264
+Language:Python
+Contributors: davemachado, mikestreety, jbrooksuk, toddmotto, wesbos, shakyink, karllhughes, hardikpthv
+Project:youtube-dl
+Owner:rg3
+Star:43199
+Language:Python
+Contributors: dstftw, phihag, jaimeMF, yan12125, remitamine, rg3, FiloSottile, Tithen-Firion, rbrito, gcmalloc, yasoob, iemejia, atomicdryad, Rudloff, TRox1972, rrooij, rzhxeo, johnhawkinson, xanadu, fstirlitz, jeffcrouse, goggle, lalinsky, parmjitv, gebn, MikeCol, Dineshs91, rupertbaxter2, sprhawk, jwilk, pmrowla, slava-sh, WillSewell, blissland
+Project:flask
+Owner:pallets
+Star:39676
+Language:Python
+Contributors: mitsuhiko, davidism, untitaker, rduplain, DasIch, kennethreitz, keyan, defuz, ThomasWaldmann, lepture, greyli, jeffwidman, ThiefMaster, SimonSapin, lord63, florentx, adambyrtek, dag, wgwz, s3rvac, flying-sheep, svenstaro
+Project:thefuck
+Owner:nvbn
+Star:38304
+Language:Python
+Contributors: nvbn, mcarton, scorphus, josephfrazier, mlk, SanketDG, Epse, diezcami
+Project:httpie
+Owner:jakubroztocil
+Star:37902
+Language:Python
+Contributors: jakubroztocil, msabramo
+Project:django
+Owner:django
+Star:37229
+Language:Python
+Contributors: timgraham, adrianholovaty, malcolmt, freakboy3742, claudep, aaugustin, jezdez, jacobian, spookylukey, alex, ramiro, andrewgodwin, akaariai, gdub, charettes, sir-sigurd, kmtracey, jbronn, ubernostrum, apollo13, carljm, felixxm, jphalip, jdufresne, loic, bmispelon, brosner, mjtamlyn, MarkusH, SmileyChris, ikelly, atombrella, ptone, telenieko, berkerpeksag, shaib, jkocherhans, prestontimmons, alasdairnicol, collinanderson, PaulMcMillan, HonzaKral, DrMeers, pope1ni, adamchainz, jarshwah, mxsasha, akki, knbk, mboersma, desecho, funkybob, francoisfreitag, carltongibson, orf, coder9042, yellowcap, hramezani, coldmind, Bouke, jschneier, manfre, AlexHill, cjerdonek, mmardini, evildmp, edmorley, marfire, srinivasreddy, wrwrwr, czpython, dstufft, scop, tchaumeny, Ian-Foote, alimony, mattrobenolt, dracos, MoritzS, areski, lamby, raphaelm, xrmx, vajrasky, ambv, vytisb, blueyed, dsanders11, bpeschier, sasha0, fcurella, gavinwahl, jorgecarleitao, andrewnester, gchp, slurms, inglesp, garwoodpr, ArcTanSusan, dbrgn
+Project:awesome-machine-learning
+Owner:josephmisiti
+Star:36061
+Language:Python
+Contributors: josephmisiti, josephmmisiti, hslatman, 0asa, ajkl
+Project:requests
+Owner:requests
+Star:35363
+Language:Python
+Contributors: kennethreitz, Lukasa, sigmavirus24, nateprewitt, slingamn, BraulioVM, dpursehouse, jgorset, daftshady, jerem, gazpachoking, idan, schlamar, kevinburke, kmadac, jdufresne, jasongrout, mjpieters, davidfischer, klimenko, mgiuca
+Project:keras
+Owner:keras-team
+Star:34807
+Language:Python
+Contributors: fchollet, farizrahman4u, taehoonlee, ozabluda, gabrieldemarmiesse, maxpumperla, EderSantana, phreeza, wxs, the-moliver, Dref360, nzw0301, matsuyamax, tdhd, jfsantos, ahundt, myutwo150, yanboliang, julienr, gvtulder, staticskies, tleeuwenburg, tboquet, carlthome, fuzzythecat, lukedeo, olegsinyavskiy, abhaikollara, yaringal, jihobak, Danielhiversen, jeammimi, joelthchao, tristandeleu, kemaswill, kashif, gw0, Joshua-Chin, souptc, henry0312
+Project:ansible
+Owner:ansible
+Star:33412
+Language:Python
+Contributors: mpdehaan, bcoca, jimi-c, abadger, mattclay, jctanner, dagwieers, privateip, sivel, resmo, Akasurde, mscherer, gundalow, caphrim007, nitzmahone, dhozac, jborean93, ganeshrn, willthames, s-hertel, Qalthos, chouseknecht, alikins, trishnaguha, rcarrillocruz, ryansb, amenonsen, pilou-, sfromm, GGabriele, Fale, samdoran, machacekondra, dharmabumstead, risaacson, emonty, cchurch, rambleraptor, mkrizek, srgvg, skvidal, mgedmin, wimnat, tbielawa, felixfontein, zikalino, lorin, maxamillion, jhoekx, robinro, carchi8py, grastogi23, QijunPan, jmcgill298, Shrews, Spredzy, saichint, jhawkesworth, jlaska, kbreit, angstwad, mckerrj, gregdek, Jmainguy, skg-net, amuraleedhar, stoned, hnakamur, newswangerd, acozine, docschick, tedder, Yannig, tima, agaffney, bpennypacker, sieben, leucos, tgerla, prasadkatti, trondhindenes, mikewiebe, jtyr, webknjaz, yuwzho, linuxdynasty, chrrrles, h0nIg, sdodsley, rahushen, smashwilson, samerd, supertom, ivanbojer, jasperla, jmighion, mmoya, mavimo, evgeni, kedarX
+Project:scikit-learn
+Owner:scikit-learn
+Star:31318
+Language:Python
+Contributors: ogrisel, amueller, larsmans, agramfort, glouppe, pprett, mblondel, vene, jnothman, arjoly, jakevdp, MechCoder, NelleV, robertlayton, lesteve, jmetzen, ndawe, qinhanmin2014, raghavrv, ahojnnes, dengemann, weilinear, clayw, kemaleren, oddskool, AlexanderFabisch, alextp, bthirion, VirgileFritsch, hamsal, dsullivan7, ibayer, ronw, FlorianWilhelm, satra, maheshakya, glemaitre, TomDLT, mjbommar, nelson-liu, betatim, yarikoptic, kastnerkyle, hlin117, conradlee, adrinjalali, cbrnr, NicolasTr, paolo-losi, Titan-C, zaxtax, dubourg, JeanKossaifi, lucidfrontier45, chyikwei, untom, yenchenlin, npinto, trevorstephens, rth, alexis-mignon, eickenberg, pgervais, kmike, jaberg, NicolasHug, michigraber, syhw, jakirkham, jorisvandenbossche, pberkes, albertcthomas, dwf, nmayorov, Balu-Varanasi, dnouri, aymas, justinvf, rasbt, AWinterman, erg, mvdoc, vinayak-mehta, tguillemot, yanlend, perimosocordiae, osdf, davidmarek, naoyak, ngoix, smoitra87, tjanez, s8wu, dalmia, briancheung, akshayah3, jeremiedbb, vighneshbirodkar, yamins81, massich
+Project:scrapy
+Owner:scrapy
+Star:29747
+Language:Python
+Contributors: pablohoffman, dangra, kmike, redapple, invalid-email-address, void, curita, eliasdorneles, lopuhin, rmax, nyov, nramirezuy, aspidites, stummjr, pawelmhm, Digenis, jdemaeyer, alexcepoi, omab, elacuesta, stav, pkufranky, andrix, ArturGaspar, StasDeep, kalessin, duendex, harshasrinivas, alexanderlukanin13, chekunkov, shaneaevans, Granitosaurus, max-arnold, felixonmars, Tethik, starrify
+Project:shadowsocks
+Owner:shadowsocks
+Star:27136
+Language:Python
+Contributors:
+Project:XX-Net
+Owner:XX-net
+Star:25180
+Language:Python
+Contributors: xxnet, SeaHOH, yeahwu, yfdyh000, Cat7373, hzxie, simonasd, cc941201, Emphasia, wooowooo, mikedchavez1010, aOJzQT, xyuanmu, xx-Chen
+Project:big-list-of-naughty-strings
+Owner:minimaxir
+Star:24304
+Language:Python
+Contributors: minimaxir
+Project:certbot
+Owner:certbot
+Star:23489
+Language:Python
+Contributors: bmw, pde, kuba, jdkasten, joohoi, SwartzCr, jsha, ohemorange, TheNavigat, erikrose, sagi, schoen, liamim, zjs, wteiken, cowlicks, ThomasWaldmann, ewust, sydneyli, BKreisel, Hainish, mgedmin, jonasbn, alex, olabini, thanatos, yan12125, felixonmars, filipochnik, ynasser, bobstrecansky, dmwilcox, levskaya, ranweiler
+Project:you-get
+Owner:soimort
+Star:20679
+Language:Python
+Contributors: soimort, rosynirvana, cnbeining, jackyzy823, lilydjwg, zmwangx, liushuyu, radaiming, zhangn1985, twlz0ne
+Project:cpython
+Owner:python
+Star:20508
+Language:Python
+Contributors: gvanrossum, benjaminp, birkenfeld, freddrake, rhettinger, serhiy-storchaka, pitrou, vstinner, jackjansen, loewis, tim-one, akuchling, brettcannon, bitdancer, warsaw, ezio-melotti, mdickinson, nnorwitz, tiran, orsenthil, terryjreedy, vsajip, merwok, jeremyhylton, 1st1, berkerpeksag, ned-deily, gward, theller, ncoghlan, vadmium, zooba, zware, gpshead, ronaldoussoren, doerwalter, asvetlov, kbkaiser, amauryfa, ericvsmith, skrah, larryhastings, briancurtin, abalkin, florentx, doko42, eliben, Yhg1s, malemburg, avassalotti, nascheme, jcea, sandrotosi, voidspace, giampaolo, nvawda, shibturn, akheron, anthonybaxter, collinw, gustaebel, ambv, ericsnowcurrently, facundobatista, methane, cjerdonek, mhammond, sjoerdmullender, ethanfurman, jaraco, hyeshik, cf-natali, dstufft, meadori, zestyping, jnoller, cloud-tester, tpn, hynek, zhangyangyu, eric-s-raymond, gpolo, tjguk, csabella, jyasskin, mfoord, rosslagerwall, pjenvey, niemeyer, pjeby, andresdelfino, Mariatta, kristjanvalur, bethard, ZackerySpytz, ashemedai, quiver, orenmn, ghaering, pablogsal
+Project:CppCoreGuidelines
+Owner:isocpp
+Star:20136
+Language:Python
+Contributors: gdr-at-ms, AndrewPardoe, tkruse, hsutter, BjarneStroustrup, cubbimew, jwakely, ascherer, mpark, tituswinters, sevmeyer, Eliyahu-Ravuna, david-mitchell, RicoAntonioFelix
+Project:Deep-Learning-Papers-Reading-Roadmap
+Owner:floodsung
+Star:19883
+Language:Python
+Contributors:
+Project:tldr
+Owner:tldr-pages
+Star:18972
+Language:Python
+Contributors: waldyrious, igorshubovych, sbrl, rprieto, agnivade, rubenvereecken, pxgamer, ostera, oxguy3, felixonmars, jsonbruce, notpeter, alx741, Cvetomird91, 85pando, jeeftor, fuerbringer, ericbn, dylanrees, kalebo, Dahie, juan88, mstruebing, pollev, alexbuzzbee, joelhy, sadboyzvone, fluxw42, heimann, sethwoodworth
+Project:sentry
+Owner:getsentry
+Star:18520
+Language:Python
+Contributors: dcramer, ckj, mattrobenolt, mitsuhiko, macqueen, benvinegar, billyvg, tkaemming, lynnagara, EvanPurkhiser, HazAT, MaxBittker, bretthoerner, ehfeng, lauryndbrown, JTCunning, MeredithAnya, markstory, alex-hofsteede, jan-auer, adhiraj, Chrissy, denamwangi, dz, mnoble, xordoquy, ayesha-omarali, jaysoffian, maheskett, JoshuaRLi, eric, cclauss, montlebalm, alex, lobsterkatie, mfrasca, DamianZaremba, mikeclarke, tracehelms, msabramo, untitaker, acdha
+Project:linux-insides
+Owner:0xAX
+Star:18410
+Language:Python
+Contributors: 0xAX, mudongliang, ruthgrace, Waqar144, proninyaroslav, hitmoon, spacewander, akash0x53
+Project:face_recognition
+Owner:ageitgey
+Star:17936
+Language:Python
+Contributors: ageitgey
+Project:home-assistant
+Owner:home-assistant
+Star:17898
+Language:Python
+Contributors: balloob, fabaff, pvizeli, robbiet480, amelchio, Danielhiversen, pavoni, armills, rmkraus, turbokongen, kellerza, MartinHjelmare, andrey-git, cdce8p, awarecan, persandstrom, jaharkes, molobrakos, nkgilley, syssi, jamespcole, happyleavesaoc, tchellomello, w1ll1am23, scop, maddox, OttoWinter, bachya, kk7ds, danielperna84, sfam, philipbl, arsaboo, Kane610, lwis, sdague, tomduijf, dgomes, rytilahti, Teagan42, azogue, StevenLooman, sander76, jbarrancos, titilambert, mezz64, aequitas, michaelarnauts, HydrelioxGitHub, postlund, rcloran, andythigpen, broox, open-homeautomation, MagnusKnutas, Julius2342, pschmitt, cgtobi, cribbstechnologies, PhracturedBlue, flyte, theolind, rhooper, partofthething, ChristianKuehnel, OverloadUT, tinloaf, schmittx, mjg59, badele, kennedyshead, tschmidty69, jeroenterheerdt, jabesq, Xorso, cgarwood, craigjmidwinter, Gyran, JshWright, exxamalte, rohankapoorcom, toddeye, miniconfig, DanNixon, jawilson, scarface-4711, perosb, teharris1, snjoetw, robmarkcole, colinodell, emontnemery, abmantis, bah2830, alanfischer, Bart274, SEJeff, rkabadi, nielstron, dshokouhi
+Project:python-patterns
+Owner:faif
+Star:17647
+Language:Python
+Contributors: faif, 0--key, osscca, yarikoptic, duboviy, mshcruz
+Project:YouCompleteMe
+Owner:Valloric
+Star:17615
+Language:Python
+Contributors: Valloric, micbou, homu, zzbot, puremourning, Chiel92, mispencer, dhleong, davits, vheon, JazzCore, rizzatti
+Project:Detectron
+Owner:facebookresearch
+Star:17185
+Language:Python
+Contributors: ir413, ashwinb, rbgirshick
+Project:tornado
+Owner:tornadoweb
+Star:16693
+Language:Python
+Contributors: bdarnell, ajdavis, finiteloop, pitrou, ploxiln, minrk, alekstorm, mivade, wolever, daftshady, SuminAndrew, leekchan, mrjoes
+Project:pandas
+Owner:pandas-dev
+Star:16572
+Language:Python
+Contributors: jreback, wesm, y-p, jorisvandenbossche, cpcloud, TomAugspurger, jbrockmendel, sinhrks, gfyoung, adamklein, jtratner, changhiskhan, hayd, mroeschke, orbitfold, jschendel, jseabold, topper-123, shoyer, toobaz, WillAyd, chris-b1, lodagro, mortada, takluyver, behzadnouri, kawochen, Komnomnomnom, reidy-p, bwignall, jankatins, dsm054, h-vetinari, gliptak, rockg, evanpw, datapythonista, yarikoptic, immerrr, davidastephens, stephenwlin, danielballan, Licht-T, Dr-Irv, minggli, lexual, aflaxman, danbirken, kshedden, alimcmaster1, unutbu, Moisan, onesandzeroes, parthea, snth, sglyon, seth-p, discort, qwhelan, bashtage, cancan101, toddrjen, nbonnotte, neirbowj, max-sixty, lbeltrame, guyrt, invisibleroads, tommyod, PKEuS, llllllllll, dhimmel, khughitt, terrytangyuan, GuessWhoSamFoo, funnycrab, kernc
+Project:Python
+Owner:TheAlgorithms
+Star:16194
+Language:Python
+Contributors: harshildarji, dynamitechetan, christianbender, daniel-s-ingram, cclauss, AnupKumarPanwar, frmatias, prateekiiest, rafaelleru
+Project:jieba
+Owner:fxsjy
+Star:15672
+Language:Python
+Contributors: fxsjy, gumblex, cloudaice
+Project:interactive-coding-challenges
+Owner:donnemartin
+Star:15554
+Language:Python
+Contributors: donnemartin, wdonahoe
+Project:incubator-mxnet
+Owner:apache
+Star:15479
+Language:Python
+Contributors: tqchen, pluskid, piiswrong, mli, antinucleon, yzhliu, vchuravy, szha, eric-haibin-lin, iblis17, sxjscience, yajiedesign, terrytangyuan, sneakerkg, kevinthesun, winstywang, hotpxl, hjk41, KellenSunderland, larroy, aaronmarkham, cjolivier01, zheng-da, haojin2, sandeep-krishnamurthy, marcoabreu, hetong007, tornadomeet, Ldpe2G, anirudh2290, zhreshold, mavenlin, jermainewang, mbaijal, thirdwing, yanqingmen, Roshrini, ThomasDelteil, nswamy, reminisce, ZiyueHuang, rahul003, qiaohaijun, lanking520, indhub, sbodenstein, ptrendx, leezu, yzhang87, howard0su, sergeykolychev, anirudhacharya, azai91, lebeg, lxn2, madjam, ZihengJiang, DickJC123, vandanavk, thinksanky, astonzhang, cclauss, zackchase, kpmurali, asmushetzel, CodingCat, udibr, apeforest, pracheer, Soonhwan-Kwon, andremoeller, leopd, Godricly, asitstands, xinyu-intel, liyuance, taoari, ziyeqinghan, thomelane, ap-hynninen, lx75249, jeremiedb, solin319, wangg12, ashokei, gautamkmr, zhanghang1989, miguelgfierro, srochel, glingyan
+Project:reddit
+Owner:reddit-archive
+Star:14715
+Language:Python
+Contributors: bsimpson63, spladug, chromakode, Deimos, madbook, andre-d, dwick, KeyserSosa, MelissaCole, JordanMilne, xiongchiamiov, umbrae, ketralnis, rram, spez, shlurbee, alienth, zeantsoi, paradox460, ajacksified, chrisst, powerlanguage, DorianGray, bboe, jedberg, 13steinj, kjoconnor, dellis23, buddydvd, dpifke, birakattack, lan17
+Project:cheat.sh
+Owner:chubin
+Star:14399
+Language:Python
+Contributors: chubin, bglopez, StrikingLoo, grayed
+Project:pipenv
+Owner:pypa
+Star:14179
+Language:Python
+Contributors: kennethreitz, techalchemy, nateprewitt, uranusjr, erinxocon, altendky, jtratner, frostming, timofurrer, greysteil, JacobHayes, tsiq-oliver, Purring, hroncok
+Project:compose
+Owner:docker
+Star:14142
+Language:Python
+Contributors: shin-, aanand, dnephin, bfirsh, mnowster, albers, d11wtq, sdurrheimer, AlexeyRokhin, garribas, SvenDowideit, DrewRomanyk, edsrzf, mnottale, vdemeester, aeriksson, dbonev, marksteve
+Project:data-science-ipython-notebooks
+Owner:donnemartin
+Star:14122
+Language:Python
+Contributors: donnemartin
+Project:gym
+Owner:openai
+Star:14058
+Language:Python
+Contributors: gdb, jietang, jonasschneider, tlbtlbtlb, joschu, RafaelCosman, nottombrown, pzhokhov, iaroslav-ai, ppaquette, siemanko, matthiasplappert, olegklimov, shelhamer, catherio
+Project:macOS-Security-and-Privacy-Guide
+Owner:drduh
+Star:13991
+Language:Python
+Contributors: drduh, sqrthree, Or3stis, DeadLion
+Project:wechat_jump_game
+Owner:wangshub
+Star:13918
+Language:Python
+Contributors: binderclip, wangshub, F-loat, leon332157, MrLevo520, chenjiandongx, lstk520
+Project:localstack
+Owner:localstack
+Star:13851
+Language:Python
+Contributors: whummer
+Project:source-code-pro
+Owner:adobe-fonts
+Star:13450
+Language:Python
+Contributors: miguelsousa, pauldhunt, teotuominen, frankrolf
+Project:algorithms
+Owner:keon
+Star:13134
+Language:Python
+Contributors: goswami-rahul, keon, danghai, christianbender, ankit167, SaadBenn, yunshuipiao, quang2705, geonlee0325, ofek, nickolaswiebe, orenovadia
+Project:ItChat
+Owner:littlecodersh
+Star:13131
+Language:Python
+Contributors: littlecodersh, tempdban
+Project:ipython
+Owner:ipython
+Star:13112
+Language:Python
+Contributors: minrk, takluyver, Carreau, jdfreder, ellisonbg, fperez, vivainio, ivanov, bfroehle, jhamrick, jasongrout, damianavila, GaelVaroquaux, SylvainCorlay, tkf, doerwalter, jstenar, rgbkrk, srinivasreddy, ssanderson, Zsailer, barrywark, juliantaylor, rkern, stefanv, dpsanders, jonathan-taylor, willingc, chronitis, gregcaporaso, chebee7i, dwf, dsblank, tomspur, pablooliveira, bollwyvl, mathieu1, jankatins, jenshnielsen, dbarbeau, jvns, abalkin, anntzer, eteq, jakobgager, m3nu, rougier, tacaswell, asmeurer, ccordoba12, KesterTong, omazapa, ddale, jdmarch, cboos, gnestor, punchagan, slojo404, mdboom, davidosterberg, mgaitan, rmcgibbo, tonyfast, ahmadia, dwyde, mspacek, piti118, satra, klonuo, Zaharid, davclark, wolever, jabooth, wking, LucianaMarques, kloper, jakevdp, jakirkham, juhasch, maxalbert, jseabold
+Project:mitmproxy
+Owner:mitmproxy
+Star:12916
+Language:Python
+Contributors: cortesi, mhils, Kriechi, dufferzafar, MatthewShao, gzzhanghao, gato, cle1000, ujjwal96, kajojify, madt1m, elitest, armudgal, s4chin, requires, lymanZerga11, dweinstein, hno, droope, nezza, alts, JustusW, arjun23496, drahosj
+Project:ZeroNet
+Owner:HelloZeroNet
+Star:12784
+Language:Python
+Contributors: shortcutme, HelloZeroNet, imachug, TheNain38, l5h5t7, MuxZeroNet, cclauss, mattseh, grez911
+Project:sqlmap
+Owner:sqlmapproject
+Star:12578
+Language:Python
+Contributors: stamparm, inquisb, guinslym, Meatballs1, mdeous
+Project:python-fire
+Owner:google
+Star:12519
+Language:Python
+Contributors: dbieber
+Project:pyspider
+Owner:binux
+Star:12156
+Language:Python
+Contributors: binux
+Project:glances
+Owner:nicolargo
+Star:12098
+Language:Python
+Contributors: nicolargo, asergi, notFloran, nclsHart, spike008t, desbma, sylvainmouquet, fraoustin, jrenner, mendelgusmao
+Project:django-rest-framework
+Owner:encode
+Star:12042
+Language:Python
+Contributors: tomchristie, xordoquy, jpadilla, carltongibson, invalid-email-address, minddust, markotibold, auvipy, d0ugal, maspwr, micgeronimo, yprez, alecperkins, j4mie, maryokhin, blueyed, jakul, jdufresne, dulacp, Ins1ne, craigds, kevin-brown, sebpiq, grimborg, thedrow, mjumbewu, wronglink, flashingpumpkin, benkonrath, nschlemm, sheppard, robromano, swistakm, ulmus, Ian-Foote, felixxm, ticosax, pablorecio, vlastv, izquierdo, ludwigkraatz, aburgel, delinhabit, FreakyDug, dbrgn
+Project:chinese-poetry
+Owner:chinese-poetry
+Star:11659
+Language:Python
+Contributors: jackeyGao, animalize
+Project:magenta
+Owner:tensorflow
+Star:11289
+Language:Python
+Contributors: adarob, cghawthorne, iansimon, douglaseck, danabo, jesseengel, elliotwaite, jhowcrof, fredbertsch
+Project:spaCy
+Owner:explosion
+Star:11134
+Language:Python
+Contributors: honnibal, ines, syllog1sm, henningpeters, maxirmx, geovedi, jimregan, oroszgy, sorenlind, polm, DuyguA, ligser, Gregory-Howard, yuukos, explosion-bot, sambozek, ExplodingCabbage, pktippa, luvogels
+Project:algo
+Owner:trailofbits
+Star:10915
+Language:Python
+Contributors: jackivanov, dguido, defunctio
+Project:bitcoinbook
+Owner:bitcoinbook
+Star:10890
+Language:Python
+Contributors: aantonop, IndexPro, myarbrough, nadamsoreilly, enderminh, wbnns, kristenORM, hackermatthew, edeykholt, Lornestar, dimitris-t, cclauss, kargakis, zaremba, erikwam, allymacdonald
+Project:celery
+Owner:celery
+Star:10806
+Language:Python
+Contributors: ask, thedrow, mher, ionelmc, piotrmaslanka, nvie, steeve, PMickael, auvipy, brainy, malinoff, mpavlov, berkerpeksag, georgepsarakis, aneilbaboo, rumineykova, vbabiy, Acey9, fredj, brosner, gthb, Anarchist666, dcramer, streeter
+Project:hosts
+Owner:StevenBlack
+Star:10722
+Language:Python
+Contributors: StevenBlack, funilrys, FadeMind, gfyoung, anudeepND, ScriptTiger, duckized, xetorixik, FrancoGag
+Project:fabric
+Owner:fabric
+Star:10676
+Language:Python
+Contributors: bitprophet
+Project:material-theme
+Owner:equinusocio
+Star:10635
+Language:Python
+Contributors: equinusocio, zpreston123
+Project:redash
+Owner:getredash
+Star:10610
+Language:Python
+Contributors: arikfr, kocsmy, amirnissim, kravets-levko, alexanderlz, erans, tjwudi, washort, alexdebrie, deecay, christophervalles, kyoshidajp, jezdez, denisov-vlad, christophervalles-hailo, luke14free, alison985, ekampf, ariarijp, adamlwgriffiths, alonho, 44px, jeffwidman, ChiragKParmar, matthew-sochor, toyama0919, kitsuyui, JohnConnell, rohithmenon, ziahamza, nathanlubchenco, stanhu, whummer
+Project:sanic
+Owner:huge-success
+Star:10530
+Language:Python
+Contributors: seemethere, r0fls, channelcat, yunstanford, 38elements, messense, ashleysommer, sjsadowski, lixxu, zenixls2, kdelwat, youknowone, AntonDnepr, subyraman, agoose77, jpiasetz, Frzk, howie6879, arnulfojr, stopspazzing
+Project:ML-From-Scratch
+Owner:eriklindernoren
+Star:10351
+Language:Python
+Contributors: eriklindernoren
+Project:luigi
+Owner:spotify
+Star:10313
+Language:Python
+Contributors: erikbern, Tarrasch, daveFNbuck, freider, gpoulin, ulzha, dlstadther, themalkolm, DavW, jcrobak, riga, interskh, anyman, fabriziodemaria, jkukul, yonromai, honnix, berkerpeksag, xoob, rantav, steenzout, soxofaan, gouthambs, tommyengstrom, ddaniels888, jpiper, miku, DeaconDesperado, graingert
+Project:iTerm2-Color-Schemes
+Owner:mbadolato
+Star:9893
+Language:Python
+Contributors: mbadolato
+Project:docker_practice
+Owner:yeasy
+Star:9886
+Language:Python
+Contributors: yeasy, khs1994, twang2218, zhangbaitong, copuzzle, yougg, ytgs
+Project:incubator-airflow
+Owner:apache
+Star:9726
+Language:Python
+Contributors: mistercrunch, bolkedebruin, r39132, jlowin, criccomini, artwr, kaxil, sekikn, Fokko, aoen, ashb, msumit, saguziel, feng-tao, XD-DENG, skudriashev, patrickleotardif, neovintage, abridgett, KevinYang21, alexvanboxel, NielsZeilemaker, syvineckruyk, jgao54, wrp, IIIIllllIIIIllllIIIIllllIIIIllllIIIIll, sv3ndk, gwax, mtustin-handy, gtoonstra, edgarRd, tedmiston, askeys, dimberman, mtagle, thibault-ketterer, jmcarp, underyx, verdan, Noremac201
+Project:Awesome-Linux-Software
+Owner:luongvo209
+Star:9723
+Language:Python
+Contributors: luongvo209, SaintFenix, alim0x, chrunchyjesus, iFaceless, drummyfish, FabioLolix
+Project:pix2code
+Owner:tonybeltramelli
+Star:9650
+Language:Python
+Contributors: tonybeltramelli
+Project:powerline
+Owner:powerline
+Star:9502
+Language:Python
+Contributors: ZyX-I, Lokaltog, kovidgoyal
+Project:salt
+Owner:saltstack
+Star:9328
+Language:Python
+Contributors: thatch45, rallytime, cachedout, s0undt3ch, terminalmage, techhat, basepi, isbm, jfindlay, twangboy, whiteinge, nmadhok, gtmanfred, UtahDave, garethgreenaway, jacksontj, cro, cvrebert, SmithSamuelM, sjorge, mirceaulinic, Ch3LL, dwoz, SEJeff, alexbleotu, kiorky, jacobhammons, mgwilliams, The-Loeki, holmboe, tonybaloney, LoveIsGrief, felskrone, pentabular, tkwilliams, meaksh, ryan-lane, lomeroe, pass-by-value, skizunov, vutny, abednarik, winstonliu1111, eliasp, shadowfax-chc, dmyerscough, clinta, anlutro, gravyboat, tsaridas, MTecknology, steverweber, bretep, opdude, bdrung, dcolish, mcalmer, QuinnyPig, msteed, cbosdo, regilero, rajvidhimar, dr4Ke, arnoldbechtoldt, ticosax, benediktwerner, mafrosis, thedrow, robertkeizer, hvnsweeting, amendlik, jhutchins, giantlock, aboe76, multani, herlo, lorengordon, bbinet, kjkuan, ranl, evinrude, baijum, cedwards, DmitryKuzmenko, m03, 0xf10e, eradman, pengyao, markuskramerIgitt, kaithar, akissa, rominf, KaiSforza, arthurlogilab, claudiupopescu, jodv, inthecloud247, castor-morveer, nicholasmhughes, damon-atkins
+Project:nginx-proxy
+Owner:jwilder
+Star:9295
+Language:Python
+Contributors: jwilder, kamermans, thomasleveil, md5, baptistedonaux, matt-hh
+Project:sshuttle
+Owner:apenwarr
+Star:9019
+Language:Python
+Contributors: apenwarr, brianmay, jwyllie83, xtaran
+Project:RocAlphaGo
+Owner:Rochester-NRT
+Star:8874
+Language:Python
+Contributors: wrongu, ttrine, jtauber, MaMiFreak, robert-waite, thouis
+Project:neural-doodle
+Owner:alexjc
+Star:8771
+Language:Python
+Contributors: alexjc
+Project:FastPhotoStyle
+Owner:NVIDIA
+Star:8674
+Language:Python
+Contributors: mingyuliutw, Yijunmaverick
+Project:tflearn
+Owner:tflearn
+Star:8641
+Language:Python
+Contributors: aymericdamien, wballard, ichuang, burness, kengz
+Project:Theano
+Owner:Theano
+Star:8539
+Language:Python
+Contributors: nouiz, lamblin, abergeron, jaberg, pascanur, goodfeli, carriepl, breuleux, notoraptor, dwf, harlouci, joaovictortr, royxue, turian, abalkin, affanv14, slefrancois, Sentient07, ReyhaneAskari, ChienliMa, Amrithasuresh, ballasn, gvtulder, gdesjardins, aalmah, Hengjean, jlowin, NicolasBouchard, khaotik, caglar, SinaHonari, aam-at, f0k, cooijmanstim, mrocklin, mohammadpz, daemonmaker, larseeri, ynd, Thrandis, cangermueller, yaoli, ChihebTrabelsi, shawntan, hantek, t13m, adbrebs, josharian, chinnadhurai, Saizheng, doomie, jsalvatier, harmdevries89, shabanian, tfjgeorge, julianser, fvisin, sisp, MarcCote, sebastien-j, bartvm, vikramnitin9, vdumoulin, Faruk-Ahmed, dmitriy-serdyuk, olimastro, manzagop, alexmlamb, mgermain, viveksck, bouthilx, HapeMask, kelvinxu, yingzha, matt-graham, stencilman, kmike, shackenberg, rmcgibbo, simlmx, erakra, AlOa, AndreiCostinescu, sygi, laurent-dinh, vmichals, wonghang, glorotxa, borisfom, JesseLivezey, aboSamoor, saebrahimi, botev, hamelphi, jhelie, xiaoqie
+Project:locust
+Owner:locustio
+Star:8535
+Language:Python
+Contributors: heyman, HeyHugo, cgbystrom, Jahaja, aldenpeterson-wf, cgoldberg, justiniso, DeepHorizons, mbeacom
+Project:neural-enhance
+Owner:alexjc
+Star:8520
+Language:Python
+Contributors: alexjc
+Project:bokeh
+Owner:bokeh
+Star:8340
+Language:Python
+Contributors: bryevdv, mattpap, damianavila, birdsarah, fpliger, canavandl, paddymul, havocp, pzwang, brendancol, Maggie-M, canavandl-test, almarklein, rothnic, kevincolten, justacec, tswicegood, kdodia, LilaHickey, jbcrail, philippjfr, brittainhard, jsignell, jqmp, clairetang6, HuntJSparra, shughes-uk, quasiben, pitrou, electronwill, jakirkham, sahat, jlstevens, abele, ilanschnell, tarzzz, lexicalunit, p-himik, Karel-van-de-Plassche, tobyhodges, jbednar
+Project:beets
+Owner:beetbox
+Star:8335
+Language:Python
+Contributors: sampsyo, geigerzaehler, jrobeson, Kraymer, brunal, pkess, invalid-email-address, diego-plan9, jackwilsdon, pscn, nathdwek, mrmachine, mried, tomjaspers, multikatt, pedros, djl, jmwatte, JesseWeinstein, duailibe, discopatrick, phmongeau, yagebu, dangmai, silb, Freso, anarcat, GuilhermeHideki, opatel99, SpirosChadoulos, tigranl, kerobaros, PierreRust, euri10, xsteadfastx, brilnius, jbaiter, reiv, SJoshBrown, yevgenybezman, tweitzel, untitaker, daveisadork, autrimpo, Stunner, pprkut, maffo999, lcharlick, m-urban, mineo, LordSputnik, dbogdanov, kljohann, psychoticmeow, l-t-k, mdecker, vapniks, bartkl, fortes
+Project:Mask_RCNN
+Owner:matterport
+Star:8312
+Language:Python
+Contributors: waleedka
+Project:kivy
+Owner:kivy
+Star:8304
+Language:Python
+Contributors: tito, akshayaurora, Zen-CODE, matham, tshirtman, dessant, KeyWeeUsr, inclement, kived, geojeff, dennda, hansent, Kovak, merriam, thopiekar, aspidites, Ian-Foote, udiboy1209, rafalo1333, LogicalDash, bob-the-hamster, knappador, cbenhagen, Voen, Bakterija, Cheaterman, jegger, dolang, jasonxxu, germn, saqib1707, FermiParadox, denys-duchier, mihaineacsu, gottadiveintopython, chozabu, FeralBytes, revolunet, el-ethan, llfkj, picibucor, sbrother, ire-and-curses, ismailof, alanjds
+Project:pelican
+Owner:getpelican
+Star:8279
+Language:Python
+Contributors: almet, justinmayer, bbinet, wking, saimn, ingwinlu, avaris, kylef, onlyhavecans, mankyd, derdon, smartass101, AndreaCrotti, svetlyak40wt, Rogdham, jorgesumle, mapio, jawher, iKevinY, mosra, Scheirle, nduhamel, davidjb, Lothiraldan, Freeculturexx, MeirKriheli, nrocco, stephane
+Project:zulip
+Owner:zulip
+Star:8257
+Language:Python
+Contributors: timabbott, showell, zbenjamin, rishig, hackerkid, brockwhittaker, umairwaheed, wdaher, adnrs96, lfranchi, gnprice, synicalsyntax, eeshangarg, lfaraone, sharmaeklavya2, HarshitOnGitHub, roberthoenig, shubhamdhama, rht, YJDave, rheaparekh, neiljp, YagoGG, lonerz, acrefoot, armooo, shubham-padia, cory2067, aero31aero, andersk, vaidap, jackrzhang, tommyip, brainwane, Lyla-Fischer, akashnimare, priyank-p, abhijeetkaur, rwbarton, taranjeet, TomaszKolek, sampritipanda, robot-dreams, kkanahin, refeed, christi3k, ashishk1994, jajodiaraghav, skunkmb, roed314, maxnuss, Balaji2198, sarahcstringer, sinwar, vabs22, 540KJ, alenavolk, yoz, jrowan, XavierCooney, picapi, HydraulicSheep, pweaver, rahuldeve, KingxBanana, jhurwitz, armaanahluwalia, arpith, anirudhjain75, AasthaGupta, kartikmaji, Kumar-Tarun, fazerlicourice7, paxapy, bojidar-bg, medullaskyline, akhilmd, umkay, AZtheAsian, GPHemsley, nkmishra1997, RobbieClarken, digi0ps, tejaskasetty, TigorC, phansen01, Anupam-dagar, utkarsh23, alliejones, thejwzhang, aakash-cr7, kunall17
+Project:autojump
+Owner:wting
+Star:8234
+Language:Python
+Contributors: wting, joelthelion, blueyed
+Project:yapf
+Owner:google
+Star:8121
+Language:Python
+Contributors: gwelymernans, eliben, hayd, msuozzo
+Project:cookiecutter
+Owner:audreyr
+Star:8120
+Language:Python
+Contributors: hackebrot, audreyr, michaeljoseph, pydanny, freakboy3742, pfmoore, stevepiercy, raphigaziano, maiksensi, terryjbates, eliasdorneles, ramiroluz
+Project:matplotlib
+Owner:matplotlib
+Star:8120
+Language:Python
+Contributors: tacaswell, mdboom, jdh2358, efiring, anntzer, dstansby, QuLogic, jenshnielsen, jklymak, NelleV, WeatherGod, pelson, ddale, dopplershift, leejjoon, jkseppan, timhoffm, dmcdougall, astraw, phobson, cgohlke, tonysyu, ericmjl, afvincent, blink1073, cmoad, jankatins, Kojoley, fariza, pwuertz, choldgraf, ImportanceOfBeingErnest, cimarronm, thisch, ianthomas23, ivanov, jrevans, jswhit, rougier, mdehoon, zblz, mgiuca-google, matthew-brett, mmetz-bn, montefra, story645, dhyams, NNemec, endolith, DietmarSchwertberger, eric-wieser, jaytmiller, patniharshit, megies, joferkington, mspacek, pganssle, astrofrog, toddrjen, bcongdon, katyhuff, neggert, Carreau, MaxNoe, sargas, maxalbert, madphysicist, seehuhn, OceanWolf, fredrik-1, jrmlhermitte, mrterry, mattip, heeres, edin1, Xarthisius, tomspur, ryanbelt, vollbier, jakevdp, Tillsten, ngoldbaum, chebee7i, bastibe, DanHickstein, dmkaplan2000, fperez, meeseeksmachine, teoliphant, TrishGillett, esvhd, cclauss, petehuang, sameerd, breedlun, perimosocordiae, gstorer, HHest, jbmohler, sfroid
+Project:Algorithm_Interview_Notes-Chinese
+Owner:imhuay
+Star:8117
+Language:Python
+Contributors: imhuay
+Project:wtfpython
+Owner:satwikkansal
+Star:8066
+Language:Python
+Contributors: satwikkansal
+Project:Zappa
+Owner:Miserlou
+Star:8021
+Language:Python
+Contributors: Miserlou, doppins-bot, jneves, nikbora, scoates, aectann, mathom, claudeatsafe, schuyler1d, tsarpaul, wobeng, bcongdon, Doerge, Xuefeng-Zhu, rgov, puhitaku, mcrowson, michi88
+Project:gensim
+Owner:RaRe-Technologies
+Star:7986
+Language:Python
+Contributors: piskvorky, tmylk, menshikh-iv, chinmayapancholi13, gojomo, cscorley, sotte, jayantj, ziky90, sebastien-j, mataddy, parulsethi, mattilyra, fbarrios, bhargavvader, prakhar2b, olavurmortensen, markroxor, temerick, dsquareindia, larsmans, dedan, davechallis, hyhan, erbas, quole, macks22, phdowling, droudy, manneshiva, hajicj
